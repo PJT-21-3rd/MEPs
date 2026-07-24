@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Thin.woff2')
+    format('woff2');
+  font-weight: 100;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-ExtraLight.woff2')
+    format('woff2');
+  font-weight: 200;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Light.woff2')
+    format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2')
+    format('woff2');
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Medium.woff2')
+    format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-SemiBold.woff2')
+    format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Bold.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-ExtraBold.woff2')
+    format('woff2');
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Suit';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Heavy.woff2')
+    format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
+@theme {
+  /* MEPS */
+  --color-primary: #00467a; /* 딥 블루 */
+  --color-secondary: #ffce00; /* 옐로우 (포인트, 하이라이트) */
+  --color-white: #ffffff; /* 기본 배경 및 텍스트 반전용 */
+  --color-black: #1a1d23; /* 묵직한 흑회색 */
+
+  /* CARD */
+  --color-surface-blue: #e8f4fb; /* 연한 블루 배경 (선택된 매물, 정보 카드 배경 등) */
+  --color-surface-gray: #f5f5f5; /* 연한 회색 배경 (전체 앱 배경, 비활성 탭 등) */
+  --color-surface-red: #fef2f2; /* 연한 빨강/핑크 배경 (경고 카드, 주의 항목 배경) */
+
+  /* TEXT */
+  --color-text-main: #171717; /* 기본 텍스트 (본문, 제목 등 가장 많이 쓰이는 검정) */
+  --color-text-sub: #a1a1a1; /* 서브 텍스트 (부제목, 설명, 비활성 텍스트) */
+  --color-text-safe: #2f8877; /* 진한 민트 (안전 텍스트 강조용) */
+  --color-text-good: #4f7d2e; /* 진한 올리브그린 (양호 텍스트 강조용) */
+  --color-text-warn: #8a7400; /* 진한 머스타드/황토색 (주의 텍스트 강조용) */
+
+  /* SCORE */
+  --color-status-safe: #e4f7f2; /* 안전 (90~100점) - 연한 민트 (게이지, 배지용) */
+  --color-status-good: #98db6b; /* 양호 (80~89점) - 밝은 연두 (게이지, 배지용) */
+  --color-status-warn: #fee96c; /* 주의 (70~79점) - 밝은 노랑 (게이지, 배지용) */
+  --color-status-danger: #e64a3b; /* 점검필요 (70점 미만) - 강렬한 빨강 (게이지, 배지용) */
+
+  /* SUIT */
+  --font-suit:
+    'SUIT', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-suit);
+    overflow-x: hidden;
+  }
+}
