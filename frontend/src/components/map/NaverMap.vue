@@ -1,5 +1,5 @@
 <template>
-  <div id="map" ref="mapContainer" class="w-full h-full min-h-[600px] bg-surface-gray"></div>
+  <div id="map" ref="mapContainer" class="w-full h-full bg-surface-gray"></div>
 </template>
 
 <script setup>
