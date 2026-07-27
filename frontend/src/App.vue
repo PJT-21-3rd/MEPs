@@ -1,8 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900">
-    <main class="h-[calc(100vh-64px)]">
-      <RouterView />
-    </main>
+  <div class="w-screen h-screen overflow-hidden">
+    <RouterView />
   </div>
 </template>
 
