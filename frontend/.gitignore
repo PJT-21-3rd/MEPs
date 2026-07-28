@@ -1,4 +1,6 @@
-# Logs
+# =========================================
+# 1. Logs (로그 파일)
+# =========================================
 logs
 *.log
 npm-debug.log*
@@ -7,14 +9,31 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# =========================================
+# 2. Dependencies & Build (의존성 및 빌드 결과물)
+# =========================================
 node_modules
-.DS_Store
 dist
 dist-ssr
-coverage
-*.local
+.histoire/
 
-# Editor directories and files
+# =========================================
+# 3. Environment Variables (보안/환경 변수)
+# =========================================
+.env
+.env.*
+!.env.example
+
+# =========================================
+# 4. Deployment / Cloud (클라우드 플랫폼 설정)
+# =========================================
+.vercel/
+
+# =========================================
+# 5. OS & Editor (운영체제 및 에디터 캐시)
+# =========================================
+.DS_Store
+Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -24,16 +43,14 @@ coverage
 *.sln
 *.sw?
 
+# =========================================
+# 6. Testing & Caches (테스트 및 린트 캐시)
+# =========================================
+coverage
+*.local
 *.tsbuildinfo
-
 .eslintcache
-
-# Cypress
 /cypress/videos/
 /cypress/screenshots/
-
-# Vitest
 __screenshots__/
-
-# Vite
 *.timestamp-*-*.mjs
