@@ -16,7 +16,7 @@ export default defineConfig({
   },
   histoire: {
     plugins: [HstVue()],
-    setupFile: '/src/histoire.setup.js',
+    setupFile: 'src/histoire.setup.js',
     tree: {
       groups: [
         { id: 'top', title: '' },
