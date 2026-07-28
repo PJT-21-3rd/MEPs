@@ -7,6 +7,11 @@ const routes = [
     name: 'Map',
     component: MapView,
   },
+  {
+    path: '/mypage',
+    name: 'mypage',
+    component: () => import('../views/MyPage.vue'),
+  },
   // {
   //   path: '/login',
   //   name: 'Login',
