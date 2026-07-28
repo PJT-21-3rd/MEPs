@@ -93,9 +93,16 @@
   --color-text-warn: #8a7400; /* 진한 머스타드/황토색 (주의 텍스트 강조용) */
 
   /* SCORE */
-  --color-status-safe: #e4f7f2; /* 안전 (90~100점) - 연한 민트 (게이지, 배지용) */
-  --color-status-good: #98db6b; /* 양호 (80~89점) - 밝은 연두 (게이지, 배지용) */
-  --color-status-warn: #fee96c; /* 주의 (70~79점) - 밝은 노랑 (게이지, 배지용) */
+  --color-status-safe: #79dcc8; /* 안전 (90~100점) - 밝은 민트 (게이지) */
+  --color-status-good: #98db6b; /* 양호 (80~89점) - 밝은 연두 (게이지) */
+  --color-status-warn: #fee96c; /* 주의 (70~79점) - 밝은 노랑 (게이지) */
+  --color-status-danger: #e64a3b; /* 점검필요 (70점 미만) - 강렬한 빨강 (게이지) */
+
+  /* GRADE */
+  --color-grade-safe: #e4f7f2; /* 안전 (안전 등급) - 연한 민트 (배지용) */
+  --color-grade-good: #eef6e4; /* 양호 (양호 등급) - 연한 연두 (배지용) */
+  --color-grade-warn: #fef4d6; /* 주의 (주의 등급) - 연한 노랑 (배지용) */
+  --color-grade-danger: #fef2f2; /* 점검필요 (점검필요 등급) - 연한 빨강 (배지용) */
 
   /* SUIT */
   --font-suit:
