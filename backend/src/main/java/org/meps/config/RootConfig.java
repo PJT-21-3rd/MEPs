@@ -44,9 +44,6 @@ import com.zaxxer.hikari.HikariDataSource;
 )
 
 public class RootConfig {
-    static {
-        System.out.println("!!!!! RootConfig 로딩됨 !!!!!");
-    }
 
     @Value("${jdbc.driver}")
     private String driver;
