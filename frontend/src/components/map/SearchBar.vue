@@ -1,76 +1,75 @@
 <script setup>
-import { Clock, Search, X, XCircle } from '@lucide/vue'
-import { useUiStore } from '@/stores/uiStore'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { Clock, Search, X } from '@lucide/vue';
+import { useUiStore } from '@/stores/uiStore';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
-const uiStore = useUiStore()
+const uiStore = useUiStore();
 
 // dropdwon 관련
-const isDropdownOpen = ref(false)
-const searchContainerRef = ref(null)
-const recentSearches = ref([]) // 최근검색어s
+const isDropdownOpen = ref(false);
+const searchContainerRef = ref(null);
+const recentSearches = ref([]); // 최근검색어s
 
 // 로컬에서 불러오기
 const loadRecentSearches = () => {
-  const saved = localStorage.getItem('meps-recent-searches')
+  const saved = localStorage.getItem('meps-recent-searches');
   if (saved) {
-    recentSearches.value = JSON.parse(saved)
+    recentSearches.value = JSON.parse(saved);
   }
-}
+};
 
 const saveRecentSearches = () => {
-  localStorage.setItem('meps-recent-searches', JSON.stringify(recentSearches.value))
-}
+  localStorage.setItem('meps-recent-searches', JSON.stringify(recentSearches.value));
+};
 
 // 검색
 const handleSearch = (q) => {
-  const keyword = q?.trim()
-  if (!keyword) return
+  const keyword = q?.trim();
+  if (!keyword) return;
 
-  uiStore.searchQuery = keyword
+  uiStore.searchQuery = keyword;
 
-  recentSearches.value = recentSearches.value.filter((item) => item !== keyword) // 중복제거
-  recentSearches.value.unshift(keyword)
+  recentSearches.value = recentSearches.value.filter((item) => item !== keyword); // 중복제거
+  recentSearches.value.unshift(keyword);
 
   if (recentSearches.value.length > 5) {
-    recentSearches.value.pop()
+    recentSearches.value.pop();
   }
 
-  saveRecentSearches()
+  saveRecentSearches();
 
-  isDropdownOpen.value = false
-  uiStore.isDetailOpen = true
-}
+  isDropdownOpen.value = false;
+  uiStore.isDetailOpen = true;
+};
 
 const removeRecentSearch = (keyword) => {
-  recentSearches.value = recentSearches.value.filter((item) => item !== keyword)
-  saveRecentSearches()
-}
+  recentSearches.value = recentSearches.value.filter((item) => item !== keyword);
+  saveRecentSearches();
+};
 
 const clearAllRecentSearches = () => {
-  recentSearches.value = []
-  localStorage.removeItem('meps-recent-searches')
-}
+  recentSearches.value = [];
+  localStorage.removeItem('meps-recent-searches');
+};
 
 const clearSearch = () => {
-  uiStore.searchQuery = ''
-}
+  uiStore.searchQuery = '';
+};
 
 // 외부 클릭 감지(드롭다운 닫기)
-const handleClickOutside = (event) => {
-  if (searchContainerRef.value && !searchContainerRef.value.contains(event.target)) {
-    isDropdownOpen.value = false
-  }
-}
+useClickOutside(searchContainerRef, () => {
+  isDropdownOpen.value = false;
+});
 
 onMounted(() => {
-  loadRecentSearches()
-  document.addEventListener('click', handleClickOutside)
-})
+  loadRecentSearches();
+  document.addEventListener('click', handleClickOutside);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
