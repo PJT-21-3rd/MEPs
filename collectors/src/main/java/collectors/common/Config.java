@@ -8,11 +8,11 @@ public class Config {
     private static final Properties props = new Properties();
 
     static {
-        try (InputStream in = Config.class.getResourceAsStream("/secret.properties")) {
-            if (in == null) throw new IllegalStateException("secret.properties not found in resources");
+        try (InputStream in = Config.class.getResourceAsStream("/application.properties")) {
+            if (in == null) throw new IllegalStateException("application.properties not found in resources");
             props.load(in);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to load secret.properties", e);
+            throw new IllegalStateException("Failed to load application.properties", e);
         }
     }
 
