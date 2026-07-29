@@ -1,7 +1,7 @@
 <script setup>
 import { Clock, Search, X } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
 const uiStore = useUiStore();
@@ -64,11 +64,6 @@ useClickOutside(searchContainerRef, () => {
 
 onMounted(() => {
   loadRecentSearches();
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
