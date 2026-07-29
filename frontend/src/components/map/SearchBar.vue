@@ -1,7 +1,7 @@
 <script setup>
 import { Clock, Search, X } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
 const uiStore = useUiStore();
@@ -60,6 +60,10 @@ const clearSearch = () => {
 // 외부 클릭 감지(드롭다운 닫기)
 useClickOutside(searchContainerRef, () => {
   isDropdownOpen.value = false;
+});
+
+onMounted(() => {
+  loadRecentSearches();
 });
 </script>
 
