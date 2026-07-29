@@ -61,15 +61,6 @@ const clearSearch = () => {
 useClickOutside(searchContainerRef, () => {
   isDropdownOpen.value = false;
 });
-
-onMounted(() => {
-  loadRecentSearches();
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
 </script>
 
 <template>
