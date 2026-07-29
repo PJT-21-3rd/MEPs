@@ -86,6 +86,9 @@
   --color-surface-red: #fef2f2; /* 연한 빨강/핑크 배경 (경고 카드, 주의 항목 배경) */
   --color-status-like: #e64a3b; /* 찜(하트) - 강렬한 빨강 */
 
+  /* BUTTON */
+  --color-button-primary: #0071ac; /* 딥 블루 (리포트 버튼, CTA 버튼 등) */
+
   /* TEXT */
   --color-text-main: #171717; /* 기본 텍스트 (본문, 제목 등 가장 많이 쓰이는 검정) */
   --color-text-secondary: #525252; /* 보조 텍스트 (부제목, 설명, 비활성 텍스트) */
