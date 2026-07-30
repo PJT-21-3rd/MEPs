@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN">
+    <Appenders>
+        <Console
+                name="Console"
+                target="SYSTEM_OUT">
+            <PatternLayout
+                    charset="UTF-8"
+                    pattern="%d{HH:mm:ss.SSS} %-5level [%logger{36}] %msg%n"
+            />
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger
+                name="org.meps"
+                level="debug"
+                additivity="false">
+
+            <AppenderRef ref="Console" />
+        </Logger>
+
+        <Logger
+                name="org.springframework"
+                level="info"
+                additivity="false">
+
+            <AppenderRef ref="Console" />
+
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>
