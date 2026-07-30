@@ -1,7 +1,29 @@
+import { fileURLToPath, URL } from 'node:url'
+
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+import tailwindcss from '@tailwindcss/vite'
+import { HstVue } from '@histoire/plugin-vue'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), vueDevTools(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  histoire: {
+    plugins: [HstVue()],
+    setupFile: 'src/histoire.setup.js',
+    tree: {
+      groups: [
+        { id: 'top', title: '' },
+        { id: 'common', title: '공통 컴포넌트' },
+        { id: 'map', title: '지도/탐색 컴포넌트' },
+        { id: 'report', title: 'AI 리포트 컴포넌트' },
+      ],
+    },
+  },
 })
