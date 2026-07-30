@@ -99,11 +99,13 @@ dependencies {
     // 테스트
     testImplementation "org.springframework:spring-test:${springVersion}"
     testImplementation "org.springframework.security:spring-security-test:${securityVersion}"
+    testImplementation 'org.assertj:assertj-core:3.26.3'
     testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 test {

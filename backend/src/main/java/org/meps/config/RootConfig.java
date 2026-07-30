@@ -2,6 +2,7 @@ package org.meps.config;
 
 import javax.sql.DataSource;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -28,7 +29,7 @@ import com.zaxxer.hikari.HikariDataSource;
 @Configuration
 @PropertySource("classpath:application.properties")
 @EnableTransactionManagement
-@MapperScan("org.meps.mapper")
+@MapperScan(basePackages = "org.meps", annotationClass = Mapper.class)
 @ComponentScan(
         basePackages = "org.meps",
         excludeFilters = {
