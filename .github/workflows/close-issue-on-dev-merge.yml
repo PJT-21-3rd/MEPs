@@ -34,10 +34,4 @@ jobs:
                 issue_number,
                 state: 'closed',
               });
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number,
-                body: `#${context.payload.pull_request.number} PR이 dev-be에 merge되어 자동으로 닫혔습니다.`,
-              });
             }
