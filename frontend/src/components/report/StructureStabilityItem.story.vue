@@ -45,10 +45,10 @@ const detailSample = {
       />
     </Variant>
 
-    <Variant title="양호 (detail, 특약 카드)">
+    <Variant title="주의 (detail, 특약 카드)">
       <StructureStabilityItem
-        status="good"
-        summary="경미한 균열이 발견되었으나 안전 범위 내입니다."
+        status="warning"
+        summary="노후 건물로 정밀 점검이 필요합니다."
         mode="detail"
         :detail="detailSample"
       />

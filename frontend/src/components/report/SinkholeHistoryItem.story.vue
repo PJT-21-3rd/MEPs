@@ -39,10 +39,10 @@ const detailSample = {
       />
     </Variant>
 
-    <Variant title="안전 (detail, 특약 카드)">
+    <Variant title="주의(detail, 특약 카드)">
       <SinkholeHistoryItem
-        status="safe"
-        summary="지반침하 이력이 없습니다."
+        status="warning"
+        summary="인근 지역 지반침하 사례가 보고되었습니다."
         mode="detail"
         :detail="detailSample"
       />
