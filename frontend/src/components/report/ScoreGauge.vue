@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
-import { GRADE_META, getGradeByScore } from '@/constants/reportConstants'
+import { computed, ref, onMounted, watch } from 'vue';
+import { GRADE_META, getGradeByScore } from '@/constants/reportConstants';
 
 // #24, #30
 
@@ -10,70 +10,75 @@ const props = defineProps({
     required: true,
     validator: (v) => v >= 0 && v <= 100,
   },
+  grade: {
+    type: String,
+    default: null,
+    validator: (v) => v === null || ['safe', 'good', 'warning', 'danger'].includes(v),
+  },
   animate: {
     type: Boolean,
     default: true,
   },
-})
+});
 
-const emit = defineEmits(['animation-end'])
+const emit = defineEmits(['animation-end']);
 
-const grade = computed(() => getGradeByScore(props.score))
-const gradeMeta = computed(() => GRADE_META[grade.value])
+const grade = computed(() => props.grade ?? getGradeByScore(props.score));
+const gradeMeta = computed(() => GRADE_META[grade.value]);
 
 // 원형 게이지 계산
-const RADIUS = 54
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+const RADIUS = 54;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const displayScore = ref(props.animate ? 0 : props.score)
+const displayScore = ref(props.animate ? 0 : props.score);
 
 const dashOffset = computed(() => {
-  const ratio = Math.min(Math.max(displayScore.value, 0), 100) / 100
-  return CIRCUMFERENCE * (1 - ratio)
-})
+  const ratio = Math.min(Math.max(displayScore.value, 0), 100) / 100;
+  return CIRCUMFERENCE * (1 - ratio);
+});
 
 function animateScore() {
-  const start = 0
-  const end = props.score
-  const duration = 800
-  const startTime = performance.now()
+  const start = 0;
+  const end = props.score;
+  const duration = 800;
+  const startTime = performance.now();
 
   function step(now) {
-    const elapsed = now - startTime
-    const progress = Math.min(elapsed / duration, 1)
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
     // ease-out
-    const eased = 1 - Math.pow(1 - progress, 3)
-    displayScore.value = Math.round(start + (end - start) * eased)
+    const eased = 1 - Math.pow(1 - progress, 3);
+    displayScore.value = Math.round(start + (end - start) * eased);
 
     if (progress < 1) {
-      requestAnimationFrame(step)
+      requestAnimationFrame(step);
     } else {
-      displayScore.value = end
-      emit('animation-end')
+      displayScore.value = end;
+      emit('animation-end');
     }
   }
 
-  requestAnimationFrame(step)
+  requestAnimationFrame(step);
 }
 
 onMounted(() => {
   if (props.animate) {
-    animateScore()
+    animateScore();
   } else {
-    emit('animation-end')
+    emit('animation-end');
   }
-})
+});
 
 watch(
   () => props.score,
   () => {
     if (props.animate) {
-      animateScore()
+      animateScore();
     } else {
-      displayScore.value = props.score
+      displayScore.value = props.score;
     }
   },
-)
+);
 </script>
 
 <template>
