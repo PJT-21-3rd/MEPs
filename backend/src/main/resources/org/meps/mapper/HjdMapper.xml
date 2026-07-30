@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.hjd.mapper.HjdMapper">
+
+    <resultMap id="hjdNavigateResultMap" type="org.meps.hjd.dto.HjdNavigateResponse">
+        <result property="hjdCode" column="hjd_cd"/>
+        <result property="hjdName" column="adstrd_nm"/>
+    </resultMap>
+
+    <select id="findByCoordinate" resultMap="hjdNavigateResultMap">
+        SELECT
+            b.hjd_cd,
+            a.adstrd_nm
+        FROM hjd_boundary b
+                 JOIN adstrd a ON b.hjd_cd = a.adstrd_cd
+        WHERE ST_Contains(b.geom, ST_SRID(POINT(#{lng}, #{lat}), 4326))
+            LIMIT 1
+    </select>
+
+</mapper>
