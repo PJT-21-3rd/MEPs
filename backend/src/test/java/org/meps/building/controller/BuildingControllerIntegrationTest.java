@@ -37,9 +37,10 @@ class BuildingControllerIntegrationTest {
 
     @Test
     void 정상_요청은_200을_반환한다() throws Exception {
+        // 광진구 자양동·구의동 일대 (데이터 존재 영역)
         mockMvc.perform(get("/api/buildings/nearby")
-                        .param("swLat", "37.4913962").param("swLng", "127.0268891")
-                        .param("neLat", "37.5098784").param("neLng", "127.0464593")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
                         .param("zoom", "17"))
                 .andExpect(status().isOk());
     }
@@ -47,8 +48,8 @@ class BuildingControllerIntegrationTest {
     @Test
     void 줌이_부족해도_200을_반환한다() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
-                        .param("swLat", "37.4913962").param("swLng", "127.0268891")
-                        .param("neLat", "37.5098784").param("neLng", "127.0464593")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
                         .param("zoom", "16"))
                 .andExpect(status().isOk());
     }
@@ -57,8 +58,8 @@ class BuildingControllerIntegrationTest {
     void 좌표_범위_오류는_400을_반환한다() throws Exception {
         // sw와 ne를 뒤바꾼 요청
         mockMvc.perform(get("/api/buildings/nearby")
-                        .param("swLat", "37.5098784").param("swLng", "127.0464593")
-                        .param("neLat", "37.4913962").param("neLng", "127.0268891")
+                        .param("swLat", "37.5450").param("swLng", "127.1000")
+                        .param("neLat", "37.5250").param("neLng", "127.0550")
                         .param("zoom", "17"))
                 .andExpect(status().isBadRequest());
     }
@@ -66,15 +67,15 @@ class BuildingControllerIntegrationTest {
     @Test
     void 필수_파라미터가_누락되면_400을_반환한다() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
-                        .param("swLat", "37.4913962"))
+                        .param("swLat", "37.5250"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void 파라미터_타입이_잘못되면_400을_반환한다() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
-                        .param("swLat", "abc").param("swLng", "127.0268891")
-                        .param("neLat", "37.5098784").param("neLng", "127.0464593")
+                        .param("swLat", "abc").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
                         .param("zoom", "17"))
                 .andExpect(status().isBadRequest());
     }

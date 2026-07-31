@@ -21,17 +21,19 @@ class BuildingServiceIntegrationTest {
 
     @Test
     void 줌17_이상이면_건물목록을_최대20개_반환한다() {
+        // 광진구 자양동·구의동 일대 (데이터 존재 영역)
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.4913962, 127.0268891, 37.5098784, 127.0464593, 17);
+                37.5250, 127.0550, 37.5450, 127.1000, 17);
 
         assertThat(result.isZoomRequired()).isFalse();
+        assertThat(result.getBuildings()).isNotEmpty();
         assertThat(result.getBuildings()).hasSizeLessThanOrEqualTo(20);
     }
 
     @Test
     void 줌이_부족하면_빈배열과_zoomRequired_true를_반환한다() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.4913962, 127.0268891, 37.5098784, 127.0464593, 16);
+                37.5250, 127.0550, 37.5450, 127.1000, 16);
 
         assertThat(result.isZoomRequired()).isTrue();
         assertThat(result.getBuildings()).isEmpty();
@@ -40,7 +42,7 @@ class BuildingServiceIntegrationTest {
     @Test
     void sw좌표가_ne좌표보다_크면_예외가_발생한다() {
         assertThatThrownBy(() -> buildingService.getNearbyBuildings(
-                37.5098784, 127.0464593, 37.4913962, 127.0268891, 17))
+                37.5450, 127.1000, 37.5250, 127.0550, 17))
                 .isInstanceOf(InvalidBoundsException.class);
     }
 
