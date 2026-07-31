@@ -17,6 +17,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,10 @@ import com.zaxxer.hikari.HikariDataSource;
                 @ComponentScan.Filter(
                         type = FilterType.ANNOTATION,
                         classes = Configuration.class
+                ),
+                @ComponentScan.Filter(
+                        type = FilterType.ANNOTATION,
+                        classes = ControllerAdvice.class
                 )
         }
 )
