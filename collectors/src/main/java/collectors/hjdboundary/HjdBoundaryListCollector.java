@@ -1,4 +1,4 @@
-package collectors.HjdBoundary;
+package collectors.hjdboundary;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
