@@ -3,7 +3,7 @@ package org.meps.hjd.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
-import org.meps.hjd.dto.HjdNavigateResponse;
+import org.meps.hjd.dto.HjdNavigateResponseDto;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -21,7 +21,7 @@ class HjdServiceIntegrationTest {
 
     @Test
     void 서울_시청_좌표는_행정동을_찾는다() {
-        HjdNavigateResponse result = hjdService.findByCoordinate(37.5665, 126.9780);
+        HjdNavigateResponseDto result = hjdService.findByCoordinate(37.5665, 126.9780);
 
         System.out.println("hjdCode = " + result.getHjdCode());
         System.out.println("hjdName = " + result.getHjdName());

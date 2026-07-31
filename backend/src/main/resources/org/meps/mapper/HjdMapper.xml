@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.meps.hjd.mapper.HjdMapper">
 
-    <resultMap id="hjdNavigateResultMap" type="org.meps.hjd.dto.HjdNavigateResponse">
+    <resultMap id="hjdNavigateResultMap" type="org.meps.hjd.dto.HjdNavigateResponseDto">
         <result property="hjdCode" column="hjd_cd"/>
         <result property="hjdName" column="adstrd_nm"/>
     </resultMap>

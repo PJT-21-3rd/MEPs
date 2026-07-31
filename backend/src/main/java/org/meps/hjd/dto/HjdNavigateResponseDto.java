@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class HjdNavigateResponse {
+public class HjdNavigateResponseDto {
     private String hjdCode;
     private String hjdName;
 }
