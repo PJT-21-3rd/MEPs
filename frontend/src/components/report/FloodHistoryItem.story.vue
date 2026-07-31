@@ -1,3 +1,4 @@
+<!-- FloodHistoryItem.story.vue -->
 <script setup>
 import FloodHistoryItem from './FloodHistoryItem.vue';
 
@@ -11,36 +12,26 @@ const detailSample = {
 
 <template>
   <Story title="AI 리포트 컴포넌트/FloodHistoryItem" :layout="{ type: 'single', iframe: false }">
-    <Variant title="안전 (summary)">
-      <FloodHistoryItem status="safe" summary="침수 이력이 없습니다." mode="summary" />
+    <Variant title="안전">
+      <FloodHistoryItem status="safe" summary="침수 이력이 없습니다." />
     </Variant>
 
-    <Variant title="양호 (summary)">
-      <FloodHistoryItem status="good" summary="배수 시설이 양호한 상태입니다." mode="summary" />
+    <Variant title="양호">
+      <FloodHistoryItem status="good" summary="배수 시설이 양호한 상태입니다." />
     </Variant>
 
-    <Variant title="주의 (summary)">
+    <Variant title="주의 (특약 카드 항상 노출)">
       <FloodHistoryItem
         status="warning"
         summary="집중호우 시 침수 이력이 1회 있습니다."
-        mode="summary"
+        :detail="detailSample"
       />
     </Variant>
 
-    <Variant title="위험 (summary)">
+    <Variant title="위험">
       <FloodHistoryItem
         status="danger"
         summary="상습 침수 구역으로 반복적인 침수 이력이 있습니다."
-        mode="summary"
-      />
-    </Variant>
-
-    <Variant title="주의 (detail, 특약 카드)">
-      <FloodHistoryItem
-        status="warning"
-        summary="집중호우 시 침수 이력이 1회 있습니다."
-        mode="detail"
-        :detail="detailSample"
       />
     </Variant>
   </Story>
