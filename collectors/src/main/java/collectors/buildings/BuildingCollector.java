@@ -32,7 +32,7 @@ public class BuildingCollector {
         Map<String, JsonNode> landCache = new HashMap<>();
         Map<String, String> parcelCache = new HashMap<>();
 
-        int ok = 0, noTitle = 0, noJuso = 0, skipped = 0, otherBjd = 0, failedPnu = 0;
+        int ok = 0, noTitle = 0, noJuso = 0, skipped = 0, otherBjd = 0, failedPnu = 0, notTarget = 0;
         Set<String> processed = new HashSet<>();   // 타일 경계에 걸친 건물 중복 방지
 
         BuildingDao.open();
@@ -117,6 +117,12 @@ public class BuildingCollector {
                                 floorCache.get(pnu), BrTitleClient.mgmBldrgstPk(title));
                         JsonNode land = landCache.get(pnu);
 
+                        // ---- 수집 대상 판정 ----
+                        if (!BuildingFilter.isTarget(floorInfo, BrTitleClient.mainPurps(title))) {
+                            notTarget++;
+                            continue;
+                        }
+
                         // ---- 적재 ----
                         BuildingDao.add(
                                 bdMgtSn,
@@ -158,6 +164,7 @@ public class BuildingCollector {
 
         System.out.println("---------------------------");
         System.out.println("적재 " + ok + "건 / 건너뜀 " + skipped
+                + "건 / 대상외(주거·설비 등) " + notTarget
                 + "건 / 표제부 미매칭 " + noTitle + "건 / juso 다리 없음 " + noJuso
                 + "건 / 타동 제외 " + otherBjd + "건 / 필지 실패 " + failedPnu + "건");
         System.out.println("API 호출 필지 수: " + titleCache.size());
