@@ -129,6 +129,7 @@
     background-color: var(--color-white);
     color: var(--color-text-main);
     font-family: var(--font-suit);
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

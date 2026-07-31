@@ -3,6 +3,7 @@
   <aside class="w-[400px] h-full">
     <SidebarHeader />
 
+    <!-- 검색창 -->
     <div class="px-6 pb-4 pt-2">
       <template v-if="!uiStore.isDetailOpen">
         <SearchBar />
@@ -21,12 +22,15 @@
       </template> -->
     </div>
 
+    <!-- 상권 요약 카드 -->
     <div class="px-6 pb-5 pt-1">
       <CommercialAiBriefing />
     </div>
 
-    <!-- TODO: -->
-    <!-- 3. 매물 리스트 -->
+    <!-- 매물 리스트 -->
+    <div class="px-6 pb-3">
+      <!-- <BuildingList /> -->
+    </div>
   </aside>
 </template>
 
@@ -35,6 +39,7 @@ import { useUiStore } from '@/stores/uiStore.js';
 import SearchBar from '../map/SearchBar.vue';
 import SidebarHeader from './SidebarHeader.vue';
 import CommercialAiBriefing from '../property/CommercialAiBriefing.vue';
+// import BuildingList from '../property/BuildingList.vue';
 
 const uiStore = useUiStore();
 </script>
