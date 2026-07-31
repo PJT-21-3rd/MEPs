@@ -21,7 +21,7 @@ defineEmits(['open-insurance', 'open-loan']);
         class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-secondary text-left"
         @click="$emit('open-insurance', 'flood')"
       >
-        <span class="w-9 h-9 shrink-0 rounded-full bg-white flex items-center justify-center">
+        <span class="w-9 h-9 shrink-0 rounded-[10px] bg-white flex items-center justify-center">
           <ShieldCheck class="w-[18px] h-[18px] text-secondary" />
         </span>
         <span class="flex-1 flex flex-col gap-0.5">
@@ -42,7 +42,7 @@ defineEmits(['open-insurance', 'open-loan']);
       class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-secondary text-left"
       @click="$emit('open-insurance', 'business')"
     >
-      <span class="w-9 h-9 shrink-0 rounded-full bg-white flex items-center justify-center">
+      <span class="w-9 h-9 shrink-0 rounded-[10px] bg-white flex items-center justify-center">
         <ShieldCheck class="w-[18px] h-[18px] text-secondary" />
       </span>
       <span class="flex-1 flex flex-col gap-0.5">
