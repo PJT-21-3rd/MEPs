@@ -96,6 +96,7 @@
   --color-text-safe: #2f8877; /* 진한 민트 (안전 텍스트 강조용) */
   --color-text-good: #4f7d2e; /* 진한 올리브그린 (양호 텍스트 강조용) */
   --color-text-warn: #8a7400; /* 진한 머스타드/황토색 (주의 텍스트 강조용) */
+  --color-text-notice: #9a3b3b; /* 진한 빨강 (문구 강조용) */
 
   /* SCORE */
   --color-status-safe: #79dcc8; /* 안전 (90~100점) - 밝은 민트 (게이지) */
