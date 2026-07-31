@@ -24,3 +24,12 @@ dependencies {
 application {
     mainClass = 'collectors.sinkhole.SinkholeListCollector'
 }
+
+// 건물 수집기 전용 실행 태스크 (기존 run은 그대로 둠)
+tasks.register('runBuilding', JavaExec) {
+    group = 'application'
+    description = '건물 데이터 수집·적재'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'collectors.buildings.BuildingCollector'
+    jvmArgs = ['-Xmx768m']
+}
