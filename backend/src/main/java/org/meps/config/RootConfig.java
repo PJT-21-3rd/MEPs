@@ -14,9 +14,11 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -162,6 +164,23 @@ public class RootConfig {
         return new DataSourceTransactionManager(
                 dataSource
         );
+    }
+
+    /**
+     * 외부 API 호출 공용 RestTemplate (지오코딩 등 짧은 호출용)
+     * 타임아웃이 빈 단위 설정이므로, 읽기 타임아웃이 긴 호출(LLM 등)은 전용 빈을 따로 등록할 것
+     */
+    @Bean
+    public RestTemplate restTemplate() {
+
+        SimpleClientHttpRequestFactory factory =
+                new SimpleClientHttpRequestFactory();
+
+        factory.setConnectTimeout(3_000);
+
+        factory.setReadTimeout(5_000);
+
+        return new RestTemplate(factory);
     }
 
     @Bean
