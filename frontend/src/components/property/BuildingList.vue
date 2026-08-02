@@ -77,9 +77,14 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUiStore } from '@/stores/uiStore.js';
 import BuildingCard from './BuildingCard.vue';
 import { Check, ChevronDown } from '@lucide/vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
+
+const router = useRouter();
+const uiStore = useUiStore();
 
 // Mock
 const mockBuildings = ref([
@@ -287,7 +292,15 @@ const sortedBuildings = computed(() => {
 });
 
 const openDetail = (buildingId) => {
-  console.log(`건물 클릭됨: ${buildingId}`);
+  console.log(`클릭된 건물 ID: ${buildingId}`);
+
+  uiStore.openBuildingDetail(buildingId);
+
+  if (router) {
+    router.push({ query: { buildingId } });
+  } else {
+    console.warn('라우터가 설정되지 않아 URL이 변경되지 않았습니다.');
+  }
 };
 </script>
 
