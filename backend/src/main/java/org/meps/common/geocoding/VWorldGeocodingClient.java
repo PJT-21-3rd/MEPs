@@ -71,6 +71,35 @@ public class VWorldGeocodingClient {
         return null;
     }
 
+    /**
+     * 지역명(법정동 등) → 지역 내부 대표 좌표.
+     * V-World의 강제 완성을 역이용한다: "역삼동" → "역삼동 601" 필지 좌표(법정동 내부의 한 점).
+     * 지오코더가 법정동명(level4L)까지 발명한 경우("서울시" → 논현동)는 null.
+     */
+    public GeocodeResult geocodeRegion(String regionNm) {
+        JsonNode response = request(regionNm, "PARCEL");
+        String status = response.path("status").asText();
+        if ("NOT_FOUND".equals(status)) {
+            return null;
+        }
+        if (!"OK".equals(status)) {
+            throw new GeocodingException("V-World 응답 오류: status=" + status
+                    + ", error=" + response.path("error").path("text").asText());
+        }
+
+        String level4L = response.path("refined").path("structure").path("level4L").asText();
+        if (level4L.isEmpty() || !regionNm.contains(level4L)) {
+            return null;
+        }
+
+        // 강제 완성으로 발명된 번지의 PNU는 의미가 없으므로 좌표만 반환한다
+        JsonNode point = response.path("result").path("point");
+        return GeocodeResult.builder()
+                .lat(point.path("y").asDouble())
+                .lng(point.path("x").asDouble())
+                .build();
+    }
+
     private JsonNode request(String keyword, String type) {
         URI uri = UriComponentsBuilder.fromHttpUrl(ENDPOINT)
                 .queryParam("service", "address")
