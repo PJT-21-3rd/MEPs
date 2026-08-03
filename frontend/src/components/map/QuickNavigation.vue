@@ -56,6 +56,9 @@ import { ref, computed } from 'vue';
 import { ChevronRight, X } from '@lucide/vue';
 import RegionColumn from './RegionColumn.vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
+import { useMapStore } from '@/stores/mapStore.js';
+
+const mapStore = useMapStore();
 
 const emit = defineEmits(['move']);
 const REGIONS = {
@@ -125,7 +128,35 @@ const confirmNav = () => {
 
   navOpen.value = false;
 
-  // 부모(지도 컴포넌트)로 이동 이벤트 전달
-  emit('move', { sido: sido.value, gu: gu.value, dong: dong.value });
+  const targetAddress = `${sido.value} ${gu.value} ${dong.value}`;
+  if (!window.naver || !window.naver.maps.Service) {
+    console.error('Geocoding 서비스가 준비되지 않았습니다. (index.html submodules=geocoder 확인)');
+    return;
+  }
+
+  // 주소를 좌표로 변환
+  window.naver.maps.Service.geocode({ query: targetAddress }, (status, response) => {
+    if (status === window.naver.maps.Service.Status.ERROR) {
+      return console.error('주소 변환 API 에러');
+    }
+
+    if (response.v2.meta.totalCount === 0) {
+      return alert('해당 지역의 좌표를 찾을 수 없습니다.');
+    }
+
+    const item = response.v2.addresses[0];
+    const targetLatLng = new window.naver.maps.LatLng(item.y, item.x);
+
+    // mapStore에 저장된 네이버 지도 객체를 꺼내서 애니메이션 이동 (morph)
+    const map = mapStore.mapInstance;
+    if (map) {
+      map.morph(targetLatLng, 15, {
+        duration: 800,
+        easing: 'easeOutCubic',
+      });
+    } else {
+      console.error('지도 객체가 아직 초기화되지 않았습니다.');
+    }
+  });
 };
 </script>
