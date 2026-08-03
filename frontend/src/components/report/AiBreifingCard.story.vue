@@ -14,20 +14,12 @@ const longBriefing =
       <AiBriefingCard />
     </Variant>
 
-    <Variant title="로딩 명시">
-      <AiBriefingCard :loading="true" />
-    </Variant>
-
     <Variant title="짧은 브리핑">
       <AiBriefingCard :loading="false" :briefing="shortBriefing" />
     </Variant>
 
     <Variant title="긴 브리핑">
       <AiBriefingCard :loading="false" :briefing="longBriefing" />
-    </Variant>
-
-    <Variant title="브리핑 텍스트 없음 (loading=false, briefing='')">
-      <AiBriefingCard :loading="false" briefing="" />
     </Variant>
   </Story>
 </template>
