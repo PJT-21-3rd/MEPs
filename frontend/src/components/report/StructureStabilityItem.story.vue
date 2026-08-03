@@ -1,6 +1,5 @@
 <script setup>
 import StructureStabilityItem from './StructureStabilityItem.vue';
-
 const detailSample = {
   dataPoints: [
     { label: '준공연도', value: '1998년' },
@@ -15,42 +14,31 @@ const detailSample = {
   },
 };
 </script>
-
 <template>
   <Story
     title="AI 리포트 컴포넌트/StructureStabilityItem"
     :layout="{ type: 'single', iframe: false }"
   >
-    <Variant title="안전 (summary)">
-      <StructureStabilityItem
-        status="safe"
-        summary="구조 안전성에 특이사항이 없습니다."
-        mode="summary"
-      />
+    <Variant title="안전">
+      <StructureStabilityItem status="safe" summary="구조 안전성에 특이사항이 없습니다." />
     </Variant>
-
-    <Variant title="양호 (summary)">
+    <Variant title="양호">
       <StructureStabilityItem
         status="good"
         summary="경미한 균열이 발견되었으나 안전 범위 내입니다."
-        mode="summary"
       />
     </Variant>
-
-    <Variant title="주의 (summary)">
+    <Variant title="주의 (특약 카드 항상 노출)">
       <StructureStabilityItem
         status="warning"
         summary="노후 건물로 정밀 점검이 필요합니다."
-        mode="summary"
-      />
-    </Variant>
-
-    <Variant title="주의 (detail, 특약 카드)">
-      <StructureStabilityItem
-        status="warning"
-        summary="노후 건물로 정밀 점검이 필요합니다."
-        mode="detail"
         :detail="detailSample"
+      />
+    </Variant>
+    <Variant title="위험">
+      <StructureStabilityItem
+        status="danger"
+        summary="위반건축물 이력이 확인되어 정밀 안전진단이 시급합니다."
       />
     </Variant>
   </Story>

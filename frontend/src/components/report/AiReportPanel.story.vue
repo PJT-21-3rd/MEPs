@@ -34,9 +34,27 @@ const warningReport = {
     '해당 건물은 화재 및 침수 이력이 확인되어 주의가 필요합니다. 관련 특약 가입을 권장합니다.',
   dangerItems: {
     structure: { status: 'good', summary: '경미한 균열이 발견되었으나 안전 범위 내입니다.' },
-    fire: { status: 'warning', summary: '최근 2년 내 소규모 화재 이력이 있습니다.' },
+    fire: {
+      status: 'warning',
+      summary: '최근 2년 내 소규모 화재 이력이 있습니다.',
+      detail: {
+        insurance: {
+          name: '화재배상책임 특약',
+          description: '화재로 인한 타인 피해 보장',
+        },
+      },
+    },
     sinkhole: { status: 'safe', summary: '지반침하 이력이 없습니다.' },
-    flood: { status: 'warning', summary: '집중호우 시 침수 이력이 1회 있습니다.' },
+    flood: {
+      status: 'warning',
+      summary: '집중호우 시 침수 이력이 1회 있습니다.',
+      detail: {
+        insurance: {
+          name: '풍수해 손해 특약',
+          description: '집중호우, 태풍 등으로 인한 침수 피해를 보장하는 특약입니다.',
+        },
+      },
+    },
   },
 };
 

@@ -14,11 +14,11 @@ defineProps({
     type: String,
     required: true,
   },
-  mode: {
-    type: String,
-    default: 'summary',
-    validator: (v) => ['summary', 'detail'].includes(v),
-  },
+  // mode: {
+  //   type: String,
+  //   default: 'summary',
+  //   validator: (v) => ['summary', 'detail'].includes(v),
+  // },
   detail: {
     type: Object,
     default: null,
@@ -36,7 +36,7 @@ defineProps({
 
     <p class="text-sm text-text-secondary">"{{ summary }}"</p>
 
-    <div v-if="mode === 'detail' && status === 'warning'" class="mt-3">
+    <div v-if="status === 'warning' && detail?.insurance" class="mt-3">
       <div v-if="detail.insurance" class="bg-surface-base rounded-lg p-3">
         <p class="text-sm font-semibold text-text-main mb-0.5">{{ detail.insurance.name }}</p>
         <p class="text-xs text-text-sub">{{ detail.insurance.description }}</p>
