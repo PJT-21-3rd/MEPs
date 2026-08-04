@@ -13,6 +13,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -104,5 +105,17 @@ class BuildingControllerIntegrationTest {
     void 상세조회_존재하지_않는_buildingId는_404를_반환한다() throws Exception {
         mockMvc.perform(get("/api/buildings/{buildingId}", "9999999999999999999999999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 상세조회_응답에_건물폴리곤이_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"footprint\""));
+        assertTrue(body.contains("MultiPolygon"));
     }
 }
