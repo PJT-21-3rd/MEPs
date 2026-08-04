@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
+import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
 import ReportBanners from './ReportBanners.vue';
 import { GRADE_META } from '@/constants/reportConstants.js';
 import ScoreGauge from './ScoreGauge.vue';
@@ -165,8 +167,20 @@ function handleClose() {
         <ChevronRight class="w-4 h-4 shrink-0" />
       </button>
 
-      <ReportBanners
+      <!-- #27: 풍수해보험 배너 -->
+      <FloodInsuranceBanner
         :flood-overlap-notice="floodOverlapNotice"
+        @open-insurance="(type) => $emit('open-insurance', type)"
+      />
+
+      <!-- #181: 의무보험 상품 노출 -->
+      <MandatoryInsuranceSection
+        :disaster-liability="reportData.disasterLiability"
+        :fire-liability="reportData.fireLiability"
+      />
+
+      <!-- #27: 사업장종합보험 + 대출 배너 -->
+      <ReportBanners
         @open-insurance="(type) => $emit('open-insurance', type)"
         @open-loan="$emit('open-loan')"
       />
