@@ -30,13 +30,13 @@
 
     <div class="relative flex-1 overflow-y-auto">
       <!-- 로드뷰 -->
+      <div class="px-4"><RoadViewImage :lat="37.5023528" :lng="127.0259463" /></div>
 
       <!-- 인포 -->
 
       <!-- 탭 + 토지/건물 -->
-
-      <!-- 리포트 생성 버튼 -->
     </div>
+    <!-- 리포트 생성 버튼 -->
   </div>
 </template>
 
@@ -45,6 +45,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUiStore } from '@/stores/uiStore.js';
 import { ChevronLeft, Heart, Share2, Sparkles } from '@lucide/vue';
+import RoadViewImage from './RoadViewImage.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
@@ -62,9 +63,13 @@ const buildingDetail = computed(() => {
     jibunAddr: '서울특별시 광진구 화양동 212',
     roadAddr: '서울특별시 광진구 광나루로 392',
     mainPurpsNm: '제2종근린생활시설',
+    platArea: '450.5',
+    totArea: '2,150.8',
     grndFlr: 12,
     ugrndFlr: 1,
-    useAprDay: '1978년 12월 29일',
+    useAprDay: '1989-12-29',
+    lat: 37.5473051,
+    lng: 127.073132,
   };
 });
 
