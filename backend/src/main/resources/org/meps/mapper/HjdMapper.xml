@@ -7,6 +7,16 @@
         <result property="hjdName" column="adstrd_nm"/>
     </resultMap>
 
+    <!-- 상권분석 통계 테이블들(hjd_flpop 등)과 같은 행정동 코드 체계인 hjd/sgg 기준 -->
+    <select id="findAllNames" resultType="org.meps.hjd.dto.HjdNameDto">
+        SELECT
+            s.sgg_nm AS sggName,
+            h.hjd_nm AS hjdNm
+        FROM hjd h
+                 JOIN sgg s ON h.sgg_cd = s.sgg_cd
+        ORDER BY s.sgg_nm, h.hjd_nm
+    </select>
+
     <select id="findByCoordinate" resultMap="hjdNavigateResultMap">
         SELECT
             b.hjd_cd,

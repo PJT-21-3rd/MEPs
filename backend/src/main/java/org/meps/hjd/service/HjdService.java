@@ -3,6 +3,7 @@ package org.meps.hjd.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.hjd.dto.HjdBboxDto;
+import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.meps.hjd.mapper.HjdMapper;
@@ -13,6 +14,11 @@ import org.springframework.stereotype.Service;
 public class HjdService {
 
     private final HjdMapper hjdMapper;
+
+    /** 서울 전체 행정동 리스트 조회 (시군구명·행정동명 순 정렬) */
+    public HjdNamesDto getNames() {
+        return HjdNamesDto.of(hjdMapper.findAllNames());
+    }
 
     public HjdNavigateResponseDto findByCoordinate(double lat, double lng) {
         HjdNavigateResponseDto result = hjdMapper.findByCoordinate(lat, lng);
