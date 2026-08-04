@@ -39,6 +39,10 @@ public class BuildingController {
 
     }
 
+    /**
+     *
+     * 통합 검색 (검색어 위치 해석) - 도로명주소/지번/건물명/지역명
+     */
     @GetMapping("/search")
     public BuildingSearchResponseDto search(@RequestParam String keyword) {
         return buildingSearchService.search(keyword);
