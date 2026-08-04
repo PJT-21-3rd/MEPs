@@ -1,13 +1,11 @@
 <script setup>
 import { Heart } from '@lucide/vue';
 
-// 부모에게서 받을 데이터 (props)
 const props = defineProps({
-  building: Object, // 건물 데이터
-  order: Number, // 선택 순서 (1,2,3 or null)
+  building: Object,
+  order: Number,
 });
 
-// 부모에게 보낼 이벤트 (emit)
 const emit = defineEmits(['toggle']);
 
 function gradeClass(grade) {
