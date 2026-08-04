@@ -1,157 +1,61 @@
 <script setup>
-import { favoriteBuildings } from '@/mocks/favorites'
+import { Heart, ArrowLeft, Scale } from '@lucide/vue';
+import { favoriteBuildings } from '@/mocks/favorites';
 
 function gradeClass(grade) {
-  if (grade === '안전') return 'bg-status-safe text-text-safe'
-  if (grade === '양호') return 'bg-status-good text-text-good'
-  if (grade === '주의') return 'bg-status-warn text-text-warn'
-  return ''
+  if (grade === '안전') return 'bg-grade-safe text-text-safe';
+  if (grade === '양호') return 'bg-grade-good text-text-good';
+  if (grade === '주의') return 'bg-grade-warn text-text-warn';
+  return '';
+}
+
+function scoreColorClass(score) {
+  if (score >= 90) return 'text-text-safe';
+  if (score >= 80) return 'text-text-good';
+  if (score >= 70) return 'text-text-warn';
+  return '';
 }
 </script>
 
 <template>
-  <div class="mypage">
-    <header class="page-header">
-      <div class="title-row">
-        <span class="back">‹</span>
-        <h1>마이페이지</h1>
+  <div class="py-5 px-4 max-w-[380px]">
+    <header class="flex items-start gap-2 mb-4">
+      <ArrowLeft :size="22" class="mt-0.5" />
+      <div>
+        <h1 class="text-lg font-bold m-0">마이페이지</h1>
+        <p class="text-[13px] text-text-sub mt-0.5">찜한 매물 {{ favoriteBuildings.length }}개</p>
       </div>
-      <p class="count">찜한 매물 {{ favoriteBuildings.length }}개</p>
     </header>
+    <p class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2">
+      <Scale :size="18" />
+      비교할 매물 2개를 선택하세요
+    </p>
 
-    <p class="guide">⊕ 비교할 매물 2개를 선택하세요</p>
+    <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
+      <li
+        v-for="building in favoriteBuildings"
+        :key="building.id"
+        class="flex items-center gap-3 py-3.5 px-4 border border-surface-gray rounded-xl"
+      >
+        <span class="shrink-0 w-5 h-5 border-2 border-surface-gray rounded-full"></span>
 
-    <ul class="card-list">
-      <li v-for="building in favoriteBuildings" :key="building.id" class="card">
-        <span class="select-circle"></span>
-
-        <div class="card-info">
-          <div class="card-title">
-            <span class="name">{{ building.name }}</span>
-            <span class="grade" :class="gradeClass(building.grade)">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[15px] font-bold">{{ building.name }}</span>
+            <span class="text-[11px] px-[7px] py-0.5 rounded" :class="gradeClass(building.grade)">
               {{ building.grade }}
             </span>
           </div>
-          <p class="address">{{ building.address }}</p>
+          <p class="text-xs text-text-sub mt-[3px]">{{ building.address }}</p>
         </div>
 
-        <div class="card-right">
-          <span class="score">{{ building.score }}</span>
-          <span class="heart">♥</span>
+        <div class="flex items-center gap-2.5 shrink-0">
+          <span class="text-[17px] font-bold" :class="scoreColorClass(building.score)">
+            {{ building.score }}
+          </span>
+          <Heart :size="18" fill="currentColor" class="text-status-like" />
         </div>
       </li>
     </ul>
   </div>
 </template>
-
-<style scoped>
-.mypage {
-  padding: 20px 16px;
-  max-width: 380px;
-}
-
-.page-header {
-  margin-bottom: 16px;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.back {
-  font-size: 22px;
-  color: var(--color-text-main);
-}
-
-.page-header h1 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.count {
-  font-size: 13px;
-  color: var(--color-text-sub);
-  margin: 2px 0 0 26px;
-}
-
-.guide {
-  font-size: 13px;
-  color: var(--color-primary);
-  margin: 0 0 12px;
-}
-
-.card-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--color-surface-gray);
-  border-radius: 12px;
-}
-
-.select-circle {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-surface-gray);
-  border-radius: 50%;
-}
-
-.card-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.name {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.grade {
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-.address {
-  font-size: 12px;
-  color: var(--color-text-sub);
-  margin: 3px 0 0;
-}
-
-.card-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.score {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--color-text-sub);
-}
-
-.heart {
-  font-size: 18px;
-  color: var(--color-status-like);
-}
-</style>
