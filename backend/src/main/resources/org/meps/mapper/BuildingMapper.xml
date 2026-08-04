@@ -42,7 +42,8 @@
                main_purps  AS mainPurpsNm,
                road_addr   AS roadAddr,
                jibun_addr  AS jibunAddr,
-               ST_AsGeoJSON(footprint) AS footprint
+               ST_AsGeoJSON(footprint) AS footprint,
+               ST_AsGeoJSON(parcel_geom) AS parcelGeom
         FROM buildings
         WHERE bd_mgt_sn = #{buildingId}
     </select>
