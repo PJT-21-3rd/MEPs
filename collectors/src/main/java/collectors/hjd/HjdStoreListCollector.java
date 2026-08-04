@@ -1,4 +1,4 @@
-package collectors.adstrd;
+package collectors.hjd;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -8,10 +8,10 @@ import java.util.Properties;
 import java.util.Set;
 
 
-public class AdstrdStoreListCollector {
+public class HjdStoreListCollector {
     private static Properties loadProperties() {
         Properties prop = new Properties();
-        try (InputStream input = AdstrdStoreListCollector.class
+        try (InputStream input = HjdStoreListCollector.class
                 .getClassLoader()
                 .getResourceAsStream("application.properties")) {
             if (input == null) return null;
@@ -31,17 +31,17 @@ public class AdstrdStoreListCollector {
         String user = prop.getProperty("db.username");
         String pass = prop.getProperty("db.password");
 
-        String sql = "INSERT INTO adstrd_store (yyqu, adstrd_cd, induty_cd, induty_nm, stor_co) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO hjd_store (yyqu, hjd_cd, induty_cd, induty_nm, stor_co) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(url, user, pass);
              PreparedStatement pstmt = conn.prepareStatement(sql);
              BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFilePath), StandardCharsets.UTF_8))) {
 
-            Set<String> validAdstrdCodes = new HashSet<>();
+            Set<String> validHjdCodes = new HashSet<>();
             try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT adstrd_cd FROM adstrd")) {
+                 ResultSet rs = stmt.executeQuery("SELECT hjd_cd FROM hjd")) {
                 while (rs.next()) {
-                    validAdstrdCodes.add(rs.getString("adstrd_cd"));
+                    validHjdCodes.add(rs.getString("hjd_cd"));
                 }
             }
 
@@ -58,15 +58,15 @@ public class AdstrdStoreListCollector {
                 if (tokens.length < 5) continue;
 
                 String yyqu = tokens[0].trim();
-                String adstrdCd = tokens[1].trim();
+                String hjdCd = tokens[1].trim();
 
-                if (adstrdCd.length() > 8) {
-                    adstrdCd = adstrdCd.substring(0, 8);
+                if (hjdCd.length() > 8) {
+                    hjdCd = hjdCd.substring(0, 8);
                 }
 
 
-                if (!validAdstrdCodes.contains(adstrdCd)) {
-                    missingCodes.add(adstrdCd);
+                if (!validHjdCodes.contains(hjdCd)) {
+                    missingCodes.add(hjdCd);
                     skipCount++;
                     continue;
                 }
@@ -81,7 +81,7 @@ public class AdstrdStoreListCollector {
                 }
 
                 pstmt.setString(1, yyqu);
-                pstmt.setString(2, adstrdCd);
+                pstmt.setString(2, hjdCd);
                 pstmt.setString(3, indutyCd);
                 pstmt.setString(4, indutyNm);
                 pstmt.setInt(5, storCo);

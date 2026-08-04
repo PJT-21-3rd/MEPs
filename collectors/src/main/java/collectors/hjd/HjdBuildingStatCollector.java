@@ -1,4 +1,4 @@
-package collectors.adstrd;
+package collectors.hjd;
 
 import collectors.common.Db;
 
@@ -6,9 +6,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class AdstrdBuildingStatCollector {
+public class HjdBuildingStatCollector {
     private static final String AGGREGATE_AND_UPSERT_SQL =
-            "INSERT INTO adstrd_stat (adstrd_cd, avg_bld_age, bld_cnt, computed_at) " +
+            "INSERT INTO hjd_stat (hjd_cd, avg_bld_age, bld_cnt, computed_at) " +
                     "SELECT " +
                     "    hjd_cd, " +
                     "    ROUND(AVG(bld_age), 1) AS avg_bld_age, " +
@@ -24,7 +24,7 @@ public class AdstrdBuildingStatCollector {
                     "            ELSE NULL " +
                     "        END AS bld_age " +
                     "    FROM buildings b " +
-                    "    INNER JOIN adstrd a ON a.adstrd_cd = b.hjd_cd " +
+                    "    INNER JOIN hjd h ON h.hjd_cd = b.hjd_cd " +
                     ") t " +
                     "GROUP BY hjd_cd " +
                     "HAVING AVG(bld_age) IS NOT NULL " +
