@@ -2,6 +2,8 @@ package org.meps.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.meps.building.exception.InvalidBoundsException;
+import org.meps.building.exception.InvalidKeywordException;
+import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,10 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /** 필수 파라미터 누락/타입 오류, 좌표 범위 오류 → 400 */
+    /** 필수 파라미터 누락/타입 오류, 좌표 범위 오류, keyword 공백 → 400 */
     @ExceptionHandler({
             InvalidBoundsException.class,
+            InvalidKeywordException.class,
             MissingServletRequestParameterException.class,
             MethodArgumentTypeMismatchException.class
     })
@@ -31,6 +34,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> handleHjdNotFound(HjdNotFoundException e) {
         log.warn("조회 결과 없음: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    /** 지오코딩/외부 API 실패 → 502 */
+    @ExceptionHandler(GeocodingException.class)
+    public ResponseEntity<Void> handleGeocodingFailure(GeocodingException e) {
+        log.error("지오코딩/외부 API 실패: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
     }
 
     /** 매핑되지 않은 URL → 404 */

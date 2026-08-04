@@ -35,4 +35,48 @@
         LIMIT #{limit}
     </select>
 
+    <!-- 통합 검색: PNU 정확 매칭 -->
+    <select id="findByPnu" resultType="org.meps.building.dto.BuildingPointDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE pnu = #{pnu}
+        LIMIT 1
+    </select>
+
+    <!--
+      통합 검색: 지오코딩 좌표 기준 최근접 건물 (약 ±200m MBR 프리필터 후 거리순)
+      - MBR 폴리곤은 WKT 경로라 위도-우선, ST_Distance_Sphere 안 POINT() 함수는 경도-우선
+    -->
+    <select id="findNearest" resultType="org.meps.building.dto.BuildingPointDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE MBRContains(
+                      ST_GeomFromText(
+                              CONCAT('POLYGON((',
+                                     #{lat} - 0.002, ' ', #{lng} - 0.002, ',',
+                                     #{lat} - 0.002, ' ', #{lng} + 0.002, ',',
+                                     #{lat} + 0.002, ' ', #{lng} + 0.002, ',',
+                                     #{lat} + 0.002, ' ', #{lng} - 0.002, ',',
+                                     #{lat} - 0.002, ' ', #{lng} - 0.002, '))'),
+                              4326),
+                      center)
+        ORDER BY ST_Distance_Sphere(center, ST_SRID(POINT(#{lng}, #{lat}), 4326))
+        LIMIT 1
+    </select>
+
+    <!-- 통합 검색: 건물명 전방일치 (가장 짧은 이름 = 정확 일치에 가까운 순) -->
+    <select id="findByName" resultType="org.meps.building.dto.BuildingPointDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE bld_nm LIKE CONCAT(#{keyword}, '%')
+        ORDER BY CHAR_LENGTH(bld_nm)
+        LIMIT 1
+    </select>
+
 </mapper>

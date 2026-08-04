@@ -74,6 +74,24 @@ class VWorldGeocodingClientTest {
     }
 
     @Test
+    void 공백_섞인_지번도_검증을_통과한다() {
+        // "18 - 1" 입력 - V-World는 "18-1"로 정규화해 응답하고(실측),
+        // 검증은 본번 숫자("18")의 포함 여부만 보므로 공백 표기와 무관하게 통과해야 한다
+        server.expect(method(HttpMethod.GET))
+                .andExpect(typeIs("PARCEL"))
+                .andRespond(withSuccess(okJson(
+                                "중곡동", "1121510100100180001", "18-1",
+                                "서울특별시 광진구 중곡동 18-1", 127.0842, 37.5658),
+                        MediaType.APPLICATION_JSON));
+
+        GeocodeResult result = client.geocode("서울특별시 광진구 중곡동 18 - 1");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getPnu()).isEqualTo("1121510100100180001");
+        server.verify();
+    }
+
+    @Test
     void 도로명주소는_ROAD_우선_매칭되고_PNU는_null이다() {
         server.expect(method(HttpMethod.GET))
                 .andExpect(typeIs("ROAD"))
@@ -135,6 +153,49 @@ class VWorldGeocodingClientTest {
                 .andRespond(withSuccess(NOT_FOUND_JSON, MediaType.APPLICATION_JSON));
 
         assertThat(client.geocode("존재하지않는주소 999999")).isNull();
+        server.verify();
+    }
+
+    @Test
+    void 지역_지오코딩은_강제완성_좌표를_지역_내부_좌표로_반환한다() {
+        // "역삼동" → V-World가 "역삼동 601"로 완성 - 법정동 내부의 한 점이므로 신뢰
+        server.expect(method(HttpMethod.GET))
+                .andExpect(typeIs("PARCEL"))
+                .andRespond(withSuccess(okJson(
+                                "역삼동", "1168010100106010000", "601",
+                                "서울특별시 강남구 역삼동 601", 127.0256, 37.5045),
+                        MediaType.APPLICATION_JSON));
+
+        GeocodeResult result = client.geocodeRegion("역삼동");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getLat()).isEqualTo(37.5045);
+        assertThat(result.getLng()).isEqualTo(127.0256);
+        // 발명된 번지의 PNU는 신뢰하지 않는다
+        assertThat(result.getPnu()).isNull();
+        server.verify();
+    }
+
+    @Test
+    void 지역_지오코딩도_동명까지_발명한_응답은_불신한다() {
+        // "서울시" → 논현동으로 강제 완성 - 입력에 없는 동명이므로 거부
+        server.expect(method(HttpMethod.GET))
+                .andExpect(typeIs("PARCEL"))
+                .andRespond(withSuccess(okJson(
+                                "논현동", "1168010800100010000", "1",
+                                "서울특별시 강남구 논현동 1", 127.0202, 37.5159),
+                        MediaType.APPLICATION_JSON));
+
+        assertThat(client.geocodeRegion("서울시")).isNull();
+        server.verify();
+    }
+
+    @Test
+    void 지역_지오코딩_NOT_FOUND는_null을_반환한다() {
+        server.expect(method(HttpMethod.GET))
+                .andRespond(withSuccess(NOT_FOUND_JSON, MediaType.APPLICATION_JSON));
+
+        assertThat(client.geocodeRegion("존재하지않는동")).isNull();
         server.verify();
     }
 
