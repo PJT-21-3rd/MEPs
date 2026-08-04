@@ -1,4 +1,4 @@
-package collectors.adstrd;
+package collectors.hjd;
 
 import collectors.common.Config;
 import collectors.common.Db;
@@ -11,7 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class AdstrdFlpopCollector {
+public class HjdFlpopCollector {
 
     private static final int BATCH_SIZE = 10000;
 
@@ -20,8 +20,8 @@ public class AdstrdFlpopCollector {
 
         long startTime = System.currentTimeMillis();
 
-        String insertSql = "INSERT IGNORE INTO adstrd_flpop (" +
-                "yyqu, adstrd_cd, tot_flpop, agrde_10, agrde_20, agrde_30, agrde_40, agrde_50, agrde_60) " +
+        String insertSql = "INSERT IGNORE INTO hjd_flpop (" +
+                "yyqu, hjd_cd, tot_flpop, agrde_10, agrde_20, agrde_30, agrde_40, agrde_50, agrde_60) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (FileInputStream fis = new FileInputStream(csvFilePath);
@@ -54,7 +54,7 @@ public class AdstrdFlpopCollector {
                     continue;
                 }
 
-                String adstrdCd = tokens[1].trim();
+                String hjdCd = tokens[1].trim();
                 int totFlpop = parseInteger(tokens[3]);
                 int agrde10 = parseInteger(tokens[4]);
                 int agrde20 = parseInteger(tokens[5]);
@@ -64,7 +64,7 @@ public class AdstrdFlpopCollector {
                 int agrde60 = parseInteger(tokens[9]);
 
                 pstmt.setString(1, yyqu);
-                pstmt.setString(2, adstrdCd);
+                pstmt.setString(2, hjdCd);
                 pstmt.setInt(3, totFlpop);
                 pstmt.setInt(4, agrde10);
                 pstmt.setInt(5, agrde20);
