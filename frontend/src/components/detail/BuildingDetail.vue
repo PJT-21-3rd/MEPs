@@ -3,7 +3,7 @@
     <!-- 임시 페이지 -->
     <!-- Todos: -->
     <!-- 헤더 -->
-    <header class="flex items-center justify-between px-4 py-3">
+    <header class="flex items-center justify-between px-4 py-3 border-t border-surface-base">
       <button
         @click="handleBack"
         class="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[15px] text-text-main hover:bg-surface-base transition-colors"
@@ -12,11 +12,18 @@
         <ChevronLeft :size="20" /> 목록
       </button>
       <div class="flex items-center gap-1">
-        <button class="rounded-full p-2 hover:bg-surface-base" aria-label="찜하기">
-          <Heart :size="20" :class="{}" />
+        <button
+          @click="toggleFavorite"
+          class="rounded-full p-2 hover:bg-surface-base"
+          aria-label="찜하기"
+        >
+          <Heart
+            :size="20"
+            :class="isFavorite ? 'fill-status-like text-status-like' : 'text-text-sub'"
+          />
         </button>
         <button class="rounded-full p-2 hover:bg-surface-base" aria-label="공유">
-          <Share2 :size="19" />
+          <Share2 :size="19" class="text-text-sub" />
         </button>
       </div>
     </header>
@@ -34,13 +41,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUiStore } from '@/stores/uiStore.js';
 import { ChevronLeft, Heart, Share2, Sparkles } from '@lucide/vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
+
+const isFavorite = ref(false);
+const toggleFavorite = () => {
+  isFavorite.value = !isFavorite.value;
+};
 
 // 임시 건물 상세 데이터 (추후 API 연동)
 const buildingDetail = computed(() => {
