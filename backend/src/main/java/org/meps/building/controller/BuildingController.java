@@ -2,7 +2,9 @@ package org.meps.building.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.building.dto.BuildingDetailDto;
+import org.meps.building.dto.BuildingSearchResponseDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
+import org.meps.building.service.BuildingSearchService;
 import org.meps.building.service.BuildingService;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class BuildingController {
 
     private final BuildingService buildingService;
+    private final BuildingSearchService buildingSearchService;
 
     /**
      * 위치 기반 매물 리스트 조회
@@ -33,5 +36,12 @@ public class BuildingController {
     @GetMapping("/{buildingId}")
     public BuildingDetailDto detail(@PathVariable String buildingId) {
         return buildingService.getBuildingDetail(buildingId);
+
+    }
+
+    @GetMapping("/search")
+    public BuildingSearchResponseDto search(@RequestParam String keyword) {
+        return buildingSearchService.search(keyword);
+
     }
 }

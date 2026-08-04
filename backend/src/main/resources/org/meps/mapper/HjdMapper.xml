@@ -17,4 +17,34 @@
             LIMIT 1
     </select>
 
+    <!--
+      지역명(행정동 전방일치 또는 시군구명)으로 매칭된 경계들의 합집합 bbox
+      - MySQL 축 순서 주의: WKT 경로(ST_GeomFromText 등)는 위도-우선, POINT() 함수 경로는 경도-우선.
+        ST_SRID(geom, 0)으로 SRID를 벗기면 내부 저장 순서가 노출되어 ST_X=경도, ST_Y=위도
+      - Envelope 링 꼭짓점: 1번=(minX,minY)=SW, 3번=(maxX,maxY)=NE
+      - HAVING COUNT(*) > 0: 매칭 없으면 행 자체를 반환하지 않아 mapper 결과가 null
+    -->
+    <select id="findRegionBboxByName" resultType="org.meps.hjd.dto.HjdBboxDto">
+        SELECT
+            MIN(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLat,
+            MIN(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLng,
+            MAX(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLat,
+            MAX(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLng
+        FROM hjd_boundary
+        WHERE hjd_nm LIKE CONCAT(#{keyword}, '%')
+           OR sgg_nm = #{keyword}
+        HAVING COUNT(*) > 0
+    </select>
+
+    <select id="findBboxByHjdCd" resultType="org.meps.hjd.dto.HjdBboxDto">
+        SELECT
+            MIN(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLat,
+            MIN(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLng,
+            MAX(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLat,
+            MAX(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLng
+        FROM hjd_boundary
+        WHERE hjd_cd = #{hjdCd}
+        HAVING COUNT(*) > 0
+    </select>
+
 </mapper>
