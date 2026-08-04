@@ -3,6 +3,7 @@ package org.meps.hjd.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
+import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,18 @@ class HjdServiceIntegrationTest {
 
         assertThat(result.getHjdCode()).isNotBlank();
         assertThat(result.getHjdName()).isNotBlank();
+    }
+
+    @Test
+    void 행정동_리스트는_서울_전체_425건을_반환한다() {
+        HjdNamesDto result = hjdService.getNames();
+
+        assertThat(result.getRegions()).hasSize(425);
+        assertThat(result.getRegions())
+                .allSatisfy(region -> {
+                    assertThat(region.getSggName()).isNotBlank();
+                    assertThat(region.getHjdNm()).isNotBlank();
+                });
     }
 
     @Test
