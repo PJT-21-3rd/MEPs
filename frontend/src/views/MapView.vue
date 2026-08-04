@@ -10,6 +10,7 @@
       </div>
       <div v-else><QuickNavigation /></div>
 
+      <MapResearch />
       <MapControls />
     </main>
   </div>
@@ -18,6 +19,7 @@
 <script setup>
 import MainSidebar from '@/components/layout/MainSidebar.vue';
 import MapControls from '@/components/map/MapControls.vue';
+import MapResearch from '@/components/map/MapResearch.vue';
 import NaverMap from '@/components/map/NaverMap.vue';
 import QuickNavigation from '@/components/map/QuickNavigation.vue';
 import SearchBar from '@/components/map/SearchBar.vue';
