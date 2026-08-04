@@ -1,7 +1,9 @@
 package org.meps.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.meps.building.exception.BuildingNotFoundException;
 import org.meps.building.exception.InvalidBoundsException;
+import org.meps.building.exception.InvalidBuildingIdException;
 import org.meps.building.exception.InvalidKeywordException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.HjdNotFoundException;
@@ -20,6 +22,7 @@ public class GlobalExceptionHandler {
     /** 필수 파라미터 누락/타입 오류, 좌표 범위 오류, keyword 공백 → 400 */
     @ExceptionHandler({
             InvalidBoundsException.class,
+            InvalidBuildingIdException.class,
             InvalidKeywordException.class,
             MissingServletRequestParameterException.class,
             MethodArgumentTypeMismatchException.class
@@ -47,6 +50,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Void> handleNoHandlerFound(NoHandlerFoundException e) {
         log.warn("존재하지 않는 경로 요청: {} {}", e.getHttpMethod(), e.getRequestURL());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+
+    /** 존재하지 않는 건물 → 404 */
+    @ExceptionHandler(BuildingNotFoundException.class)
+    public ResponseEntity<Void> handleBuildingNotFound(BuildingNotFoundException e) {
+        log.warn("건물 조회 결과 없음: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 

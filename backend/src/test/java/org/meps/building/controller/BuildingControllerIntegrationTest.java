@@ -79,4 +79,30 @@ class BuildingControllerIntegrationTest {
                         .param("zoom", "17"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void 상세조회_정상_요청은_200을_반환한다() throws Exception {
+        // 동인빌딩 (광진구 중곡동)
+        mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180054000039"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 상세조회_도로명주소가_없는_건물도_200을_반환한다() throws Exception {
+        // 아차산관리사무소 — 건축물대장에 도로명주소 미등재 (결측 필드는 null)
+        mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 상세조회_buildingId_형식이_잘못되면_400을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/{buildingId}", "abc"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 상세조회_존재하지_않는_buildingId는_404를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/{buildingId}", "9999999999999999999999999"))
+                .andExpect(status().isNotFound());
+    }
 }

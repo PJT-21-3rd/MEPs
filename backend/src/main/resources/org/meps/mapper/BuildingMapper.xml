@@ -35,6 +35,17 @@
         LIMIT #{limit}
     </select>
 
+    <!-- 건물 기본 정보 조회 -->
+    <select id="findBuildingDetail" resultType="org.meps.building.dto.BuildingDetailDto">
+        SELECT bd_mgt_sn   AS buildingId,
+               bld_nm      AS bldNm,
+               main_purps  AS mainPurpsNm,
+               road_addr   AS roadAddr,
+               jibun_addr  AS jibunAddr
+        FROM buildings
+        WHERE bd_mgt_sn = #{buildingId}
+    </select>
+
     <!-- 통합 검색: PNU 정확 매칭 -->
     <select id="findByPnu" resultType="org.meps.building.dto.BuildingPointDto">
         SELECT bd_mgt_sn            AS buildingId,

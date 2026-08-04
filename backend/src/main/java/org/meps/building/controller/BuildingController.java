@@ -1,14 +1,12 @@
 package org.meps.building.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.building.dto.BuildingDetailDto;
 import org.meps.building.dto.BuildingSearchResponseDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
 import org.meps.building.service.BuildingSearchService;
 import org.meps.building.service.BuildingService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/buildings")
@@ -33,10 +31,21 @@ public class BuildingController {
     }
 
     /**
+     * 건물 기본 상세 조회
+     */
+    @GetMapping("/{buildingId}")
+    public BuildingDetailDto detail(@PathVariable String buildingId) {
+        return buildingService.getBuildingDetail(buildingId);
+
+    }
+
+    /**
+     *
      * 통합 검색 (검색어 위치 해석) - 도로명주소/지번/건물명/지역명
      */
     @GetMapping("/search")
     public BuildingSearchResponseDto search(@RequestParam String keyword) {
         return buildingSearchService.search(keyword);
+
     }
 }

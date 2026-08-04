@@ -2,7 +2,10 @@ package org.meps.building.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.meps.building.dto.BuildingDetailDto;
+
 import org.meps.building.dto.BuildingPointDto;
+
 import org.meps.building.dto.NearbyBuildingDto;
 
 import java.util.List;
@@ -18,9 +21,15 @@ public interface BuildingMapper {
             @Param("limit") int limit
     );
 
+
+    BuildingDetailDto findBuildingDetail(
+            @Param("buildingId") String buildingId
+    );
+
     BuildingPointDto findByPnu(@Param("pnu") String pnu);
 
     BuildingPointDto findNearest(@Param("lat") double lat, @Param("lng") double lng);
 
     BuildingPointDto findByName(@Param("keyword") String keyword);
+
 }
