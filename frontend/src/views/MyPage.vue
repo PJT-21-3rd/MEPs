@@ -1,6 +1,37 @@
 <script setup>
 import { Heart, ArrowLeft, Scale } from '@lucide/vue';
 import { favoriteBuildings } from '@/mocks/favorites';
+import { ref, computed } from 'vue';
+
+const MAX_SELECT = 3;
+const selectedIds = ref([]);
+const guideText = computed(() => {
+  const count = selectedIds.value.length;
+  if (count === 0) return '비교할 매물을 선택하세요';
+  if (count === 1) return '하나 더 선택해주세요';
+  return '비교할 매물이 선택되었어요';
+});
+
+function toggleSelect(id) {
+  const index = selectedIds.value.indexOf(id);
+
+  if (index !== -1) {
+    // 이미 선택된 카드 → 해제
+    selectedIds.value.splice(index, 1);
+  } else {
+    // 새로 선택하는 카드
+    if (selectedIds.value.length >= MAX_SELECT) {
+      // 이미 최대(3개)면 → 제일 오래된 것 제거
+      selectedIds.value.shift();
+    }
+    selectedIds.value.push(id);
+  }
+}
+
+function selectOrder(id) {
+  const index = selectedIds.value.indexOf(id);
+  return index === -1 ? null : index + 1;
+}
 
 function gradeClass(grade) {
   if (grade === '안전') return 'bg-grade-safe text-text-safe';
@@ -28,16 +59,27 @@ function scoreColorClass(score) {
     </header>
     <p class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2">
       <Scale :size="18" />
-      비교할 매물 2개를 선택하세요
+      {{ guideText }}
     </p>
 
     <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
       <li
         v-for="building in favoriteBuildings"
         :key="building.id"
-        class="flex items-center gap-3 py-3.5 px-4 border border-surface-gray rounded-xl"
+        @click="toggleSelect(building.id)"
+        class="flex items-center gap-3 py-3.5 px-4 border rounded-xl cursor-pointer"
+        :class="selectOrder(building.id) ? 'border-primary bg-surface-blue' : 'border-surface-gray'"
       >
-        <span class="shrink-0 w-5 h-5 border-2 border-surface-gray rounded-full"></span>
+        <span
+          class="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center text-[11px] font-bold"
+          :class="
+            selectOrder(building.id)
+              ? 'bg-primary border-primary text-white'
+              : 'border-surface-gray'
+          "
+        >
+          {{ selectOrder(building.id) }}
+        </span>
 
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5">
