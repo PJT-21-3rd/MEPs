@@ -41,7 +41,8 @@
                bld_nm      AS bldNm,
                main_purps  AS mainPurpsNm,
                road_addr   AS roadAddr,
-               jibun_addr  AS jibunAddr
+               jibun_addr  AS jibunAddr,
+               ST_AsGeoJSON(footprint) AS footprint
         FROM buildings
         WHERE bd_mgt_sn = #{buildingId}
     </select>

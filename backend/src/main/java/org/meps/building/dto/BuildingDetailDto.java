@@ -1,5 +1,6 @@
 package org.meps.building.dto;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.*;
 
 @Builder
@@ -16,4 +17,6 @@ public class BuildingDetailDto {
     private String roadAddr;
     private String jibunAddr;
 
+    @JsonRawValue
+    private String footprint;
 }
