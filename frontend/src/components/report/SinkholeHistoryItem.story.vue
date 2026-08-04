@@ -11,40 +11,26 @@ const detailSample = {
 
 <template>
   <Story title="AI 리포트 컴포넌트/SinkholeHistoryItem" :layout="{ type: 'single', iframe: false }">
-    <Variant title="안전 (summary)">
-      <SinkholeHistoryItem status="safe" summary="지반침하 이력이 없습니다." mode="summary" />
+    <Variant title="안전">
+      <SinkholeHistoryItem status="safe" summary="지반침하 이력이 없습니다." />
     </Variant>
 
-    <Variant title="양호 (summary)">
-      <SinkholeHistoryItem
-        status="good"
-        summary="최근 지질 조사 결과 안정적입니다."
-        mode="summary"
-      />
+    <Variant title="양호">
+      <SinkholeHistoryItem status="good" summary="최근 지질 조사 결과 안정적입니다." />
     </Variant>
 
-    <Variant title="주의 (summary)">
+    <Variant title="주의 (특약 카드 항상 노출)">
       <SinkholeHistoryItem
         status="warning"
         summary="인근 지역 지반침하 사례가 보고되었습니다."
-        mode="summary"
+        :detail="detailSample"
       />
     </Variant>
 
-    <Variant title="위험 (summary)">
+    <Variant title="위험">
       <SinkholeHistoryItem
         status="danger"
         summary="반경 500m 내 지반침하 이력이 반복적으로 확인되었습니다."
-        mode="summary"
-      />
-    </Variant>
-
-    <Variant title="주의(detail, 특약 카드)">
-      <SinkholeHistoryItem
-        status="warning"
-        summary="인근 지역 지반침하 사례가 보고되었습니다."
-        mode="detail"
-        :detail="detailSample"
       />
     </Variant>
   </Story>

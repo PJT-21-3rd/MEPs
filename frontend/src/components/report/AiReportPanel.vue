@@ -1,5 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import ReportBanners from './ReportBanners.vue';
 import { GRADE_META } from '@/constants/reportConstants.js';
 import ScoreGauge from './ScoreGauge.vue';
 import AiBriefingCard from './AiBriefingCard.vue';
@@ -12,84 +14,86 @@ const props = defineProps({
     type: [String, Number],
     required: true,
   },
-  // 상세 뷰 헤더의 건물명 표시용 (예: "동양빌딩")
   buildingName: {
     type: String,
     default: '',
   },
-  // Histoire 테스트 전용: 값이 있으면 API 호출 없이 이 데이터로 초기화한다
   initialReportData: {
     type: Object,
     default: null,
   },
-  // // Histoire 테스트 전용: true면 API 호출 없이 로딩 상태를 계속 유지한다
   forceLoading: {
     type: Boolean,
     default: false,
   },
 });
 
-const emit = defineEmits(['close']); // 패널 닫기
+const emit = defineEmits(['close', 'open-insurance', 'open-loan']);
+const router = useRouter();
 
 const currentView = ref('summary');
 const isLoading = ref(true);
-const hasError = ref(false);
 const reportData = ref(null);
 
-// detail 헤더의 등급·점수 배지용 (예: "주의 · 74점")
 const gradeMeta = computed(() => {
   if (!reportData.value) return null;
   return GRADE_META[reportData.value.grade];
 });
 
-// 리포트 데이터 불러오기 (initialReportData 있으면 API 호출 스킵)
+// 침수이력이 주의 등급일 때만 풍수해보험 배너 아래 중복 안내 문구 노출
+const floodOverlapNotice = computed(() => {
+  if (reportData.value?.dangerItems?.flood?.status === 'warning') {
+    return '침수이력 추천 특약의 "풍수해 특약"과 보장이 중복돼요';
+  }
+  return '';
+});
+
 async function loadReport() {
   if (props.forceLoading) {
     isLoading.value = true;
-    hasError.value = false;
     currentView.value = 'summary';
-    return; // 로딩 상태 유지
+    return;
   }
 
   if (props.initialReportData) {
     reportData.value = props.initialReportData;
     currentView.value = 'summary';
-    hasError.value = false;
     isLoading.value = false;
     return;
   }
 
   isLoading.value = true;
-  hasError.value = false;
   currentView.value = 'summary';
   try {
     reportData.value = await fetchReportData(props.buildingId);
   } catch {
-    hasError.value = true;
+    // API 실패(존재하지 않는 buildingId 등) -> 404 페이지로 이동
+    // TODO: 404 라우트 이름/경로는 router/index.js에 NotFoundView 등록 후 확정 필요
+    router.push({ name: 'NotFound' });
+    return;
   } finally {
     isLoading.value = false;
   }
 }
 
 onMounted(loadReport);
-watch(() => props.buildingId, loadReport); // 다른 건물 클릭 시 리포트 다시 조회
+watch(() => props.buildingId, loadReport);
 
 function openDetail() {
-  currentView.value = 'detail'; // 상세 진단 리포트로 전환
+  currentView.value = 'detail';
 }
 
 function backToSummary() {
-  currentView.value = 'summary'; // 요약(AI 안심 진단 리포트)로 복귀
+  currentView.value = 'summary';
 }
 
 function handleClose() {
-  emit('close'); // 패널 닫기 -> 건물 상세로 복귀
+  emit('close');
 }
 </script>
 
 <template>
   <div class="w-full h-full bg-white flex flex-col overflow-y-auto">
-    <!-- 헤더: 안심 진단일 때만 닫기, 상세 뷰일 때만 뒤로가기 버튼 -->
     <div class="flex items-center gap-4 px-4 py-4.5 border-b border-surface-gray">
       <button
         v-if="currentView === 'detail'"
@@ -101,7 +105,6 @@ function handleClose() {
         <arrow-left class="w-4 h-4" />
       </button>
 
-      <!-- summary 뷰: 아이콘 + 타이틀 한 줄 -->
       <p
         v-if="currentView === 'summary'"
         class="flex-1 flex items-center gap-1.5 text-[17px] font-Regular text-text-main"
@@ -110,7 +113,6 @@ function handleClose() {
         AI 안심 진단 리포트
       </p>
 
-      <!-- detail 뷰: 건물명 + 타이틀 2줄 + 우측 등급/점수 배지 -->
       <div v-else class="flex-1 flex items-center justify-between gap-2">
         <div class="flex flex-col gap-0.5">
           <span class="text-[13px] text-text-sub">{{ buildingName }}</span>
@@ -128,7 +130,6 @@ function handleClose() {
         </span>
       </div>
 
-      <!-- summary 뷰일 때만 닫기 버튼 표시 -->
       <button
         v-if="currentView === 'summary'"
         type="button"
@@ -145,7 +146,7 @@ function handleClose() {
       리포트를 불러오는 중이에요...
     </div>
 
-    <!-- summary 뷰: 스코어 + 브리핑 + 진단근거 4개 + 상세보기 CTA -->
+    <!-- summary 뷰 -->
     <div v-else-if="currentView === 'summary'" class="flex-1 flex flex-col gap-5 px-4 py-2">
       <div class="flex flex-col gap-2">
         <ScoreGauge :score="reportData.score" :grade="reportData.grade" />
@@ -163,9 +164,15 @@ function handleClose() {
         <span>4대 근거 전체 상세 진단 리포트 보기</span>
         <ChevronRight class="w-4 h-4 shrink-0" />
       </button>
+
+      <ReportBanners
+        :flood-overlap-notice="floodOverlapNotice"
+        @open-insurance="(type) => $emit('open-insurance', type)"
+        @open-loan="$emit('open-loan')"
+      />
     </div>
 
-    <!-- detail 뷰: 상세 진단 리포트 (추후 구현 예정, 지금은 placeholder) -->
+    <!-- detail 뷰: 상세 진단 리포트 (#32에서 구현 예정) -->
     <div
       v-else-if="currentView === 'detail'"
       class="flex-1 flex items-center justify-center text-sm text-text-sub"
