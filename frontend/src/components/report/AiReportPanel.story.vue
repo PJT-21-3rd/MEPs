@@ -12,6 +12,16 @@ const safeReport = {
     sinkhole: { status: 'safe', summary: '지반침하 이력이 없습니다.' },
     flood: { status: 'safe', summary: '침수 이력이 없습니다.' },
   },
+  disasterLiability: {
+    required: false,
+    description: '1층 미해당 · 의무 가입 대상 아님',
+    evidenceTags: [],
+  },
+  fireLiability: {
+    required: false,
+    description: '다중이용업소 미해당 · 바닥면적 기준 미달',
+    evidenceTags: [],
+  },
 };
 
 const goodReport = {
@@ -24,6 +34,16 @@ const goodReport = {
     fire: { status: 'good', summary: '소방시설 점검이 최근 완료되었습니다.' },
     sinkhole: { status: 'safe', summary: '지반침하 이력이 없습니다.' },
     flood: { status: 'good', summary: '배수 시설이 양호한 상태입니다.' },
+  },
+  disasterLiability: {
+    required: false,
+    description: '1층 미해당 · 의무 가입 대상 아님',
+    evidenceTags: [],
+  },
+  fireLiability: {
+    required: false,
+    description: '다중이용업소 미해당 · 바닥면적 기준 미달',
+    evidenceTags: [],
   },
 };
 
@@ -56,6 +76,16 @@ const warningReport = {
       },
     },
   },
+  disasterLiability: {
+    required: true,
+    description: '1층 음식점 의무 가입 · 미가입 시 과태료 최대 300만 원',
+    evidenceTags: ['지상 1층', '업종 카페'],
+  },
+  fireLiability: {
+    required: false,
+    description: '다중이용업소 미해당 · 바닥면적 기준 미달',
+    evidenceTags: [],
+  },
 };
 
 const dangerReport = {
@@ -68,6 +98,16 @@ const dangerReport = {
     fire: { status: 'danger', summary: '반복적인 화재 이력이 확인되었습니다.' },
     sinkhole: { status: 'warning', summary: '인근 지역 지반침하 사례가 보고되었습니다.' },
     flood: { status: 'danger', summary: '상습 침수 구역으로 반복적인 침수 이력이 있습니다.' },
+  },
+  disasterLiability: {
+    required: true,
+    description: '1층 음식점 의무 가입 · 미가입 시 과태료 최대 300만 원',
+    evidenceTags: ['지상 1층', '업종 음식점'],
+  },
+  fireLiability: {
+    required: true,
+    description: '다중이용업소 해당 · 의무 가입 대상',
+    evidenceTags: ['다중이용업소'],
   },
 };
 </script>
