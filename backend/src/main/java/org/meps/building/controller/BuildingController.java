@@ -1,12 +1,10 @@
 package org.meps.building.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.building.dto.BuildingDetailDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
 import org.meps.building.service.BuildingService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/buildings")
@@ -27,5 +25,13 @@ public class BuildingController {
             @RequestParam int zoom) {
 
         return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom);
+    }
+
+    /**
+     * 건물 기본 상세 조회
+     */
+    @GetMapping("/{buildingId}")
+    public BuildingDetailDto detail(@PathVariable String buildingId) {
+        return buildingService.getBuildingDetail(buildingId);
     }
 }
