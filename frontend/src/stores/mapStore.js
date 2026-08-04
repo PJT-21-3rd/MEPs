@@ -1,14 +1,19 @@
 // 지도 컨트롤
 
 import { defineStore } from 'pinia';
-import { shallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 
 export const useMapStore = defineStore('map', () => {
   const mapInstance = shallowRef(null);
+  const isMapMoved = ref(false);
 
   const setMapInstance = (map) => {
     mapInstance.value = map;
   }; // 지도
+
+  const setMapMoved = (status) => {
+    isMapMoved.value = status;
+  }; // 맵 변경 상태 업데이트
 
   const zoomIn = () => {
     if (mapInstance.value) {
@@ -45,5 +50,13 @@ export const useMapStore = defineStore('map', () => {
       alert('이 브라우저에서는 위치 정보(GPS)를 지원하지 않습니다.');
     }
   };
-  return { mapInstance, setMapInstance, zoomIn, zoomOut, moveToMyLocation };
+  return {
+    mapInstance,
+    isMapMoved,
+    setMapInstance,
+    setMapMoved,
+    zoomIn,
+    zoomOut,
+    moveToMyLocation,
+  };
 });
