@@ -1,7 +1,8 @@
 <script setup>
-import { Heart, ArrowLeft, Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
+import { ArrowLeft, Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
 import { favoriteBuildings } from '@/mocks/favorites';
 import { ref, computed } from 'vue';
+import FavoriteCard from '@/components/mypage/FavoriteCard.vue';
 
 const MAX_SELECT = 3;
 const selectedIds = ref([]);
@@ -52,20 +53,6 @@ function selectOrder(id) {
   const index = selectedIds.value.indexOf(id);
   return index === -1 ? null : index + 1;
 }
-
-function gradeClass(grade) {
-  if (grade === '안전') return 'bg-grade-safe text-text-safe';
-  if (grade === '양호') return 'bg-grade-good text-text-good';
-  if (grade === '주의') return 'bg-grade-warn text-text-warn';
-  return '';
-}
-
-function scoreColorClass(score) {
-  if (score >= 90) return 'text-text-safe';
-  if (score >= 80) return 'text-text-good';
-  if (score >= 70) return 'text-text-warn';
-  return '';
-}
 </script>
 
 <template>
@@ -86,43 +73,13 @@ function scoreColorClass(score) {
       </p>
 
       <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
-        <li
+        <FavoriteCard
           v-for="building in favoriteBuildings"
           :key="building.id"
-          @click="toggleSelect(building.id)"
-          class="flex items-center gap-3 py-3.5 px-4 border rounded-xl cursor-pointer"
-          :class="
-            selectOrder(building.id) ? 'border-primary bg-surface-blue' : 'border-surface-gray'
-          "
-        >
-          <span
-            class="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center text-[11px] font-bold"
-            :class="
-              selectOrder(building.id)
-                ? 'bg-primary border-primary text-white'
-                : 'border-surface-gray'
-            "
-          >
-            {{ selectOrder(building.id) }}
-          </span>
-
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[15px] font-bold">{{ building.name }}</span>
-              <span class="text-[11px] px-[7px] py-0.5 rounded" :class="gradeClass(building.grade)">
-                {{ building.grade }}
-              </span>
-            </div>
-            <p class="text-xs text-text-sub mt-[3px]">{{ building.address }}</p>
-          </div>
-
-          <div class="flex items-center gap-2.5 shrink-0">
-            <span class="text-[17px] font-bold" :class="scoreColorClass(building.score)">
-              {{ building.score }}
-            </span>
-            <Heart :size="18" fill="currentColor" class="text-status-like" />
-          </div>
-        </li>
+          :building="building"
+          :order="selectOrder(building.id)"
+          @toggle="toggleSelect(building.id)"
+        />
       </ul>
     </aside>
 
