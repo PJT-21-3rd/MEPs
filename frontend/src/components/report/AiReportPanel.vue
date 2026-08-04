@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
 import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
 import ReportBanners from './ReportBanners.vue';
+import OfflineAgentCard from './OfflineAgentCard.vue';
 import { GRADE_META } from '@/constants/reportConstants.js';
 import ScoreGauge from './ScoreGauge.vue';
 import AiBriefingCard from './AiBriefingCard.vue';
@@ -42,7 +43,6 @@ const gradeMeta = computed(() => {
   return GRADE_META[reportData.value.grade];
 });
 
-// 침수이력이 주의 등급일 때만 풍수해보험 배너 아래 중복 안내 문구 노출
 const floodOverlapNotice = computed(() => {
   if (reportData.value?.dangerItems?.flood?.status === 'warning') {
     return '침수이력 추천 특약의 "풍수해 특약"과 보장이 중복돼요';
@@ -69,7 +69,6 @@ async function loadReport() {
   try {
     reportData.value = await fetchReportData(props.buildingId);
   } catch {
-    // API 실패(존재하지 않는 buildingId 등) -> 404 페이지로 이동
     // TODO: 404 라우트 이름/경로는 router/index.js에 NotFoundView 등록 후 확정 필요
     router.push({ name: 'NotFound' });
     return;
@@ -92,10 +91,45 @@ function backToSummary() {
 function handleClose() {
   emit('close');
 }
+
+// #29: 리포트 패널 스크롤이 바닥에 닿으면 공인중개사 카드를 지도 위에 노출
+// 지도 정확한 좌표를 모르는 상태라, 화면 우측 지도 영역쯤을 대략적인 fixed 좌표로 배치
+// TODO: 실제 3단 레이아웃 폭 확정되면 좌표 조정 필요
+const scrollContainer = ref(null);
+const showAgentCard = ref(false);
+
+function handleScroll() {
+  const el = scrollContainer.value;
+  if (!el) return;
+
+  // 이미 떠있으면 재판단 안 함 (한번 뜨면 유지)
+  if (showAgentCard.value) return;
+
+  const isScrollable = el.scrollHeight > el.clientHeight;
+  const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+
+  if (isScrollable && isNearBottom) {
+    showAgentCard.value = true;
+  }
+}
+
+watch(currentView, () => {
+  showAgentCard.value = false;
+});
+
+const mockAgent = {
+  name: '김민준',
+  company: 'KB부동산개발법인(주)',
+  phone: '010-0000-0000',
+};
 </script>
 
 <template>
-  <div class="w-full h-full bg-white flex flex-col overflow-y-auto">
+  <div
+    ref="scrollContainer"
+    class="w-full h-full bg-white flex flex-col overflow-y-auto"
+    @scroll="handleScroll"
+  >
     <div class="flex items-center gap-4 px-4 py-4.5 border-b border-surface-gray">
       <button
         v-if="currentView === 'detail'"
@@ -167,19 +201,16 @@ function handleClose() {
         <ChevronRight class="w-4 h-4 shrink-0" />
       </button>
 
-      <!-- #27: 풍수해보험 배너 -->
       <FloodInsuranceBanner
         :flood-overlap-notice="floodOverlapNotice"
         @open-insurance="(type) => $emit('open-insurance', type)"
       />
 
-      <!-- #181: 의무보험 상품 노출 -->
       <MandatoryInsuranceSection
         :disaster-liability="reportData.disasterLiability"
         :fire-liability="reportData.fireLiability"
       />
 
-      <!-- #27: 사업장종합보험 + 대출 배너 -->
       <ReportBanners
         @open-insurance="(type) => $emit('open-insurance', type)"
         @open-loan="$emit('open-loan')"
@@ -193,5 +224,13 @@ function handleClose() {
     >
       상세 진단 리포트는 추후 구현 예정
     </div>
+
+    <!-- #29: 공인중개사 안내 카드 (지도 영역 위 fixed 배치, 좌표는 임시값) -->
+    <OfflineAgentCard
+      v-if="showAgentCard"
+      class="fixed bottom-12 right-70 z-20"
+      dong-name="역삼동"
+      :agent="mockAgent"
+    />
   </div>
 </template>
