@@ -118,4 +118,15 @@ class BuildingControllerIntegrationTest {
         assertTrue(body.contains("\"footprint\""));
         assertTrue(body.contains("MultiPolygon"));
     }
+
+    @Test
+    void 상세조회_응답에_필지폴리곤이_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180088000054"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"parcelGeom\""));
+    }
 }
