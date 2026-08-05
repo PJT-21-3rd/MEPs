@@ -58,7 +58,7 @@ import SearchBar from '../map/SearchBar.vue';
 import SidebarHeader from './SidebarHeader.vue';
 import CommercialAiBriefing from '../property/CommercialAiBriefing.vue';
 import BuildingList from '../property/BuildingList.vue';
-import BuildingDetail from '../property/BuildingDetail.vue';
+import BuildingDetail from '../detail/BuildingDetail.vue';
 
 const uiStore = useUiStore();
 
