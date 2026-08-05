@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { ArrowLeft, Scale } from '@lucide/vue';
+import { ArrowLeft, Scale, FolderHeart } from '@lucide/vue';
 import FavoriteCard from '@/components/mypage/FavoriteCard.vue';
 
 const props = defineProps({
@@ -24,21 +24,26 @@ function selectOrder(id) {
 </script>
 
 <template>
-  <aside class="w-[380px] shrink-0">
-    <header class="flex items-start gap-2 mb-4">
-      <ArrowLeft :size="22" class="mt-0.5" />
-      <div>
-        <h1 class="text-lg font-bold m-0">마이페이지</h1>
-        <p class="text-[13px] text-text-sub mt-0.5">찜한 매물 {{ buildings.length }}개</p>
-      </div>
-    </header>
+  <aside class="w-[380px] shrink-0 flex flex-col h-full">
+    <div class="shrink-0">
+      <header class="flex items-start gap-2 mb-4">
+        <ArrowLeft :size="22" class="mt-0.5" />
+        <div>
+          <h1 class="flex items-center gap-1 text-lg font-bold m-0">
+            마이페이지
+            <FolderHeart :size="17" />
+          </h1>
+          <p class="text-[13px] text-text-sub mt-0.5">찜한 매물 {{ buildings.length }}개</p>
+        </div>
+      </header>
 
-    <p class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2">
-      <Scale :size="18" />
-      {{ guideText }}
-    </p>
+      <p class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2">
+        <Scale :size="18" />
+        {{ guideText }}
+      </p>
+    </div>
 
-    <ul class="list-none p-0 m-0 flex flex-col gap-2.5">
+    <ul class="list-none p-0 m-0 flex flex-col gap-2.5 flex-1 overflow-y-auto">
       <FavoriteCard
         v-for="building in buildings"
         :key="building.id"

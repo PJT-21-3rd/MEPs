@@ -38,12 +38,12 @@ function scoreColorClass(score) {
 
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-1.5">
-        <span class="text-[15px] font-bold">{{ building.name }}</span>
+        <span class="text-[15px] font-bold">{{ building.address }}</span>
         <span class="text-[11px] px-[7px] py-0.5 rounded" :class="gradeClass(building.grade)">
           {{ building.grade }}
         </span>
       </div>
-      <p class="text-xs text-text-sub mt-[3px]">{{ building.address }}</p>
+      <p class="text-xs text-text-sub mt-[3px]">{{ building.name }}</p>
     </div>
 
     <div class="flex items-center gap-2.5 shrink-0">
