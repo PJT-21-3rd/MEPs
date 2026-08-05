@@ -2,6 +2,7 @@
 import ScoreGauge from '@/components/report/ScoreGauge.vue';
 import AiBriefingCard from '@/components/report/AiBriefingCard.vue';
 import DiagnosticFactorList from '@/components/report/DiagnosticFactorList.vue';
+import { Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
 
 const props = defineProps({
   building: Object,
@@ -33,8 +34,11 @@ function formatDate(yyyymmdd) {
     <p class="text-[13px] text-text-sub mt-1 mb-4">{{ building.bldNm }}</p>
 
     <!-- AI 안전진단 섹션 -->
-    <div v-if="isActive('report')" class="mb-4">
-      <h4 class="text-[13px] font-bold text-primary mb-2">AI 안전진단</h4>
+    <div v-if="isActive('report')" class="mb-4 p-3 border border-surface-gray rounded-lg">
+      <h4 class="flex items-center gap-1 text-[13px] font-bold text-primary mb-2">
+        <Sparkles :size="15" />
+        AI 안전진단
+      </h4>
       <div class="flex justify-center py-2">
         <ScoreGauge :score="building.score" />
       </div>
@@ -43,8 +47,10 @@ function formatDate(yyyymmdd) {
     </div>
 
     <!-- 기본 정보 섹션 -->
-    <div v-if="isActive('basic')" class="mb-4">
-      <h4 class="text-[13px] font-bold text-primary mb-2">기본 정보</h4>
+    <div v-if="isActive('basic')" class="mb-4 p-3 border border-surface-gray rounded-lg">
+      <h4 class="flex items-center gap-1 text-[13px] font-bold text-primary mb-2">
+        <Info :size="15" />기본 정보
+      </h4>
       <dl class="text-[13px]">
         <div class="flex justify-between py-1 border-b border-surface-gray">
           <dt class="text-text-sub">주용도</dt>
@@ -66,8 +72,10 @@ function formatDate(yyyymmdd) {
     </div>
 
     <!-- 토지 정보 섹션 -->
-    <div v-if="isActive('land')" class="mb-4">
-      <h4 class="text-[13px] font-bold text-primary mb-2">토지 정보</h4>
+    <div v-if="isActive('land')" class="mb-4 p-3 border border-surface-gray rounded-lg">
+      <h4 class="flex items-center gap-1 text-[13px] font-bold text-primary mb-2">
+        <LandPlot :size="15" />토지 정보
+      </h4>
       <dl class="text-[13px]">
         <div class="flex justify-between py-1 border-b border-surface-gray">
           <dt class="text-text-sub">지목</dt>
@@ -89,8 +97,10 @@ function formatDate(yyyymmdd) {
     </div>
 
     <!-- 건축물 정보 섹션 -->
-    <div v-if="isActive('building')" class="mb-4">
-      <h4 class="text-[13px] font-bold text-primary mb-2">건축물 정보</h4>
+    <div v-if="isActive('building')" class="mb-4 p-3 border border-surface-gray rounded-lg">
+      <h4 class="flex items-center gap-1 text-[13px] font-bold text-primary mb-2">
+        <Building2 :size="15" />건축물 정보
+      </h4>
       <dl class="text-[13px]">
         <div class="flex justify-between py-1 border-b border-surface-gray">
           <dt class="text-text-sub">주구조</dt>
@@ -116,8 +126,10 @@ function formatDate(yyyymmdd) {
     </div>
 
     <!-- 층별 정보 섹션 -->
-    <div v-if="isActive('floor')" class="mb-4">
-      <h4 class="text-[13px] font-bold text-primary mb-2">층별 현황</h4>
+    <div v-if="isActive('floor')" class="mb-4 p-3 border border-surface-gray rounded-lg">
+      <h4 class="flex items-center gap-1 text-[13px] font-bold text-primary mb-2">
+        <Layers :size="15" />층별 현황
+      </h4>
       <table class="w-full text-[12px]">
         <thead>
           <tr class="text-text-sub border-b border-surface-gray">

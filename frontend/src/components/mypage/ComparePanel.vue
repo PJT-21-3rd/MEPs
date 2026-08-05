@@ -38,7 +38,7 @@ function isActive(key) {
 </script>
 
 <template>
-  <section class="flex-1 min-w-0 flex flex-col h-full">
+  <section class="flex-1 min-w-0 flex flex-col h-full pl-6">
     <!-- 헤더: 제목 + 섹션 표시 개수 + 토글 -->
     <div class="pb-4 border-b border-surface-gray">
       <div class="flex items-center justify-between mb-3">
@@ -69,11 +69,11 @@ function isActive(key) {
       </div>
     </div>
     <!-- 스크롤 영역 -->
-    <div class="flex-1 overflow-y-auto pt-4">
+    <div class="flex-1 overflow-y-auto pt-4 flex flex-col">
       <!-- 2개 미만: 안내 문구 -->
       <div
         v-if="compareBuildings.length < 2"
-        class="flex-1 flex flex-col items-center justify-center py-20 text-text-sub"
+        class="flex-1 flex flex-col items-center justify-center text-text-sub"
       >
         <Building2 :size="40" class="mb-3 opacity-40" />
         <p class="text-[15px]">
