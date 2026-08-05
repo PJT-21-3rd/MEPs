@@ -13,6 +13,7 @@ const hasError = ref(false);
 
 let panorama = null;
 
+// 좌표 사이의 방위각 계산
 const calculateBearing = (lat1, lng1, lat2, lng2) => {
   const toRad = (val) => (val * Math.PI) / 180;
   const toDeg = (val) => (val * 180) / Math.PI;
@@ -28,18 +29,19 @@ const calculateBearing = (lat1, lng1, lat2, lng2) => {
   return (toDeg(bearing) + 360) % 360;
 };
 
+// 로드뷰 시선을 건물쪽으로 고정
 const lookAtBuilding = () => {
   if (!panorama) return;
 
-  // 1. 도로 위에 있는 거리뷰 카메라의 '실제' 좌표
+  // 로드뷰 좌표
   const panoLocation = panorama.getLocation();
   if (!panoLocation) return;
   const cameraCoord = panoLocation.coord;
 
-  // 2. 사용자가 보려고 하는 '건물'의 좌표
+  // 건물 좌표
   const targetLatLng = new window.naver.maps.LatLng(props.lat, props.lng);
 
-  // 3. 카메라 -> 건물 방향으로의 각도 계산
+  // 로드뷰 건물 간 방위각 계산
   const panAngle = calculateBearing(
     cameraCoord.lat(),
     cameraCoord.lng(),
@@ -47,15 +49,15 @@ const lookAtBuilding = () => {
     targetLatLng.lng(),
   );
 
-  // 4. 시야(Pov) 업데이트
+  // 시야 업데이트
   panorama.setPov({
-    pan: panAngle, // 건물 쪽으로 휙 돌리기
-    tilt: 10, // 건물이 보이도록 카메라를 위로 살짝(10도) 치켜들기
+    pan: panAngle, // 수평
+    tilt: 10, // 수직
     fov: 90, // 시야각
   });
 };
 
-// 네이버 파노라마를 띄우는 핵심 로직
+// 네이버 파노라마
 const initPanorama = () => {
   if (!window.naver || !window.naver.maps || !window.naver.maps.Panorama) {
     console.error('네이버 파노라마 API가 없습니다.');
@@ -73,7 +75,7 @@ const initPanorama = () => {
     panControl: true,
   });
 
-  // 로딩이 완료되면 시선을 돌림
+  // 로딩완료 후 시야 변경
   window.naver.maps.Event.addListener(panorama, 'init', () => {
     isLoaded.value = true;
 
@@ -82,7 +84,6 @@ const initPanorama = () => {
       return;
     }
 
-    // 로딩 직후 건물 바라보기 실행!
     lookAtBuilding();
   });
 };
@@ -91,7 +92,7 @@ onMounted(() => {
   initPanorama();
 });
 
-// 건물이 바뀌면(Props 변경) 위치를 갱신
+// 건물 변경 시 위치를 갱신
 watch(
   () => [props.lat, props.lng],
   () => {
@@ -101,8 +102,6 @@ watch(
     if (panorama) {
       panorama.setPosition(new window.naver.maps.LatLng(props.lat, props.lng));
 
-      // 위치 이동(비동기)이 완료된 후 딱 한 번만(once) 시선을 다시 돌려줌
-      // (이후 사용자가 마우스로 드래그하며 동네를 둘러볼 때는 개입하지 않기 위함)
       window.naver.maps.Event.once(panorama, 'pano_changed', () => {
         lookAtBuilding();
       });
@@ -114,20 +113,20 @@ watch(
 </script>
 
 <template>
-  <div class="relative h-[180px] overflow-hidden rounded-2xl bg-surface-base">
+  <div class="relative h-[180px] overflow-hidden rounded-2xl bg-surface-base inset-0">
     <div
       v-if="!isLoaded && !hasError"
-      class="absolute inset-0 flex flex-col items-center justify-center text-neutral-400 gap-2 z-10 bg-neutral-100"
+      class="absolute inset-0 flex flex-col items-center justify-center text-text-sub gap-2 z-10 bg-surface-base"
     >
       <Map :size="24" class="animate-bounce" />
       <span class="text-[13px]">이미지를 불러오는 중 ...</span>
     </div>
     <div
       v-if="hasError"
-      class="absolute inset-0 flex flex-col items-center justify-center text-neutral-400 gap-2 z-10 bg-neutral-100"
+      class="absolute inset-0 flex flex-col items-center justify-center text-text-sub gap-2 z-10 bg-surface-base"
     >
       <ImageOff :size="24" />
-      <span class="text-[13px]">해당 건물의 이미지는 제공되지 않습니다</span>
+      <span class="text-[13px]">해당 건물(위치)의 로드뷰는 제공되지 않습니다</span>
     </div>
     <div ref="panoContainer" class="w-full h-full pointer-events-auto"></div>
     <span
