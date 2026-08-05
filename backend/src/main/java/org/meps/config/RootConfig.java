@@ -30,7 +30,10 @@ import com.zaxxer.hikari.HikariDataSource;
 
 
 @Configuration
-@PropertySource("classpath:application.properties")
+@PropertySource(value = {
+        "classpath:application.properties",
+        "file:/config/application.properties"
+}, ignoreResourceNotFound = true)
 @EnableTransactionManagement
 @MapperScan(basePackages = "org.meps", annotationClass = Mapper.class)
 @ComponentScan(
