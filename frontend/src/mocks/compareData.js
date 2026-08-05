@@ -24,6 +24,8 @@ export const compareData = {
     },
     roadAddr: '서울특별시 강남구 태헤란로 152',
     jibunAddr: '서울특별시 강남구 역삼동 123-4',
+    lat: 37.5006,
+    lng: 127.0364,
     mainPurps: '제2종근린생활시설',
     platArea: 512.0, // 대지면적(㎡)
     totArea: 3840.0, // 연면적(㎡)
@@ -68,6 +70,8 @@ export const compareData = {
     },
     roadAddr: '서울특별시 강남구 태헤란로 210',
     jibunAddr: '서울특별시 강남구 역삼동 210-9',
+    lat: 37.5012,
+    lng: 127.0396,
     mainPurps: '업무시설',
     platArea: 680.0,
     totArea: 5120.0,
@@ -111,6 +115,8 @@ export const compareData = {
     },
     roadAddr: '서울특별시 강남구 태헤란로 301',
     jibunAddr: '서울특별시 강남구 역삼동 301-2',
+    lat: 37.5008,
+    lng: 127.0281,
     mainPurps: '제1종근린생활시설',
     platArea: 445.0,
     totArea: 2980.0,

@@ -4,6 +4,7 @@ import AiBriefingCard from '@/components/report/AiBriefingCard.vue';
 import DiagnosticFactorList from '@/components/report/DiagnosticFactorList.vue';
 import { Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
 import BuildingInfoPannel from '../detail/BuildingInfoPannel.vue';
+import RoadViewImage from '../detail/RoadViewImage.vue';
 const props = defineProps({
   building: Object,
   activeSections: Array,
@@ -21,6 +22,12 @@ function formatDate(yyyymmdd) {
 
 <template>
   <div class="flex-1 min-w-0 border border-surface-gray rounded-xl p-4">
+    <!-- 로드뷰 사진 -->
+    <div class="mb-3">
+      <RoadViewImage :lat="building.lat" :lng="building.lng" />
+    </div>
+
+    <!-- 건물 기본정보 -->
     <div class="mb-4">
       <BuildingInfoPannel :buildingData="building" />
     </div>
