@@ -22,7 +22,7 @@ function formatDate(yyyymmdd) {
 
 <template>
   <div class="flex-1 min-w-0 border border-surface-gray rounded-xl p-4">
-    <div class="mb-4 border border-surface-gray rounded-2xl">
+    <div class="mb-4 border border-surface-gray rounded-2xl bg-white shadow-lg">
       <!-- 로드뷰 사진 -->
       <div class="mb-3">
         <RoadViewImage :lat="building.lat" :lng="building.lng" />
