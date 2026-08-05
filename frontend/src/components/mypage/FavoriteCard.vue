@@ -1,7 +1,7 @@
 <script setup>
 import { Heart } from '@lucide/vue';
 
-const props = defineProps({
+defineProps({
   building: Object,
   order: Number,
 });
@@ -30,7 +30,7 @@ function scoreColorClass(score) {
     :class="order ? 'border-primary bg-surface-blue' : 'border-surface-gray'"
   >
     <span
-      class="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center text-[11px] font-bold"
+      class="shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center text-[11px] font-bold"
       :class="order ? 'bg-primary border-primary text-white' : 'border-surface-gray'"
     >
       {{ order }}
@@ -38,8 +38,8 @@ function scoreColorClass(score) {
 
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-1.5">
-        <span class="text-[15px] font-bold">{{ building.address }}</span>
-        <span class="text-[11px] px-[7px] py-0.5 rounded" :class="gradeClass(building.grade)">
+        <span class="text-[13px] font-bold truncate">{{ building.address }}</span>
+        <span class="text-[13px] px-[7px] py-0.5 rounded" :class="gradeClass(building.grade)">
           {{ building.grade }}
         </span>
       </div>
