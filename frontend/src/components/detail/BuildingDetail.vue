@@ -33,7 +33,13 @@
       <div class="px-4"><RoadViewImage :lat="37.5023528" :lng="127.0259463" /></div>
 
       <!-- 인포 -->
-
+      <div class="px-5 pt-4">
+        <BuildingInfoPannel :buildingData="buildingDetail" />
+      </div>
+      <!-- 칩 -->
+      <div class="px-5 mt-4">
+        <BuildingInfoChips :buildingData="buildingDetail" />
+      </div>
       <!-- 탭 + 토지/건물 -->
     </div>
     <!-- 리포트 생성 버튼 -->
@@ -46,6 +52,8 @@ import { useRouter } from 'vue-router';
 import { useUiStore } from '@/stores/uiStore.js';
 import { ChevronLeft, Heart, Share2, Sparkles } from '@lucide/vue';
 import RoadViewImage from './RoadViewImage.vue';
+import BuildingInfoPannel from './BuildingInfoPannel.vue';
+import BuildingInfoChips from './BuildingInfoChips.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
