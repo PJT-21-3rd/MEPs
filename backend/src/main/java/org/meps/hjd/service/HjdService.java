@@ -3,6 +3,7 @@ package org.meps.hjd.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.hjd.dto.HjdBboxDto;
+import org.meps.hjd.dto.HjdBriefingResponseDto;
 import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
 import org.meps.hjd.exception.HjdNotFoundException;
@@ -42,5 +43,9 @@ public class HjdService {
     /** 행정동 코드로 경계 bbox 조회. 없으면 null */
     public HjdBboxDto findBboxByHjdCd(String hjdCd) {
         return hjdMapper.findBboxByHjdCd(hjdCd);
+    }
+
+    public HjdBriefingResponseDto getBriefing(String hjdCd) {
+        return hjdMapper.findByHjdCd(hjdCd);
     }
 }
