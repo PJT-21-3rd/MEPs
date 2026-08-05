@@ -3,7 +3,7 @@ import ScoreGauge from '@/components/report/ScoreGauge.vue';
 import AiBriefingCard from '@/components/report/AiBriefingCard.vue';
 import DiagnosticFactorList from '@/components/report/DiagnosticFactorList.vue';
 import { Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
-
+import BuildingInfoPannel from '../detail/BuildingInfoPannel.vue';
 const props = defineProps({
   building: Object,
   activeSections: Array,
@@ -21,17 +21,9 @@ function formatDate(yyyymmdd) {
 
 <template>
   <div class="flex-1 min-w-0 border border-surface-gray rounded-xl p-4">
-    <!-- 인범 님 기본정보 컴포넌트 자리 (사진 + 건물정보) -->
-    <!-- TODO: <BuildingBasicInfo :building="building" /> 로 교체 -->
-    <div
-      class="mb-4 flex items-center justify-center h-32 bg-surface-gray rounded-lg text-text-sub text-[13px]"
-    >
-      사진+기본정보 (인범 님 컴포넌트 예정)
+    <div class="mb-4">
+      <BuildingInfoPannel :buildingData="building" />
     </div>
-
-    <!-- 건물명/주소 (인범 컴포넌트에 포함되면 제거) -->
-    <h3 class="text-base font-bold">{{ building.roadAddr }}</h3>
-    <p class="text-[13px] text-text-sub mt-1 mb-4">{{ building.bldNm }}</p>
 
     <!-- AI 안전진단 섹션 -->
     <div v-if="isActive('report')" class="mb-4 p-3 border border-surface-gray rounded-lg">
