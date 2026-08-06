@@ -1,7 +1,7 @@
 package org.meps.sinkhole.service;
 
 import org.junit.jupiter.api.Test;
-import org.meps.sinkhole.dto.SafetyGrade;
+import org.meps.common.util.SafetyGrade;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 

@@ -1,6 +1,7 @@
 package org.meps.sinkhole.dto;
 
 import lombok.*;
+import org.meps.common.util.SafetyGrade;
 
 import java.util.List;
 

@@ -3,7 +3,7 @@ package org.meps.sinkhole.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
-import org.meps.sinkhole.dto.SafetyGrade;
+import org.meps.common.util.SafetyGrade;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.springframework.beans.factory.annotation.Autowired;

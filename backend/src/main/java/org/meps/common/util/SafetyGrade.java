@@ -1,4 +1,4 @@
-package org.meps.sinkhole.dto;
+package org.meps.common.util;
 
 /**
  * 요소 배지·종합 등급 공용 구간표: 70~79 주의 / 80~89 양호 / 90~100 안전.
