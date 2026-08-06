@@ -49,6 +49,22 @@
         WHERE bd_mgt_sn = #{buildingId}
     </select>
 
+    <!-- 좌표로 조회 (지도에서 건물 클릭) -->
+    <select id="findBuildingDetailAt" resultType="org.meps.building.dto.BuildingDetailDto">
+        SELECT bd_mgt_sn   AS buildingId,
+               bld_nm      AS bldNm,
+               main_purps  AS mainPurpsNm,
+               road_addr   AS roadAddr,
+               jibun_addr  AS jibunAddr,
+               floor_info  AS floors,
+               ST_AsGeoJSON(footprint)   AS footprint,
+               ST_AsGeoJSON(parcel_geom) AS parcelGeom
+        FROM buildings
+        WHERE ST_Contains(footprint,
+                          ST_GeomFromText(CONCAT('POINT(', #{lat}, ' ', #{lng}, ')'), 4326))
+            LIMIT 1
+    </select>
+
     <!-- 통합 검색: PNU 정확 매칭 -->
     <select id="findByPnu" resultType="org.meps.building.dto.BuildingPointDto">
         SELECT bd_mgt_sn            AS buildingId,

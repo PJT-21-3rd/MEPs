@@ -26,6 +26,11 @@ public interface BuildingMapper {
             @Param("buildingId") String buildingId
     );
 
+    BuildingDetailDto findBuildingDetailAt(
+            @Param("lat") double lat,
+            @Param("lng") double lng
+    );
+
     BuildingPointDto findByPnu(@Param("pnu") String pnu);
 
     BuildingPointDto findNearest(@Param("lat") double lat, @Param("lng") double lng);
