@@ -93,6 +93,8 @@
 
   /* badge */
   --color-badge-neutral: #f7f6f1; /* 연한 회색 (배지 배경) */
+  --color-badge-check: #15803d; /* 진한 올리브그린 (양호 배지) */
+  --color-badge-check-light: #dcfce7; /* 연한 올리브그린 (양호 배지) */
 
   /* TEXT */
   --color-text-main: #171717; /* 기본 텍스트 (본문, 제목 등 가장 많이 쓰이는 검정) */
@@ -106,6 +108,7 @@
   --color-text-muted: #8a8880; /* 진한 회색 (문구 강조용) */
   --color-text-badge: #6b6a66; /* 진한 회색 (배지 근거 설명) */
   --color-text-disabled: #d4d4d4; /* 연한 회색 (문구용) */
+  --color-text-modal: #737373; /* 진한 회색 (모달 문구용) */
 
   /* SCORE */
   --color-status-safe: #79dcc8; /* 안전 (90~100점) - 밝은 민트 (게이지) */

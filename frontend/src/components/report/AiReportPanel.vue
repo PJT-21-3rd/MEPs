@@ -37,7 +37,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['close', 'open-insurance', 'open-loan']);
+const emit = defineEmits(['close', 'open-insurance', 'open-loan', 'report-loaded']);
 const router = useRouter();
 
 const currentView = ref('summary');
@@ -86,6 +86,7 @@ async function loadReport() {
     reportData.value = props.initialReportData;
     currentView.value = 'summary';
     isLoading.value = false;
+    emit('report-loaded', reportData.value);
     return;
   }
 
@@ -93,6 +94,7 @@ async function loadReport() {
   currentView.value = 'summary';
   try {
     reportData.value = await fetchReportData(props.buildingId);
+    emit('report-loaded', reportData.value);
   } catch {
     // TODO: 404 라우트 이름/경로는 router/index.js에 NotFoundView 등록 후 확정 필요
     router.push({ name: 'NotFound' });
