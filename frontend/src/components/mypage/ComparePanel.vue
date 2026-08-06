@@ -41,7 +41,7 @@ function isActive(key) {
 
 <template>
   <section class="flex-1 min-w-0 flex flex-col h-full">
-    <!-- 헤더: 제목 + 섹션 표시 개수 + 토글 -->
+    <!-- 제목 + 섹션 표시 개수 + 섹션 토글 -->
     <div class="pb-4 border-b border-surface-gray pl-6">
       <div class="flex items-center justify-between mb-3">
         <h2 class="flex items-center gap-2 text-base font-bold">
@@ -71,8 +71,8 @@ function isActive(key) {
       </div>
     </div>
     <!-- 스크롤 영역 -->
-    <div class="flex-1 overflow-y-auto pt-4 flex flex-col bg-surface-gray">
-      <!-- 2개 미만: 안내 문구 -->
+    <div class="flex-1 overflow-y-auto pt-4 pl-6 flex flex-col bg-surface-gray">
+      <!-- 2개 미만일 때 안내 문구 -->
       <div
         v-if="compareBuildings.length < 2"
         class="flex-1 flex flex-col items-center justify-center text-text-sub"
@@ -86,7 +86,7 @@ function isActive(key) {
         </p>
       </div>
 
-      <!-- 2개 이상: 비교 뷰 -->
+      <!-- 비교 뷰 -->
 
       <div v-else class="pt-4">
         <CompareBasicInfo :buildings="compareBuildings" />

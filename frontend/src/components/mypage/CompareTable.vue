@@ -1,4 +1,6 @@
 <script setup>
+import { Info, LandPlot, Building2, Layers } from '@lucide/vue';
+import { formatDate } from '@/utils/formatters';
 const props = defineProps({
   buildings: Array, // 비교할 매물들 (compareBuildings)
   activeSections: Array, // 켜진 섹션
@@ -32,84 +34,102 @@ const buildingRows = [
   { label: '경과연차', get: (b) => `${b.detail.elapsedYear}년` },
   { label: '위반건축물', get: (b) => (b.detail.violBdYn === 'Y' ? '해당' : '해당없음') },
 ];
-
-// 사용승인일 포맷 (건축물 항목에서 씀)
-function formatDate(yyyymmdd) {
-  if (!yyyymmdd || yyyymmdd.length !== 8) return yyyymmdd;
-  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
-}
 </script>
 
 <template>
   <div>
     <!-- 기본 정보 섹션 -->
     <div v-if="isActive('basic')" class="mb-6">
-      <h4 class="flex items-center gap-1 text-[15px] font-bold text-primary mb-2">기본 정보</h4>
-      <table class="w-full text-[13px] table-fixed">
-        <tbody>
-          <tr v-for="row in basicRows" :key="row.label" class="border-b border-surface-gray">
-            <!-- 항목명 (왼쪽 고정 열) -->
-            <td class="py-3 pr-4 text-text-sub w-[140px] align-top">
-              {{ row.label }}
-            </td>
-            <!-- 각 매물의 값 (가로로) -->
-            <td
-              v-for="building in buildings"
-              :key="building.buildingId"
-              class="py-3 px-4 align-top"
-            >
-              {{ row.get(building) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+        <Info :size="17" />
+        기본 정보
+      </h4>
+      <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
+        <table class="w-full text-[13px] table-fixed">
+          <tbody>
+            <tr v-for="row in basicRows" :key="row.label" class="border-b border-surface-gray">
+              <!-- 항목명 (왼쪽 고정 열) -->
+              <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">
+                {{ row.label }}
+              </td>
+              <!-- 각 매물의 값 (가로로) -->
+              <td
+                v-for="building in buildings"
+                :key="building.buildingId"
+                class="py-3 px-4 align-top"
+              >
+                {{ row.get(building) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- 토지 정보 섹션 -->
     <div v-if="isActive('land')" class="mb-6">
-      <h4 class="flex items-center gap-1 text-[15px] font-bold text-primary mb-2">토지 정보</h4>
-      <table class="w-full text-[13px] table-fixed">
-        <tbody>
-          <tr v-for="row in landRows" :key="row.label" class="border-b border-surface-gray">
-            <td class="py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
-            <td
-              v-for="building in buildings"
-              :key="building.buildingId"
-              class="py-3 px-4 align-top"
-            >
-              {{ row.get(building) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+        <LandPlot :size="17" />
+        토지 정보
+      </h4>
+      <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
+        <table class="w-full text-[13px] table-fixed">
+          <tbody>
+            <tr v-for="row in landRows" :key="row.label" class="border-b border-surface-gray">
+              <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
+              <td
+                v-for="building in buildings"
+                :key="building.buildingId"
+                class="py-3 px-4 align-top"
+              >
+                {{ row.get(building) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- 건축물 정보 섹션 -->
     <div v-if="isActive('building')" class="mb-6">
-      <h4 class="flex items-center gap-1 text-[15px] font-bold text-primary mb-2">건축물 정보</h4>
-      <table class="w-full text-[13px] table-fixed">
-        <tbody>
-          <tr v-for="row in buildingRows" :key="row.label" class="border-b border-surface-gray">
-            <td class="py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
-            <td
-              v-for="building in buildings"
-              :key="building.buildingId"
-              class="py-3 px-4 align-top"
-            >
-              {{ row.get(building) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+        <Building2 :size="17" />
+        건축물 정보
+      </h4>
+      <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
+        <table class="w-full text-[13px] table-fixed">
+          <tbody>
+            <tr v-for="row in buildingRows" :key="row.label" class="border-b border-surface-gray">
+              <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
+              <td
+                v-for="building in buildings"
+                :key="building.buildingId"
+                class="py-3 px-4 align-top"
+              >
+                {{ row.get(building) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- 층별 현황 섹션 -->
     <div v-if="isActive('floor')" class="mb-6">
-      <h4 class="flex items-center gap-1 text-[15px] font-bold text-primary mb-2">층별 현황</h4>
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+        <Layers :size="17" />
+        층별 현황
+      </h4>
       <div class="flex gap-4">
         <!-- 매물마다 자기 층 목록 표 -->
-        <div v-for="building in buildings" :key="building.buildingId" class="flex-1 min-w-0">
-          <p class="text-[13px] font-semibold mb-2">{{ building.bldNm }}</p>
+        <div
+          v-for="building in buildings"
+          :key="building.buildingId"
+          class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm p-4"
+        >
+          <div class="-mx-4 -mt-4 px-4 pt-2 pb-2 mb-2 border-b border-surface-gray bg-surface-gray">
+            <p class="text-[15px] font-semibold">{{ building.bldNm }}</p>
+          </div>
           <table class="w-full text-[12px] table-fixed">
             <thead>
               <tr class="text-text-sub border-b border-surface-gray">

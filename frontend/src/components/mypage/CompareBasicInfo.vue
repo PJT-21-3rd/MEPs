@@ -9,11 +9,15 @@ defineProps({
 
 <template>
   <div class="flex gap-4 mb-6">
-    <div v-for="building in buildings" :key="building.buildingId" class="flex-1 min-w-0">
-      <div class="mb-3">
-        <RoadViewImage :lat="building.lat" :lng="building.lng" />
+    <div
+      v-for="building in buildings"
+      :key="building.buildingId"
+      class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm"
+    >
+      <RoadViewImage :lat="building.lat" :lng="building.lng" />
+      <div class="p-3">
+        <BuildingInfoPannel :buildingData="building" />
       </div>
-      <BuildingInfoPannel :buildingData="building" />
     </div>
   </div>
 </template>
