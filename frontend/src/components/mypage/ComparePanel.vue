@@ -1,6 +1,16 @@
 <script setup>
-import { ref } from 'vue';
-import { Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
+import { ref, computed } from 'vue';
+import { Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
+import { compareData } from '@/mocks/compareData';
+import CompareColumn from './CompareColumn.vue';
+
+const compareBuildings = computed(() => {
+  return props.selectedIds.map((id) => compareData[id]);
+});
+
+const props = defineProps({
+  selectedIds: Array,
+});
 
 const sections = [
   { key: 'report', label: 'AI 안전진단', icon: Sparkles },
@@ -28,22 +38,61 @@ function isActive(key) {
 </script>
 
 <template>
-  <section class="flex-1 min-w-0">
-    <div class="flex flex-wrap gap-2 mb-4">
-      <button
-        v-for="section in sections"
-        :key="section.key"
-        @click="toggleSection(section.key)"
-        class="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-medium border transition-colors"
-        :class="
-          isActive(section.key)
-            ? 'bg-primary text-white border-primary'
-            : 'bg-surface-gray text-text-sub border-surface-gray'
-        "
+  <section class="flex-1 min-w-0 flex flex-col h-full">
+    <!-- 헤더: 제목 + 섹션 표시 개수 + 토글 -->
+    <div class="pb-4 border-b border-surface-gray pl-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="flex items-center gap-2 text-base font-bold">
+          <Scale :size="18" class="text-primary" />
+          찜한 매물 비교
+        </h2>
+        <span class="text-[13px] text-text-sub">
+          {{ activeSections.length }}/{{ sections.length }}개 섹션 표시
+        </span>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="section in sections"
+          :key="section.key"
+          @click="toggleSection(section.key)"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-medium border transition-colors"
+          :class="
+            isActive(section.key)
+              ? 'bg-primary text-white border-primary'
+              : 'bg-surface-gray text-text-sub border-surface-gray'
+          "
+        >
+          <component :is="section.icon" :size="15" />
+          {{ section.label }}
+        </button>
+      </div>
+    </div>
+    <!-- 스크롤 영역 -->
+    <div class="flex-1 overflow-y-auto pt-4 flex flex-col bg-surface-gray">
+      <!-- 2개 미만: 안내 문구 -->
+      <div
+        v-if="compareBuildings.length < 2"
+        class="flex-1 flex flex-col items-center justify-center text-text-sub"
       >
-        <component :is="section.icon" :size="15" />
-        {{ section.label }}
-      </button>
+        <Building2 :size="40" class="mb-3 opacity-40" />
+        <p class="text-[15px]">
+          {{ compareBuildings.length === 0 ? '비교할 매물을 선택하세요' : '하나 더 선택해주세요' }}
+        </p>
+        <p class="text-[13px] mt-1 opacity-70">
+          왼쪽 찜 목록에서 매물을 선택하면 상세 조건이 비교됩니다
+        </p>
+      </div>
+
+      <!-- 2개 이상: 비교 뷰 -->
+      <div v-else class="pt-4 flex gap-4">
+        <CompareColumn
+          v-for="building in compareBuildings"
+          :key="building.buildingId"
+          :building="building"
+          :activeSections="activeSections"
+        />
+      </div>
     </div>
   </section>
 </template>

@@ -23,12 +23,13 @@ function toggleSelect(id) {
 </script>
 
 <template>
-  <div class="flex gap-6 p-4 h-full">
+  <div class="flex p-4 h-full overflow-hidden divide-x divide-surface-gray">
     <FavoriteSidebar
       :buildings="favoriteBuildings"
       :selectedIds="selectedIds"
       @toggle="toggleSelect"
     />
-    <ComparePanel />
+
+    <ComparePanel :selectedIds="selectedIds" />
   </div>
 </template>
