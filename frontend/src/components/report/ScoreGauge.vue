@@ -19,6 +19,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  showLabel: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emit = defineEmits(['animation-end']);
@@ -83,7 +87,7 @@ watch(
 
 <template>
   <div class="flex flex-col items-center gap-3 py-6">
-    <p class="text-sm text-text-sub">종합 AI 안심 스코어</p>
+    <p v-if="showLabel" class="text-sm text-text-sub">종합 AI 안심 스코어</p>
 
     <div class="relative w-40 h-40">
       <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
@@ -116,6 +120,7 @@ watch(
     </div>
 
     <span
+      v-if="showLabel"
       class="px-4 py-1.5 rounded-full text-sm font-semibold"
       :class="[gradeMeta.badgeBg, gradeMeta.text]"
     >

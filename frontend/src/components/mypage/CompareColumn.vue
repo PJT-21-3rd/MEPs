@@ -43,7 +43,7 @@ function formatDate(yyyymmdd) {
       <div class="p-3 border border-surface-gray rounded-lg">
         <div class="flex items-center gap-4">
           <div class="scale-75 origin-center shrink-0 -mx-6 -my-6">
-            <ScoreGauge :score="building.score" />
+            <ScoreGauge :score="building.score" :showLabel="false" />
           </div>
           <div class="flex-1 min-w-0">
             <AiBriefingCard :loading="false" :briefing="building.briefing" />
