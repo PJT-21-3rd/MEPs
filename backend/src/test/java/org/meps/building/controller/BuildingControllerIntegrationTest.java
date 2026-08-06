@@ -139,4 +139,30 @@ class BuildingControllerIntegrationTest {
         assertTrue(body.contains("\"floors\""));
         assertTrue(body.contains("flrNoNm"));
     }
+
+    // ---- 좌표 기반 상세 조회 ----
+
+    @Test
+    void 좌표조회_건물이_있는_좌표는_200을_반환한다() throws Exception {
+        // 아차산관리사무소 (광진구 중곡동)
+        mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 좌표조회_건물이_없는_좌표는_404를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.53")
+                        .param("lng", "127.07"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 좌표조회_파라미터가_누락되면_400을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/poinr")
+                        .param("lat", "37.562335"))
+                .andExpect(status().isBadRequest());
+    }
 }
