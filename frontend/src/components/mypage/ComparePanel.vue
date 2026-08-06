@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
 import { compareData } from '@/mocks/compareData';
 import CompareColumn from './CompareColumn.vue';
+import CompareTable from './CompareTable.vue';
 
 const compareBuildings = computed(() => {
   return props.selectedIds.map((id) => compareData[id]);
@@ -85,13 +86,18 @@ function isActive(key) {
       </div>
 
       <!-- 2개 이상: 비교 뷰 -->
-      <div v-else class="pt-4 flex gap-4">
-        <CompareColumn
+
+      <div v-else class="pt-4">
+        <CompareTable :buildings="compareBuildings" :activeSections="activeSections" />
+
+        <!-- <div class="flex gap-4"> -->
+        <!-- <CompareColumn
           v-for="building in compareBuildings"
           :key="building.buildingId"
           :building="building"
           :activeSections="activeSections"
         />
+      </div> -->
       </div>
     </div>
   </section>
