@@ -39,15 +39,15 @@ const buildingRows = [
 <template>
   <div>
     <!-- 기본 정보 섹션 -->
-    <div v-if="isActive('basic')" class="mb-6">
-      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+    <div v-if="isActive('basic')" class="mt-4">
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
         <Info :size="17" />
         기본 정보
       </h4>
       <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
         <table class="w-full text-[13px] table-fixed">
           <tbody>
-            <tr v-for="row in basicRows" :key="row.label" class="border-b border-surface-gray">
+            <tr v-for="row in basicRows" :key="row.label" class="odd:bg-white even:bg-surface-gray">
               <!-- 항목명 (왼쪽 고정 열) -->
               <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">
                 {{ row.label }}
@@ -56,7 +56,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top"
+                class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -67,20 +67,20 @@ const buildingRows = [
     </div>
 
     <!-- 토지 정보 섹션 -->
-    <div v-if="isActive('land')" class="mb-6">
-      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+    <div v-if="isActive('land')" class="mt-4">
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
         <LandPlot :size="17" />
         토지 정보
       </h4>
       <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
         <table class="w-full text-[13px] table-fixed">
           <tbody>
-            <tr v-for="row in landRows" :key="row.label" class="border-b border-surface-gray">
+            <tr v-for="row in landRows" :key="row.label" class="odd:bg-white even:bg-surface-gray">
               <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top"
+                class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -91,20 +91,24 @@ const buildingRows = [
     </div>
 
     <!-- 건축물 정보 섹션 -->
-    <div v-if="isActive('building')" class="mb-6">
-      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+    <div v-if="isActive('building')" class="mt-4">
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
         <Building2 :size="17" />
         건축물 정보
       </h4>
       <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
         <table class="w-full text-[13px] table-fixed">
           <tbody>
-            <tr v-for="row in buildingRows" :key="row.label" class="border-b border-surface-gray">
+            <tr
+              v-for="row in buildingRows"
+              :key="row.label"
+              class="odd:bg-white even:bg-surface-gray"
+            >
               <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top"
+                class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -115,8 +119,8 @@ const buildingRows = [
     </div>
 
     <!-- 층별 현황 섹션 -->
-    <div v-if="isActive('floor')" class="mb-6">
-      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+    <div v-if="isActive('floor')" class="mt-4 mb-4">
+      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
         <Layers :size="17" />
         층별 현황
       </h4>

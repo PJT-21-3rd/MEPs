@@ -15,8 +15,8 @@ function isActive(key) {
 </script>
 
 <template>
-  <div v-if="isActive('report')" class="mb-6">
-    <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-2">
+  <div v-if="isActive('report')" class="mt-4">
+    <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
       <Sparkles :size="17" />
       AI 안전진단
     </h4>
@@ -34,7 +34,7 @@ function isActive(key) {
             <AiBriefingCard :loading="false" :briefing="building.briefing" />
           </div>
         </div>
-        <DiagnosticFactorList :items="building.diagnosis" mode="summary" class="mt-2" />
+        <DiagnosticFactorList :items="building.diagnosis" mode="summary" class="mt-3" />
         <div class="mt-3">
           <DetailedReportDisclaimer />
         </div>

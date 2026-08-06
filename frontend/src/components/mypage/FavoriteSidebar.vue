@@ -24,7 +24,7 @@ function selectOrder(id) {
 </script>
 
 <template>
-  <aside class="w-[330px] shrink-0 flex flex-col h-full pr-6">
+  <aside class="w-[330px] shrink-0 flex flex-col h-full pt-4 px-4">
     <div class="shrink-0">
       <header class="flex items-start gap-2 mb-4">
         <ArrowLeft :size="22" class="mt-0.5" />
