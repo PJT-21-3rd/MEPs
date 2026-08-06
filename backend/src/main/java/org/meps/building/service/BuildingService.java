@@ -43,6 +43,15 @@ public class BuildingService {
         return detail;
     }
 
+    /** 지도에서 건물 클릭 → 좌표로 상세 조회 */
+    public BuildingDetailDto getBuildingDetailAt(double lat, double lng) {
+        BuildingDetailDto detail = buildingMapper.findBuildingDetailAt(lat, lng);
+        if (detail == null) {
+            throw new BuildingNotFoundException("좌표에 건물 없음: " + lat + ", " + lng);
+        }
+        return detail;
+    }
+
     /** 명세 Fail 케이스: 좌표 파라미터 범위 오류(sw > ne 등) → 400 */
     private void validateBounds(double swLat, double swLng, double neLat, double neLng) {
         if (swLat >= neLat || swLng >= neLng) {

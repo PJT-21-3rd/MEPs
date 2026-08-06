@@ -45,4 +45,10 @@ public class BuildingController {
     public BuildingSearchResponseDto search(@RequestParam String keyword) {
         return buildingSearchService.search(keyword);
     }
+
+    @GetMapping("/point")
+    public BuildingDetailDto detailAt(@RequestParam double lat,
+                                      @RequestParam double lng) {
+        return buildingService.getBuildingDetailAt(lat, lng);
+    }
 }
