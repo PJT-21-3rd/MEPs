@@ -2,8 +2,13 @@
 import { ref, computed } from 'vue';
 import { Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
 import { compareData } from '@/mocks/compareData';
-import CompareColumn from './CompareColumn.vue';
 import CompareTable from './CompareTable.vue';
+
+import RoadViewImage from '@/components/detail/RoadViewImage.vue';
+import BuildingInfoPannel from '@/components/detail/BuildingInfoPannel.vue';
+import ScoreGauge from '@/components/report/ScoreGauge.vue';
+import AiBriefingCard from '@/components/report/AiBriefingCard.vue';
+import DiagnosticFactorList from '@/components/report/DiagnosticFactorList.vue';
 
 const compareBuildings = computed(() => {
   return props.selectedIds.map((id) => compareData[id]);
@@ -88,16 +93,46 @@ function isActive(key) {
       <!-- 2개 이상: 비교 뷰 -->
 
       <div v-else class="pt-4">
-        <CompareTable :buildings="compareBuildings" :activeSections="activeSections" />
+        <!-- 매물 헤더: 로드뷰 + 건물정보 (매물별 가로) -->
+        <div class="flex gap-4 mb-6">
+          <div
+            v-for="building in compareBuildings"
+            :key="building.buildingId"
+            class="flex-1 min-w-0"
+          >
+            <div class="mb-3">
+              <RoadViewImage :lat="building.lat" :lng="building.lng" />
+            </div>
+            <BuildingInfoPannel :buildingData="building" />
+          </div>
+        </div>
 
-        <!-- <div class="flex gap-4"> -->
-        <!-- <CompareColumn
-          v-for="building in compareBuildings"
-          :key="building.buildingId"
-          :building="building"
-          :activeSections="activeSections"
-        />
-      </div> -->
+        <!-- AI 안전진단 (매물별 가로) -->
+        <div v-if="activeSections.includes('report')" class="mb-6">
+          <h4 class="flex items-center gap-1 text-[15px] font-bold text-primary mb-2">
+            AI 안전진단
+          </h4>
+          <div class="flex gap-4">
+            <div
+              v-for="building in compareBuildings"
+              :key="building.buildingId"
+              class="flex-1 min-w-0 p-3 border border-surface-gray rounded-lg"
+            >
+              <div class="flex items-center gap-4">
+                <div class="scale-[0.7] origin-center shrink-0 -mx-6 -my-6">
+                  <ScoreGauge :score="building.score" :showLabel="false" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <AiBriefingCard :loading="false" :briefing="building.briefing" />
+                </div>
+              </div>
+              <DiagnosticFactorList :items="building.diagnosis" mode="summary" class="mt-2" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 나머지 섹션 표 -->
+        <CompareTable :buildings="compareBuildings" :activeSections="activeSections" />
       </div>
     </div>
   </section>
