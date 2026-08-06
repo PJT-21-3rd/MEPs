@@ -42,6 +42,7 @@
                main_purps  AS mainPurpsNm,
                road_addr   AS roadAddr,
                jibun_addr  AS jibunAddr,
+               floor_info  AS floors,
                ST_AsGeoJSON(footprint) AS footprint,
                ST_AsGeoJSON(parcel_geom) AS parcelGeom
         FROM buildings

@@ -129,4 +129,14 @@ class BuildingControllerIntegrationTest {
 
         assertTrue(body.contains("\"parcelGeom\""));
     }
+
+    @Test
+    void 상세조회_응답에_층별현황이_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1168010100106010003000001"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"floors\""));
+        assertTrue(body.contains("flrNoNm"));
+    }
 }

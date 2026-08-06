@@ -18,6 +18,9 @@ public class BuildingDetailDto {
     private String jibunAddr;
 
     @JsonRawValue
+    private String floors;
+
+    @JsonRawValue
     private String footprint;
 
     @JsonRawValue
