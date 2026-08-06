@@ -3,6 +3,7 @@ package org.meps.hjd.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
+import org.meps.hjd.dto.HjdBriefingResponseDto;
 import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
 import org.meps.hjd.exception.HjdNotFoundException;
@@ -48,5 +49,28 @@ class HjdServiceIntegrationTest {
         // 부산 해운대 좌표
         assertThatThrownBy(() -> hjdService.findByCoordinate(35.1587, 129.1604))
                 .isInstanceOf(HjdNotFoundException.class);
+    }
+
+    @Test
+    void getBriefing_존재하는_행정동코드_성공() {
+
+        String hjdCd = "11215840";
+
+        HjdBriefingResponseDto result = hjdService.getBriefing(hjdCd);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getSggName()).isNotBlank();
+        assertThat(result.getHjdName()).isNotBlank();
+        assertThat(result.getOverallBriefing()).isNotBlank();
+    }
+
+    @Test
+    void getBriefing_존재하지않는_행정동코드_실패() {
+
+        String hjdCd = "11215841";
+
+        assertThatThrownBy(() -> hjdService.getBriefing(hjdCd))
+                .isInstanceOf(HjdNotFoundException.class)
+                .hasMessageContaining(hjdCd);
     }
 }
