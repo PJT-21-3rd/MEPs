@@ -11,6 +11,7 @@ import AiBriefingCard from './AiBriefingCard.vue';
 import DiagnosticFactorList from './DiagnosticFactorList.vue';
 import { fetchReportData } from '@/api/reportApi';
 import { X, ArrowLeft, ChevronRight, FileText, Zap } from '@lucide/vue';
+import { useUiStore } from '@/stores/uiStore.js';
 
 const props = defineProps({
   buildingId: {
@@ -33,6 +34,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'open-insurance', 'open-loan']);
 const router = useRouter();
+const uiStore = useUiStore();
 
 const currentView = ref('summary');
 const isLoading = ref(true);
@@ -90,6 +92,7 @@ function backToSummary() {
 
 function handleClose() {
   emit('close');
+  uiStore.closeReport();
 }
 
 // #29: 리포트 패널 스크롤이 바닥에 닿으면 공인중개사 카드를 지도 위에 노출

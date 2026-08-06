@@ -1,7 +1,7 @@
 <!-- src/components/layout/MainSidebar.vue -->
 <template>
   <aside
-    class="relative z-10 flex h-full w-[400px] shrink-0 flex-col bg-white shadow-[1px_0_0_0_rgba(0,0,0,0.06)]"
+    class="relative z-30 flex h-full w-[400px] shrink-0 flex-col bg-white shadow-[1px_0_0_0_rgba(0,0,0,0.06)]"
   >
     <SidebarHeader />
     <template v-if="uiStore.isDetailOpen">
