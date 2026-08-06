@@ -16,14 +16,16 @@ const totArea = computed(() =>
 </script>
 
 <template>
-  <div class="flex gap-2">
-    <InfoChip label="대지면적" :value="platArea" />
-    <InfoChip label="연면적" :value="totArea" />
-  </div>
+  <div class="mt-4">
+    <div class="flex gap-2">
+      <InfoChip label="대지면적" :value="platArea" />
+      <InfoChip label="연면적" :value="totArea" />
+    </div>
 
-  <div class="flex items-center justify-end p-1">
-    <span class="text-[12px] text-neutral-500 flex items-center gap-1">
-      <Heart :size="12" class="fill-status-like text-status-like" /> 0 명이 저장함
-    </span>
+    <div class="flex items-center justify-end">
+      <span class="text-[12px] text-text-sub flex items-center gap-1">
+        <Heart :size="12" class="fill-status-like text-status-like" /> 0 명이 저장함
+      </span>
+    </div>
   </div>
 </template>

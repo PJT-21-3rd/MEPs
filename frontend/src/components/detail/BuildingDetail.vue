@@ -30,17 +30,20 @@
 
     <div class="relative flex-1 overflow-y-auto">
       <!-- 로드뷰 -->
-      <div class="px-4"><RoadViewImage :lat="37.5023528" :lng="127.0259463" /></div>
+      <div class="px-4">
+        <RoadViewImage :lat="37.5023528" :lng="127.0259463" />
+      </div>
 
       <!-- 인포 -->
       <div class="px-5 pt-4">
         <BuildingInfoPannel :buildingData="buildingDetail" />
       </div>
       <!-- 칩 -->
-      <div class="px-5 mt-4">
+      <div class="px-5">
         <BuildingInfoChips :buildingData="buildingDetail" />
       </div>
       <!-- 탭 + 토지/건물 -->
+      <BuildingSpecs :buildingData="buildingDetail" />
     </div>
     <!-- 리포트 생성 버튼 -->
   </div>
@@ -54,6 +57,7 @@ import { ChevronLeft, Heart, Share2, Sparkles } from '@lucide/vue';
 import RoadViewImage from './RoadViewImage.vue';
 import BuildingInfoPannel from './BuildingInfoPannel.vue';
 import BuildingInfoChips from './BuildingInfoChips.vue';
+import BuildingSpecs from './BuildingSpecs.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
@@ -66,18 +70,52 @@ const toggleFavorite = () => {
 // 임시 건물 상세 데이터 (추후 API 연동)
 const buildingDetail = computed(() => {
   return {
-    buildingId: uiStore.selectedBuildingId,
-    bldNm: '메가타워',
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    mainPurpsNm: '제2종근린생활시설',
-    platArea: '450.5',
-    totArea: '2,150.8',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '1989-12-29',
-    lat: 37.5473051,
-    lng: 127.073132,
+    buildingId: '1168010100102160000',
+    pnu: '1168010100102160000',
+    bldNm: '역삼 스타빌딩',
+    mainPurps: '제2종근린생활시설',
+    roadAddr: '서울특별시 강남구 테헤란로 152',
+    jibunAddr: '서울특별시 강남구 역삼동 123-4',
+    center: {
+      type: 'Point',
+      coordinates: [127.0366742, 37.5006373],
+    },
+    footprint: {
+      type: 'MultiPolygon',
+      coordinates: [
+        [
+          [
+            [127.0365, 37.5007],
+            [127.0368, 37.5007],
+            [127.0368, 37.5005],
+            [127.0365, 37.5005],
+            [127.0365, 37.5007],
+          ],
+        ],
+      ],
+    },
+    savedCnt: 12,
+    land: {
+      lndcgrCodeNm: '대',
+      prposAreaNm: '일반상업지역',
+      roadSideCodeNm: '광대소각',
+      pblntfPclnd: 29040000,
+    },
+    detail: {
+      strctCdNm: '철근콘크리트구조',
+      grndFlr: 3,
+      ugrndFlr: 1,
+      hoCnt: 86,
+      useAprDay: '20180101',
+      elapsedYear: 8,
+      violBdYn: 'N',
+    },
+    floors: [
+      { flrGbNm: '지하', flrNoNm: '1층', mainPurpsNm: '제2종근린생활시설', etcPurps: '창고' },
+      { flrGbNm: '지상', flrNoNm: '1층', mainPurpsNm: '제2종근린생활시설', etcPurps: '소매점' },
+      { flrGbNm: '지상', flrNoNm: '2층', mainPurpsNm: '제2종근린생활시설', etcPurps: '일반음식점' },
+      { flrGbNm: '지상', flrNoNm: '3층', mainPurpsNm: '제2종근린생활시설', etcPurps: '미용실' },
+    ],
   };
 });
 
