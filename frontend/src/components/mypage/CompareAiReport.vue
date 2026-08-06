@@ -12,6 +12,13 @@ const props = defineProps({
 function isActive(key) {
   return props.activeSections.includes(key);
 }
+
+function gradeClass(grade) {
+  if (grade === '안전') return 'bg-grade-safe text-text-safe';
+  if (grade === '양호') return 'bg-grade-good text-text-good';
+  if (grade === '주의') return 'bg-grade-warn text-text-warn';
+  return '';
+}
 </script>
 
 <template>
@@ -26,6 +33,21 @@ function isActive(key) {
         :key="building.buildingId"
         class="flex-1 min-w-0 p-3 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm"
       >
+        <!-- 매물 헤더 -->
+        <div class="-mx-3 -mt-3 px-3 py-2.5 bg-surface-gray flex items-center justify-between">
+          <!-- 왼쪽: 아이콘+건물명-->
+          <div class="flex items-center gap-1.5">
+            <Sparkles :size="15" class="text-secondary" />
+            <span class="text-[14px] font-bold">{{ building.bldNm }}</span>
+          </div>
+
+          <!-- 오른쪽: 등급 배지 -->
+          <span class="text-[12px] px-2 py-0.5 rounded-full" :class="gradeClass(building.grade)">
+            {{ building.grade }}
+          </span>
+        </div>
+
+        <!-- 게이지+브리핑 -->
         <div class="flex items-center gap-4">
           <div class="scale-[0.7] origin-center shrink-0 -mx-6 -my-6">
             <ScoreGauge :score="building.score" :showLabel="false" />
