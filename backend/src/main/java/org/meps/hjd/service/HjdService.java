@@ -6,6 +6,7 @@ import org.meps.hjd.dto.HjdBboxDto;
 import org.meps.hjd.dto.HjdBriefingResponseDto;
 import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
+import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.meps.hjd.mapper.HjdMapper;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,15 @@ public class HjdService {
     }
 
     public HjdBriefingResponseDto getBriefing(String hjdCd) {
-        return hjdMapper.findByHjdCd(hjdCd);
+        HjdBriefingResponseDto briefing = hjdMapper.findByHjdCd(hjdCd);
+
+        if (briefing == null) {
+            throw new HjdNotFoundException(hjdCd);
+        }
+
+        if (briefing.getOverallBriefing() == null) {
+            throw new AiBriefingNotAvailableException(hjdCd);
+        }
+        return briefing;
     }
 }

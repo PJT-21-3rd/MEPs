@@ -6,6 +6,7 @@ import org.meps.building.exception.InvalidBoundsException;
 import org.meps.building.exception.InvalidBuildingIdException;
 import org.meps.building.exception.InvalidKeywordException;
 import org.meps.common.geocoding.GeocodingException;
+import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,5 +67,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> handleUnexpected(Exception e) {
         log.error("처리되지 않은 예외 발생", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+    /** 행정동은 존재하나 AI 브리핑이 아직 생성되지 않음 (배치 미처리) → 502 */
+    @ExceptionHandler(AiBriefingNotAvailableException.class)
+    public ResponseEntity<Void> handleAiBriefingNotAvailable(AiBriefingNotAvailableException e) {
+        log.warn("AI 브리핑 미생성: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
     }
 }
