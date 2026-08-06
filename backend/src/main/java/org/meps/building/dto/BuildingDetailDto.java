@@ -17,6 +17,9 @@ public class BuildingDetailDto {
     private String roadAddr;
     private String jibunAddr;
 
+    private Double platArea;
+    private Double totArea;;
+
     @JsonRawValue
     private String floors;
 

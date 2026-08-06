@@ -165,4 +165,53 @@ class BuildingControllerIntegrationTest {
                         .param("lat", "37.562335"))
                 .andExpect(status().isBadRequest());
     }
+
+
+    @Test
+    void 상세조회_응답에_토지정보가_포함된다() throws Exception {
+        // 이수빌딩 (강남구 역삼동)
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1168010100106010003000001"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"land\""));
+        assertTrue(body.contains("lndcgrCodeNm"));
+        assertTrue(body.contains("pblntfPclnd"));
+    }
+
+    @Test
+    void 좌표조회_응답에도_토지정보가_포함된다() throws Exception {
+        mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 상세조회_응답에_면적정보가_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510300105990008024604"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"platArea\""));
+        assertTrue(body.contains("\"totArea\""));
+    }
+
+    @Test
+    void 좌표조회_응답에도_면적정보가_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.5329003")
+                        .param("lng", "127.0918808"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"platArea\""));
+        assertTrue(body.contains("\"totArea\""));
+    }
 }

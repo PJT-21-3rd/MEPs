@@ -45,6 +45,8 @@
         <result property="floors"      column="floors"/>
         <result property="footprint"   column="footprint"/>
         <result property="parcelGeom"  column="parcelGeom"/>
+        <result property="platArea"  column="platArea"/>
+        <result property="totArea"   column="totArea"/>
 
         <association property="land" javaType="org.meps.building.dto.BuildingLandDto">
             <result property="lndcgrCodeNm"   column="lndcgrCodeNm"/>
@@ -65,6 +67,8 @@
                road_side_code_nm AS roadSideCodeNm,
                pblntf_pclnd      AS pblntfPclnd,
                floor_info        AS floors,
+               plat_area         AS platArea,
+               tot_area          AS totArea,
                ST_AsGeoJSON(footprint)   AS footprint,
                ST_AsGeoJSON(parcel_geom) AS parcelGeom
         FROM buildings
@@ -83,6 +87,8 @@
                road_side_code_nm AS roadSideCodeNm,
                pblntf_pclnd      AS pblntfPclnd,
                floor_info        AS floors,
+               plat_area         AS platArea,
+               tot_area          AS totArea,
                ST_AsGeoJSON(footprint)   AS footprint,
                ST_AsGeoJSON(parcel_geom) AS parcelGeom
         FROM buildings
