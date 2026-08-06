@@ -1,7 +1,5 @@
 <template>
   <div class="flex flex-col h-full bg-white">
-    <!-- 임시 페이지 -->
-    <!-- Todos: -->
     <!-- 헤더 -->
     <header class="flex items-center justify-between px-4 py-3 border-t border-surface-base">
       <button
@@ -46,6 +44,7 @@
       <BuildingSpecs :buildingData="buildingDetail" />
     </div>
     <!-- 리포트 생성 버튼 -->
+    <ReportCTAButton @action="handleGenerateReport" />
   </div>
 </template>
 
@@ -58,6 +57,7 @@ import RoadViewImage from './RoadViewImage.vue';
 import BuildingInfoPannel from './BuildingInfoPannel.vue';
 import BuildingInfoChips from './BuildingInfoChips.vue';
 import BuildingSpecs from './BuildingSpecs.vue';
+import ReportCTAButton from './ReportCTAButton.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
@@ -118,6 +118,11 @@ const buildingDetail = computed(() => {
     ],
   };
 });
+
+const handleGenerateReport = () => {
+  console.log('AI 리포트 패널 열기!');
+  uiStore.openReport();
+};
 
 // 뒤로가기 핸들러
 const handleBack = () => {
