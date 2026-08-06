@@ -38,7 +38,7 @@ function gradeClass(grade) {
           <!-- 왼쪽: 아이콘+건물명-->
           <div class="flex items-center gap-1.5">
             <Sparkles :size="15" class="text-secondary" />
-            <span class="text-[14px] font-bold">{{ building.bldNm }}</span>
+            <span class="text-[14px] font-semibold">{{ building.bldNm }}</span>
           </div>
 
           <!-- 오른쪽: 등급 배지 -->

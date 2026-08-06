@@ -56,7 +56,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top border-l border-surface-gray"
+                class="py-3 px-4 align-top font-bold border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -80,7 +80,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top border-l border-surface-gray"
+                class="py-3 px-4 align-top font-bold border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -108,7 +108,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top border-l border-surface-gray"
+                class="py-3 px-4 align-top font-bold border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -148,9 +148,9 @@ const buildingRows = [
                 :key="index"
                 class="border-b border-surface-gray"
               >
-                <td class="py-1.5">{{ floor.flrGbNm }} {{ floor.flrNoNm }}</td>
-                <td class="py-1.5">{{ floor.mainPurpsNm }}</td>
-                <td class="py-1.5">{{ floor.etcPurps }}</td>
+                <td class="py-1.5 font-bold">{{ floor.flrGbNm }} {{ floor.flrNoNm }}</td>
+                <td class="py-1.5 font-bold">{{ floor.mainPurpsNm }}</td>
+                <td class="py-1.5 font-bold">{{ floor.etcPurps }}</td>
               </tr>
             </tbody>
           </table>
