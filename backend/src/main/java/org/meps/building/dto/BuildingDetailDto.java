@@ -25,4 +25,6 @@ public class BuildingDetailDto {
 
     @JsonRawValue
     private String parcelGeom;
+
+    private BuildingLandDto land;
 }

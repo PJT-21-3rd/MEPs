@@ -36,27 +36,53 @@
     </select>
 
     <!-- 건물 기본 정보 조회 -->
-    <select id="findBuildingDetail" resultType="org.meps.building.dto.BuildingDetailDto">
-        SELECT bd_mgt_sn   AS buildingId,
-               bld_nm      AS bldNm,
-               main_purps  AS mainPurpsNm,
-               road_addr   AS roadAddr,
-               jibun_addr  AS jibunAddr,
-               floor_info  AS floors,
-               ST_AsGeoJSON(footprint) AS footprint,
+    <resultMap id="buildingDetailMap" type="org.meps.building.dto.BuildingDetailDto">
+        <id     property="buildingId"  column="buildingId"/>
+        <result property="bldNm"       column="bldNm"/>
+        <result property="mainPurpsNm" column="mainPurpsNm"/>
+        <result property="roadAddr"    column="roadAddr"/>
+        <result property="jibunAddr"   column="jibunAddr"/>
+        <result property="floors"      column="floors"/>
+        <result property="footprint"   column="footprint"/>
+        <result property="parcelGeom"  column="parcelGeom"/>
+
+        <association property="land" javaType="org.meps.building.dto.BuildingLandDto">
+            <result property="lndcgrCodeNm"   column="lndcgrCodeNm"/>
+            <result property="prposAreaNm"    column="prposAreaNm"/>
+            <result property="roadSideCodeNm" column="roadSideCodeNm"/>
+            <result property="pblntfPclnd"    column="pblntfPclnd"/>
+        </association>
+    </resultMap>
+
+    <select id="findBuildingDetail" resultMap="buildingDetailMap">
+        SELECT bd_mgt_sn         AS buildingId,
+               bld_nm            AS bldNm,
+               main_purps        AS mainPurpsNm,
+               road_addr         AS roadAddr,
+               jibun_addr        AS jibunAddr,
+               lndcgr_code_nm    AS lndcgrCodeNm,
+               prpos_area_nm     AS prposAreaNm,
+               road_side_code_nm AS roadSideCodeNm,
+               pblntf_pclnd      AS pblntfPclnd,
+               floor_info        AS floors,
+               ST_AsGeoJSON(footprint)   AS footprint,
                ST_AsGeoJSON(parcel_geom) AS parcelGeom
         FROM buildings
         WHERE bd_mgt_sn = #{buildingId}
     </select>
 
     <!-- 좌표로 조회 (지도에서 건물 클릭) -->
-    <select id="findBuildingDetailAt" resultType="org.meps.building.dto.BuildingDetailDto">
-        SELECT bd_mgt_sn   AS buildingId,
-               bld_nm      AS bldNm,
-               main_purps  AS mainPurpsNm,
-               road_addr   AS roadAddr,
-               jibun_addr  AS jibunAddr,
-               floor_info  AS floors,
+    <select id="findBuildingDetailAt" resultMap="buildingDetailMap">
+        SELECT bd_mgt_sn         AS buildingId,
+               bld_nm            AS bldNm,
+               main_purps        AS mainPurpsNm,
+               road_addr         AS roadAddr,
+               jibun_addr        AS jibunAddr,
+               lndcgr_code_nm    AS lndcgrCodeNm,
+               prpos_area_nm     AS prposAreaNm,
+               road_side_code_nm AS roadSideCodeNm,
+               pblntf_pclnd      AS pblntfPclnd,
+               floor_info        AS floors,
                ST_AsGeoJSON(footprint)   AS footprint,
                ST_AsGeoJSON(parcel_geom) AS parcelGeom
         FROM buildings
