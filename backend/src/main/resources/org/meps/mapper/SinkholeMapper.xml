@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.sinkhole.mapper.SinkholeMapper">
+
+    <!-- 건물 반경 500m 이내 지반침하 사고 이력 -->
+    <select id="findIncidentsByBuilding" resultType="org.meps.sinkhole.dto.SinkholeIncidentDto">
+        SELECT s.sago_no,
+               s.sago_date,
+               s.sgg_nm,
+               s.bjd_nm,
+               ST_Distance_Sphere(b.center, s.geom) AS distanceM
+        FROM building_sinkhole_map m
+        JOIN sinkhole s  ON s.sago_no = m.sago_no
+        JOIN buildings b ON b.bd_mgt_sn = m.bd_mgt_sn
+        WHERE m.bd_mgt_sn = #{buildingId}
+        ORDER BY s.sago_date DESC
+    </select>
+
+</mapper>
