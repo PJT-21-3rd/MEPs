@@ -3,8 +3,10 @@ package org.meps.hjd.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.hjd.dto.HjdBboxDto;
+import org.meps.hjd.dto.HjdBriefingResponseDto;
 import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
+import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.meps.hjd.mapper.HjdMapper;
 import org.springframework.stereotype.Service;
@@ -42,5 +44,18 @@ public class HjdService {
     /** 행정동 코드로 경계 bbox 조회. 없으면 null */
     public HjdBboxDto findBboxByHjdCd(String hjdCd) {
         return hjdMapper.findBboxByHjdCd(hjdCd);
+    }
+
+    public HjdBriefingResponseDto getBriefing(String hjdCd) {
+        HjdBriefingResponseDto briefing = hjdMapper.findByHjdCd(hjdCd);
+
+        if (briefing == null) {
+            throw new HjdNotFoundException(hjdCd);
+        }
+
+        if (briefing.getOverallBriefing() == null) {
+            throw new AiBriefingNotAvailableException(hjdCd);
+        }
+        return briefing;
     }
 }
