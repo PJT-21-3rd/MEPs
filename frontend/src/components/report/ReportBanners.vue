@@ -4,7 +4,7 @@ import { ChevronRight, ShieldCheck, Landmark } from '@lucide/vue';
 // #27: 배너 노출 + 클릭 이벤트 emit까지
 // 실제 모달 오픈 로직은 #94(보험)·#102(대출)에서 부모가 처리
 
-defineEmits(['open-insurance', 'open-loan']);
+defineEmits(['open-insurance', 'business', 'open-loan']);
 </script>
 
 <template>

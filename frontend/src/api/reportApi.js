@@ -6,8 +6,8 @@ import { getGradeByStatusCode, FACTOR_CODE_TO_KEY } from '@/constants/reportCons
 const REPORT_ENDPOINT = (buildingId) => `/buildings/${buildingId}/safety-report/basic`;
 // TODO: 정확한 엔드포인트 경로는 BE API 문서 확인 후 수정 필요
 const DETAILED_REPORT_ENDPOINT = (buildingId) => `/buildings/${buildingId}/safety-report/detailed`;
+const INSURANCE_RIDERS_ENDPOINT = '/insurance/riders';
 
-// BE 응답을 컴포넌트가 쓰는 형태로 변환
 function transformReportResponse(raw) {
   const dangerItems = {};
 
@@ -58,6 +58,30 @@ function transformDetailedReportResponse(raw) {
   };
 }
 
+// 주의 판정된 factor 코드만 추출
+function getCautionFactorCodes(rawFactors) {
+  return rawFactors.filter((factor) => factor.status === 'CAUTION').map((factor) => factor.code);
+}
+
+// 특약/상품 응답 factorCode 기준으로 그룹핑
+// 한 팩터에 RIDER/PRODUCT 여러 개 존재 가능 -> 배열로 묶음
+function groupInsuranceRidersByFactor(items) {
+  const grouped = {};
+
+  items.forEach((item) => {
+    const key = FACTOR_CODE_TO_KEY[item.factorCode];
+    if (!key) return;
+
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push({
+      coverageType: item.coverageType,
+      name: item.name,
+      description: item.coverageSummary,
+    });
+  });
+
+  return grouped;
+}
 /**
  * 건물 ID로 AI 안심 진단 리포트 조회
  * (GET /buildings/{buildingId}/safety-report/basic)
@@ -67,7 +91,31 @@ function transformDetailedReportResponse(raw) {
  */
 export async function fetchReportData(buildingId) {
   const { data } = await http.get(REPORT_ENDPOINT(buildingId));
-  return transformReportResponse(data);
+  const result = transformReportResponse(data);
+
+  const cautionCodes = getCautionFactorCodes(data.factors);
+  result.insuranceRidersByFactor = {};
+
+  if (cautionCodes.length > 0) {
+    try {
+      const { data: coverageData } = await http.get(INSURANCE_RIDERS_ENDPOINT, {
+        params: { factors: cautionCodes.join(',') },
+      });
+      result.insuranceRidersByFactor = groupInsuranceRidersByFactor(coverageData.items);
+
+      // 특약 카드(#25/#32 진단 카드)용: 팩터별 RIDER 하나만 뽑아 detail.insurance로 병합
+      Object.keys(result.insuranceRidersByFactor).forEach((key) => {
+        const rider = result.insuranceRidersByFactor[key].find((i) => i.coverageType === 'RIDER');
+        if (rider && result.dangerItems[key]) {
+          result.dangerItems[key].detail = { insurance: rider };
+        }
+      });
+    } catch (err) {
+      console.warn('[reportApi] 특약/상품 목록 조회 실패', err);
+    }
+  }
+
+  return result;
 }
 
 /**
