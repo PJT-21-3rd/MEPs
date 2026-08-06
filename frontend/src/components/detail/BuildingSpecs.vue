@@ -18,7 +18,7 @@
   </div>
 
   <!-- 본문 -->
-  <div class="px-5 pb-32 pt-2">
+  <div class="px-5 pb-40 pt-2">
     <!-- 토지 -->
     <section ref="sectionLand" id="section-land" class="scroll-mt-14 py-3">
       <div class="mb-2 flex items-center gap-2">
