@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -171,9 +172,10 @@ public class RootConfig {
 
     /**
      * 외부 API 호출 공용 RestTemplate (지오코딩 등 짧은 호출용)
-     * 타임아웃이 빈 단위 설정이므로, 읽기 타임아웃이 긴 호출(LLM 등)은 전용 빈을 따로 등록할 것
+     * 빈이 둘이 되면서 무자격 주입(RestTemplate 단독 파라미터)이 모호해지므로 @Primary로 기본 지정
      */
     @Bean
+    @Primary
     public RestTemplate restTemplate() {
 
         SimpleClientHttpRequestFactory factory =
@@ -182,6 +184,24 @@ public class RootConfig {
         factory.setConnectTimeout(3_000);
 
         factory.setReadTimeout(5_000);
+
+        return new RestTemplate(factory);
+    }
+
+    /**
+     * LLM 호출 전용 RestTemplate — 한줄 브리핑 5문장 생성은 공용 빈의 5초 읽기 타임아웃을
+     * 넘길 수 있어 분리. gpt-5-nano reasoning medium이 20초를 넘는 실측이 있어 45초.
+     * 주입 시 @Qualifier("llmRestTemplate") 필요
+     */
+    @Bean
+    public RestTemplate llmRestTemplate() {
+
+        SimpleClientHttpRequestFactory factory =
+                new SimpleClientHttpRequestFactory();
+
+        factory.setConnectTimeout(3_000);
+
+        factory.setReadTimeout(45_000);
 
         return new RestTemplate(factory);
     }
