@@ -14,7 +14,6 @@ export const compareData = {
     buildingId: '1121510700102020000025797',
     bldNm: '역삼 스타빌딩',
     score: 92,
-    grade: '안전',
     briefing:
       '구조·화재·지반침하·침수 4개 항목 모두 안전 범위로 평가되었습니다. 안심하고 검토하셔도 좋습니다.',
     diagnosis: {
@@ -61,7 +60,6 @@ export const compareData = {
     buildingId: '1121510700102020000025798',
     bldNm: '센트럴프라자',
     score: 96,
-    grade: '안전',
     briefing:
       '전 항목에서 우수한 안전성을 보입니다. 최근 준공된 건물로 구조적 안정성이 특히 뛰어납니다.',
     diagnosis: {
@@ -108,7 +106,6 @@ export const compareData = {
     buildingId: '1121510700102020000025799',
     bldNm: '메가시티타워',
     score: 88,
-    grade: '양호',
     briefing: '위반건축물 이력이 있으나 안전 지표는 매우 양호합니다. 세부 사항 확인을 권장합니다.',
     diagnosis: {
       structure: { status: 'good', summary: '위반건축물 이력이 있어 확인이 필요합니다.' },

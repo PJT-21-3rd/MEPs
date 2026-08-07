@@ -4,6 +4,8 @@ import AiBriefingCard from '@/components/report/AiBriefingCard.vue';
 import DiagnosticFactorList from '@/components/report/DiagnosticFactorList.vue';
 import { Sparkles } from '@lucide/vue';
 import DetailedReportDisclaimer from '../report/DetailedReportDisclaimer.vue';
+import { getGradeByScore, GRADE_META } from '@/constants/reportConstants.js';
+
 const props = defineProps({
   buildings: Array,
   activeSections: Array,
@@ -13,11 +15,8 @@ function isActive(key) {
   return props.activeSections.includes(key);
 }
 
-function gradeClass(grade) {
-  if (grade === '안전') return 'bg-grade-safe text-text-safe';
-  if (grade === '양호') return 'bg-grade-good text-text-good';
-  if (grade === '주의') return 'bg-grade-warn text-text-warn';
-  return '';
+function gradeMeta(score) {
+  return GRADE_META[getGradeByScore(score)];
 }
 </script>
 
@@ -42,8 +41,11 @@ function gradeClass(grade) {
           </div>
 
           <!-- 오른쪽: 등급 배지 -->
-          <span class="text-[12px] px-2 py-0.5 rounded-full" :class="gradeClass(building.grade)">
-            {{ building.grade }}
+          <span
+            class="text-[12px] px-2 py-0.5 rounded-full"
+            :class="[gradeMeta(building.score).badgeBg, gradeMeta(building.score).text]"
+          >
+            {{ gradeMeta(building.score).label }}
           </span>
         </div>
 
