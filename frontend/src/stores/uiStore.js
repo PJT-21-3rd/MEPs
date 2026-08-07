@@ -7,6 +7,8 @@ export const useUiStore = defineStore('ui', () => {
   const selectedBuildingId = ref(null); // 건물선택
   const isDetailOpen = ref(false); // 상세화면 열람
   const isReportOpen = ref(false); // 리포트화면 열람
+  const insuranceModalConfig = ref(null); // 보험 모달 설정
+  const loanModalConfig = ref(null); // 대출 모달 설정
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
@@ -31,6 +33,22 @@ export const useUiStore = defineStore('ui', () => {
     isReportOpen.value = false;
   };
 
+  // 보험 모달 여닫
+  const openInsuranceModal = (config) => {
+    insuranceModalConfig.value = config;
+  };
+  const closeInsuranceModal = () => {
+    insuranceModalConfig.value = null;
+  };
+
+  // 대출 모달 여닫
+  const openLoanModal = (config) => {
+    loanModalConfig.value = config;
+  };
+  const closeLoanModal = () => {
+    loanModalConfig.value = null;
+  };
+
   return {
     isDetailOpen,
     isReportOpen,
@@ -41,5 +59,11 @@ export const useUiStore = defineStore('ui', () => {
     openReport,
     closeReport,
     toggleDetailPanel,
+    insuranceModalConfig,
+    openInsuranceModal,
+    closeInsuranceModal,
+    loanModalConfig,
+    openLoanModal,
+    closeLoanModal,
   };
 });
