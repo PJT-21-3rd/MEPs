@@ -39,14 +39,15 @@
     <resultMap id="buildingDetailMap" type="org.meps.building.dto.BuildingDetailDto">
         <id     property="buildingId"  column="buildingId"/>
         <result property="bldNm"       column="bldNm"/>
-        <result property="mainPurpsNm" column="mainPurpsNm"/>
         <result property="roadAddr"    column="roadAddr"/>
         <result property="jibunAddr"   column="jibunAddr"/>
-        <result property="floors"      column="floors"/>
+        <result property="mainPurpsNm" column="mainPurpsNm"/>
+        <result property="platArea"    column="platArea"/>
+        <result property="totArea"     column="totArea"/>
+        <result property="center"      column="center"/>
         <result property="footprint"   column="footprint"/>
         <result property="parcelGeom"  column="parcelGeom"/>
-        <result property="platArea"  column="platArea"/>
-        <result property="totArea"   column="totArea"/>
+        <result property="floors"      column="floors"/>
 
         <association property="land" javaType="org.meps.building.dto.BuildingLandDto">
             <result property="lndcgrCodeNm"   column="lndcgrCodeNm"/>
@@ -54,23 +55,46 @@
             <result property="roadSideCodeNm" column="roadSideCodeNm"/>
             <result property="pblntfPclnd"    column="pblntfPclnd"/>
         </association>
+
+        <association property="detail" javaType="org.meps.building.dto.BuildingStructureDto">
+            <result property="strctCdNm" column="strctCdNm"/>
+            <result property="grndFlr"   column="grndFlr"/>
+            <result property="ugrndFlr"  column="ugrndFlr"/>
+            <result property="archArea"  column="archArea"/>
+            <result property="heit"      column="heit"/>
+            <result property="hoCnt"     column="hoCnt"/>
+            <result property="useAprDay" column="useAprDay"/>
+            <result property="violBdYn"  column="violBdYn"/>
+        </association>
     </resultMap>
 
     <select id="findBuildingDetail" resultMap="buildingDetailMap">
         SELECT bd_mgt_sn         AS buildingId,
                bld_nm            AS bldNm,
-               main_purps        AS mainPurpsNm,
                road_addr         AS roadAddr,
                jibun_addr        AS jibunAddr,
+               main_purps        AS mainPurpsNm,
+               plat_area         AS platArea,
+               tot_area          AS totArea,
+               ST_AsGeoJSON(center)      AS center,
+               ST_AsGeoJSON(footprint)   AS footprint,
+               ST_AsGeoJSON(parcel_geom) AS parcelGeom,
+
                lndcgr_code_nm    AS lndcgrCodeNm,
                prpos_area_nm     AS prposAreaNm,
                road_side_code_nm AS roadSideCodeNm,
                pblntf_pclnd      AS pblntfPclnd,
-               floor_info        AS floors,
-               plat_area         AS platArea,
-               tot_area          AS totArea,
-               ST_AsGeoJSON(footprint)   AS footprint,
-               ST_AsGeoJSON(parcel_geom) AS parcelGeom
+
+               strct_cd_nm       AS strctCdNm,
+               grnd_flr          AS grndFlr,
+               ugrnd_flr         AS ugrndFlr,
+               arch_area         AS archArea,
+               heit              AS heit,
+               ho_cnt            AS hoCnt,
+               use_apr_day       AS useAprDay,
+               viol_bd_yn        AS violBdYn,
+
+               floor_info        AS floors
         FROM buildings
         WHERE bd_mgt_sn = #{buildingId}
     </select>
@@ -79,18 +103,30 @@
     <select id="findBuildingDetailAt" resultMap="buildingDetailMap">
         SELECT bd_mgt_sn         AS buildingId,
                bld_nm            AS bldNm,
-               main_purps        AS mainPurpsNm,
                road_addr         AS roadAddr,
                jibun_addr        AS jibunAddr,
+               main_purps        AS mainPurpsNm,
+               plat_area         AS platArea,
+               tot_area          AS totArea,
+               ST_AsGeoJSON(center)      AS center,
+               ST_AsGeoJSON(footprint)   AS footprint,
+               ST_AsGeoJSON(parcel_geom) AS parcelGeom,
+
                lndcgr_code_nm    AS lndcgrCodeNm,
                prpos_area_nm     AS prposAreaNm,
                road_side_code_nm AS roadSideCodeNm,
                pblntf_pclnd      AS pblntfPclnd,
-               floor_info        AS floors,
-               plat_area         AS platArea,
-               tot_area          AS totArea,
-               ST_AsGeoJSON(footprint)   AS footprint,
-               ST_AsGeoJSON(parcel_geom) AS parcelGeom
+
+               strct_cd_nm       AS strctCdNm,
+               grnd_flr          AS grndFlr,
+               ugrnd_flr         AS ugrndFlr,
+               arch_area         AS archArea,
+               heit              AS heit,
+               ho_cnt            AS hoCnt,
+               use_apr_day       AS useAprDay,
+               viol_bd_yn        AS violBdYn,
+
+               floor_info        AS floors
         FROM buildings
         WHERE ST_Contains(footprint,
                           ST_GeomFromText(CONCAT('POINT(', #{lat}, ' ', #{lng}, ')'), 4326))
