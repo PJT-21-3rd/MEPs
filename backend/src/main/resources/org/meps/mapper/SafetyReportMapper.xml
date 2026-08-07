@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.report.mapper.SafetyReportMapper">
+
+    <!-- 기본 리포트 캐시 행 조회 (상세 리포트용 *_report 컬럼은 제외) -->
+    <select id="findByBdMgtSn" resultType="org.meps.report.dto.SafetyReportRowDto">
+        SELECT bd_mgt_sn,
+               ai_model_nm,
+               total_score,
+               flood_score,
+               sink_score,
+               fire_score,
+               struct_score,
+               total_brief,
+               flood_brief,
+               sink_brief,
+               fire_brief,
+               struct_brief
+        FROM building_safety_report
+        WHERE bd_mgt_sn = #{bdMgtSn}
+    </select>
+
+    <!-- 점수 변경 시에만 호출: 갱신이면 기존 브리핑·상세 해석을 함께 무효화(NULL) -->
+    <insert id="upsertScores">
+        INSERT INTO building_safety_report
+            (bd_mgt_sn, ai_model_nm, total_score, flood_score, sink_score, fire_score, struct_score)
+        VALUES
+            (#{bdMgtSn}, #{aiModelNm}, #{totalScore}, #{floodScore}, #{sinkScore}, #{fireScore}, #{structScore})
+        ON DUPLICATE KEY UPDATE
+            ai_model_nm  = VALUES(ai_model_nm),
+            total_score  = VALUES(total_score),
+            flood_score  = VALUES(flood_score),
+            sink_score   = VALUES(sink_score),
+            fire_score   = VALUES(fire_score),
+            struct_score = VALUES(struct_score),
+            total_brief  = NULL,
+            flood_brief  = NULL,
+            sink_brief   = NULL,
+            fire_brief   = NULL,
+            struct_brief = NULL,
+            total_report  = NULL,
+            flood_report  = NULL,
+            sink_report   = NULL,
+            fire_report   = NULL,
+            struct_report = NULL
+    </insert>
+
+    <update id="updateBriefs">
+        UPDATE building_safety_report
+        SET ai_model_nm  = #{aiModelNm},
+            total_brief  = #{briefs.totalBrief},
+            flood_brief  = #{briefs.floodBrief},
+            sink_brief   = #{briefs.sinkBrief},
+            fire_brief   = #{briefs.fireBrief},
+            struct_brief = #{briefs.structBrief}
+        WHERE bd_mgt_sn = #{bdMgtSn}
+    </update>
+
+</mapper>

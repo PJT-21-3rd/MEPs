@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.hjd.mapper.HjdMapper">
+
+    <resultMap id="hjdNavigateResultMap" type="org.meps.hjd.dto.HjdNavigateResponseDto">
+        <result property="hjdCode" column="hjd_cd"/>
+        <result property="hjdName" column="hjd_nm"/>
+    </resultMap>
+
+    <resultMap id="hjdBriefingResultMap" type="org.meps.hjd.dto.HjdBriefingResponseDto">
+        <result property="sggName" column="sgg_nm"/>
+        <result property="hjdName" column="hjd_nm"/>
+        <result property="dailyFlpop" column="daily_flpop"/>
+        <result property="flpopChangeRate" column="flpop_chg_rate"/>
+        <result property="topIndustryName" column="top_induty_nm"/>
+        <result property="topIndustryCnt" column="top_induty_stor_cnt"/>
+        <result property="avgBuildingAge" column="avg_bld_age"/>
+        <result property="majorAgeGroup" column="major_age_grp"/>
+        <result property="majorAgeRatio" column="major_age_ratio"/>
+        <result property="overallBriefing" column="ai_brf"/>
+    </resultMap>
+
+    <!-- 상권분석 통계 테이블들(hjd_flpop 등)과 같은 행정동 코드 체계인 hjd/sgg 기준 -->
+    <select id="findAllNames" resultType="org.meps.hjd.dto.HjdNameDto">
+        SELECT
+            s.sgg_nm AS sggName,
+            h.hjd_nm AS hjdNm
+        FROM hjd h
+                 JOIN sgg s ON h.sgg_cd = s.sgg_cd
+        ORDER BY s.sgg_nm, h.hjd_nm
+    </select>
+
+    <select id="findByCoordinate" resultMap="hjdNavigateResultMap">
+        SELECT
+            hjd_cd,
+            hjd_nm
+        FROM hjd_boundary
+        WHERE ST_Contains(geom, ST_SRID(POINT(#{lng}, #{lat}), 4326))
+            LIMIT 1
+    </select>
+
+    <!--
+      지역명(행정동 전방일치 또는 시군구명)으로 매칭된 경계들의 합집합 bbox
+      - MySQL 축 순서 주의: WKT 경로(ST_GeomFromText 등)는 위도-우선, POINT() 함수 경로는 경도-우선.
+        ST_SRID(geom, 0)으로 SRID를 벗기면 내부 저장 순서가 노출되어 ST_X=경도, ST_Y=위도
+      - Envelope 링 꼭짓점: 1번=(minX,minY)=SW, 3번=(maxX,maxY)=NE
+      - HAVING COUNT(*) > 0: 매칭 없으면 행 자체를 반환하지 않아 mapper 결과가 null
+    -->
+    <select id="findRegionBboxByName" resultType="org.meps.hjd.dto.HjdBboxDto">
+        SELECT
+            MIN(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLat,
+            MIN(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLng,
+            MAX(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLat,
+            MAX(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLng
+        FROM hjd_boundary
+        WHERE hjd_nm LIKE CONCAT(#{keyword}, '%')
+           OR sgg_nm = #{keyword}
+        HAVING COUNT(*) > 0
+    </select>
+
+    <select id="findBboxByHjdCd" resultType="org.meps.hjd.dto.HjdBboxDto">
+        SELECT
+            MIN(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLat,
+            MIN(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 1))) AS swLng,
+            MAX(ST_Y(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLat,
+            MAX(ST_X(ST_PointN(ST_ExteriorRing(ST_Envelope(ST_SRID(geom, 0))), 3))) AS neLng
+        FROM hjd_boundary
+        WHERE hjd_cd = #{hjdCd}
+        HAVING COUNT(*) > 0
+    </select>
+
+    <select id="findByHjdCd" resultMap="hjdBriefingResultMap">
+        SELECT
+            s.sgg_nm,
+            h.hjd_nm,
+            b.daily_flpop,
+            b.flpop_chg_rate,
+            b.top_induty_nm,
+            b.top_induty_stor_cnt,
+            st.avg_bld_age,
+            b.major_age_grp,
+            b.major_age_ratio,
+            b.ai_brf
+        FROM hjd_ai_briefing b
+                 JOIN hjd h ON h.hjd_cd = b.hjd_cd
+                 JOIN sgg s ON s.sgg_cd = h.sgg_cd
+                 LEFT JOIN hjd_stat st ON st.hjd_cd = b.hjd_cd
+        WHERE b.hjd_cd = #{hjdCd}
+    </select>
+
+</mapper>

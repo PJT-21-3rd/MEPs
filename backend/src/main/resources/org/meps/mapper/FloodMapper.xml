@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.flood.mapper.FloodMapper">
+
+    <!--
+      건물에 매칭된 침수흔적 이력을 year 단위로 집계
+      cause는 자유텍스트라 정규화 되지 않았으므로 참고용으로 활용
+    -->
+    <select id="findIncidentsByBuilding" resultType="org.meps.flood.dto.FloodIncidentDto">
+        SELECT f.year AS year,
+            MAX(f.grade)  AS grade,
+            MIN(f.sgg_cd) AS sggCd,
+            MIN(f.cause)  AS cause
+        FROM building_flood_map m
+            JOIN flood f ON f.sn = m.sn
+        WHERE m.bd_mgt_sn = #{buildingId}
+        GROUP BY f.year
+        ORDER BY f.year DESC
+    </select>
+
+</mapper>

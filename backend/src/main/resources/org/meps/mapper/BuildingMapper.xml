@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.building.mapper.BuildingMapper">
+
+    <!--
+      BBox에 속한 빌딩 목록 조회
+      - jibun_addr 등은 mapUnderscoreToCamelCase 전역 설정으로 자동 매핑
+      - 별칭 4개: buildingId/mainPurpsNm(컬럼명-필드명 불일치), lat/lng(함수 결과라 별칭 필수)
+    -->
+    <select id="findBuildingsInBounds"
+            resultType="org.meps.building.dto.NearbyBuildingDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng,
+               jibun_addr,
+               road_addr,
+               bld_nm,
+               main_purps           AS mainPurpsNm,
+               grnd_flr,
+               ugrnd_flr,
+               use_apr_day
+        FROM buildings
+        WHERE MBRContains(
+                      ST_GeomFromText(
+                              CONCAT('POLYGON((',
+                                     #{swLat}, ' ', #{swLng}, ',',
+                                     #{swLat}, ' ', #{neLng}, ',',
+                                     #{neLat}, ' ', #{neLng}, ',',
+                                     #{neLat}, ' ', #{swLng}, ',',
+                                     #{swLat}, ' ', #{swLng}, '))'),
+                              4326),
+                      center)
+        LIMIT #{limit}
+    </select>
+
+    <!-- 건물 기본 정보 조회 -->
+    <resultMap id="buildingDetailMap" type="org.meps.building.dto.BuildingDetailDto">
+        <id     property="buildingId"  column="buildingId"/>
+        <result property="bldNm"       column="bldNm"/>
+        <result property="roadAddr"    column="roadAddr"/>
+        <result property="jibunAddr"   column="jibunAddr"/>
+        <result property="mainPurpsNm" column="mainPurpsNm"/>
+        <result property="platArea"    column="platArea"/>
+        <result property="totArea"     column="totArea"/>
+        <result property="center"      column="center"/>
+        <result property="footprint"   column="footprint"/>
+        <result property="parcelGeom"  column="parcelGeom"/>
+        <result property="floors"      column="floors"/>
+
+        <association property="land" javaType="org.meps.building.dto.BuildingLandDto">
+            <result property="lndcgrCodeNm"   column="lndcgrCodeNm"/>
+            <result property="prposAreaNm"    column="prposAreaNm"/>
+            <result property="roadSideCodeNm" column="roadSideCodeNm"/>
+            <result property="pblntfPclnd"    column="pblntfPclnd"/>
+        </association>
+
+        <association property="detail" javaType="org.meps.building.dto.BuildingStructureDto">
+            <result property="strctCdNm" column="strctCdNm"/>
+            <result property="grndFlr"   column="grndFlr"/>
+            <result property="ugrndFlr"  column="ugrndFlr"/>
+            <result property="archArea"  column="archArea"/>
+            <result property="heit"      column="heit"/>
+            <result property="hoCnt"     column="hoCnt"/>
+            <result property="useAprDay" column="useAprDay"/>
+            <result property="violBdYn"  column="violBdYn"/>
+        </association>
+    </resultMap>
+
+    <select id="findBuildingDetail" resultMap="buildingDetailMap">
+        SELECT bd_mgt_sn         AS buildingId,
+               bld_nm            AS bldNm,
+               road_addr         AS roadAddr,
+               jibun_addr        AS jibunAddr,
+               main_purps        AS mainPurpsNm,
+               plat_area         AS platArea,
+               tot_area          AS totArea,
+               ST_AsGeoJSON(center)      AS center,
+               ST_AsGeoJSON(footprint)   AS footprint,
+               ST_AsGeoJSON(parcel_geom) AS parcelGeom,
+
+               lndcgr_code_nm    AS lndcgrCodeNm,
+               prpos_area_nm     AS prposAreaNm,
+               road_side_code_nm AS roadSideCodeNm,
+               pblntf_pclnd      AS pblntfPclnd,
+
+               strct_cd_nm       AS strctCdNm,
+               grnd_flr          AS grndFlr,
+               ugrnd_flr         AS ugrndFlr,
+               arch_area         AS archArea,
+               heit              AS heit,
+               ho_cnt            AS hoCnt,
+               use_apr_day       AS useAprDay,
+               viol_bd_yn        AS violBdYn,
+
+               floor_info        AS floors
+        FROM buildings
+        WHERE bd_mgt_sn = #{buildingId}
+    </select>
+
+    <!-- 좌표로 조회 (지도에서 건물 클릭) -->
+    <select id="findBuildingDetailAt" resultMap="buildingDetailMap">
+        SELECT bd_mgt_sn         AS buildingId,
+               bld_nm            AS bldNm,
+               road_addr         AS roadAddr,
+               jibun_addr        AS jibunAddr,
+               main_purps        AS mainPurpsNm,
+               plat_area         AS platArea,
+               tot_area          AS totArea,
+               ST_AsGeoJSON(center)      AS center,
+               ST_AsGeoJSON(footprint)   AS footprint,
+               ST_AsGeoJSON(parcel_geom) AS parcelGeom,
+
+               lndcgr_code_nm    AS lndcgrCodeNm,
+               prpos_area_nm     AS prposAreaNm,
+               road_side_code_nm AS roadSideCodeNm,
+               pblntf_pclnd      AS pblntfPclnd,
+
+               strct_cd_nm       AS strctCdNm,
+               grnd_flr          AS grndFlr,
+               ugrnd_flr         AS ugrndFlr,
+               arch_area         AS archArea,
+               heit              AS heit,
+               ho_cnt            AS hoCnt,
+               use_apr_day       AS useAprDay,
+               viol_bd_yn        AS violBdYn,
+
+               floor_info        AS floors
+        FROM buildings
+        WHERE ST_Contains(footprint,
+                          ST_GeomFromText(CONCAT('POINT(', #{lat}, ' ', #{lng}, ')'), 4326))
+            LIMIT 1
+    </select>
+
+    <!-- 통합 검색: PNU 정확 매칭 -->
+    <select id="findByPnu" resultType="org.meps.building.dto.BuildingPointDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE pnu = #{pnu}
+        LIMIT 1
+    </select>
+
+    <!--
+      통합 검색: 지오코딩 좌표 기준 최근접 건물 (약 ±200m MBR 프리필터 후 거리순)
+      - MBR 폴리곤은 WKT 경로라 위도-우선, ST_Distance_Sphere 안 POINT() 함수는 경도-우선
+    -->
+    <select id="findNearest" resultType="org.meps.building.dto.BuildingPointDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE MBRContains(
+                      ST_GeomFromText(
+                              CONCAT('POLYGON((',
+                                     #{lat} - 0.002, ' ', #{lng} - 0.002, ',',
+                                     #{lat} - 0.002, ' ', #{lng} + 0.002, ',',
+                                     #{lat} + 0.002, ' ', #{lng} + 0.002, ',',
+                                     #{lat} + 0.002, ' ', #{lng} - 0.002, ',',
+                                     #{lat} - 0.002, ' ', #{lng} - 0.002, '))'),
+                              4326),
+                      center)
+        ORDER BY ST_Distance_Sphere(center, ST_SRID(POINT(#{lng}, #{lat}), 4326))
+        LIMIT 1
+    </select>
+
+    <!-- 통합 검색: 건물명 전방일치 (가장 짧은 이름 = 정확 일치에 가까운 순) -->
+    <select id="findByName" resultType="org.meps.building.dto.BuildingPointDto">
+        SELECT bd_mgt_sn            AS buildingId,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE bld_nm LIKE CONCAT(#{keyword}, '%')
+        ORDER BY CHAR_LENGTH(bld_nm)
+        LIMIT 1
+    </select>
+
+</mapper>
