@@ -13,6 +13,7 @@ const uiStore = useUiStore();
 
 let timeOut = null; // 재검색 타이머
 let currentPolygons = []; // 폴리곤 객체
+let streetLayer = null; // 거리뷰 선 객체
 
 // geoJSON 좌표 파싱
 const parseMultiPolygon = (multiPolygon) => {
@@ -122,6 +123,21 @@ const fetchPolygonByCoord = async (lat, lng) => {
   return await fetchPolygonData('1168010100102160000'); // 가짜 데이터 반환
 };
 
+// 로드뷰 토글 감지 & 거리뷰레이어 표시
+watch(
+  () => mapStore.isRoadViewMode,
+  (isActive) => {
+    if (!mapStore.mapInstance) return;
+
+    if (isActive) {
+      if (!streetLayer) streetLayer = new window.naver.maps.StreetLayer();
+      streetLayer.setMap(mapStore.mapInstance);
+    } else {
+      if (streetLayer) streetLayer.setMap(null);
+    }
+  },
+);
+
 // 지도 초기화, 이벤트 등록
 onMounted(() => {
   if (!window.naver || !window.naver.maps) {
@@ -160,6 +176,13 @@ onMounted(() => {
   window.naver.maps.Event.addListener(map, 'click', async (e) => {
     const lat = e.coord.lat();
     const lng = e.coord.lng();
+
+    // 로드뷰 모드라면 건물클릭 x
+    if (mapStore.isRoadViewMode) {
+      uiStore.openRoadViewModal(lat, lng);
+      return;
+    }
+
     const data = await fetchPolygonByCoord(lat, lng); // 해당 좌표의 건물 정보 가져오기
 
     if (data && data.buildingId) {
