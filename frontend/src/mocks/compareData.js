@@ -11,7 +11,7 @@
 export const compareData = {
   // id를 키로 두면 selectedIds로 바로 꺼내 쓰기 편함
   1: {
-    buildingId: '1121510700102020000025797',
+    buildingId: '1121510700102160011',
     bldNm: '역삼 스타빌딩',
     score: 92,
     briefing:
