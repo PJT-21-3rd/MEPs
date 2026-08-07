@@ -27,3 +27,9 @@ export const formatRate = (rate) => {
   if (rate > 0) return `+${rate}%`;
   if (rate < 0) return `-${Math.abs(rate)}%`;
 };
+
+// YYYYMMDD → YYYY-MM-DD
+export function formatDate(yyyymmdd) {
+  if (!yyyymmdd || yyyymmdd.length !== 8) return yyyymmdd;
+  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+}

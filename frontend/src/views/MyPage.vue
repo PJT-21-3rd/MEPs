@@ -23,7 +23,7 @@ function toggleSelect(id) {
 </script>
 
 <template>
-  <div class="flex p-4 h-full overflow-hidden divide-x divide-surface-gray">
+  <div class="flex h-full overflow-hidden divide-x divide-surface-gray">
     <FavoriteSidebar
       :buildings="favoriteBuildings"
       :selectedIds="selectedIds"
