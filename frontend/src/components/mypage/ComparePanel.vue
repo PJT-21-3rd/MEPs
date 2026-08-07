@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
+import { Scale, Sparkles, LandPlot, Building2, Layers } from '@lucide/vue';
 import { compareData } from '@/mocks/compareData';
 import CompareBasicInfo from './CompareBasicInfo.vue';
 import CompareAiReport from './CompareAiReport.vue';
@@ -16,13 +16,12 @@ const props = defineProps({
 
 const sections = [
   { key: 'report', label: 'AI 안전진단', icon: Sparkles },
-  { key: 'basic', label: '기본 정보', icon: Info },
   { key: 'land', label: '토지 정보', icon: LandPlot },
   { key: 'building', label: '건축물 정보', icon: Building2 },
   { key: 'floor', label: '층별 정보', icon: Layers },
 ];
 
-const activeSections = ref(['report', 'basic', 'land', 'building', 'floor']);
+const activeSections = ref(['report', 'land', 'building', 'floor']);
 
 function toggleSection(key) {
   const index = activeSections.value.indexOf(key);

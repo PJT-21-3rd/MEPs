@@ -44,8 +44,9 @@ export const compareData = {
       ugrndFlr: 2, // 지하층수
       hoCnt: 48, // 호수
       useAprDay: '20150722', // 사용승인일
-      elapsedYear: 10, // 경과연차
       violBdYn: 'N', // 위반건축물 여부
+      archArea: 320.5, //건축면적
+      heit: 0, //높이
     },
 
     floors: [
@@ -90,8 +91,9 @@ export const compareData = {
       ugrndFlr: 3,
       hoCnt: 62,
       useAprDay: '20180315',
-      elapsedYear: 7,
       violBdYn: 'N',
+      archArea: 320.5,
+      heit: 0,
     },
 
     floors: [
@@ -135,8 +137,9 @@ export const compareData = {
       ugrndFlr: 1,
       hoCnt: 33,
       useAprDay: '20200110',
-      elapsedYear: 5,
       violBdYn: 'Y',
+      archArea: 320.5,
+      heit: 0,
     },
 
     floors: [
