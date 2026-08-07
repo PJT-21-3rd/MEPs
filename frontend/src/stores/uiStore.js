@@ -9,6 +9,8 @@ export const useUiStore = defineStore('ui', () => {
   const isReportOpen = ref(false); // 리포트화면 열람
   const isRoadViewModalOpen = ref(false); // 로드뷰
   const roadViewCoords = ref({ lat: null, lng: null });
+  const insuranceModalConfig = ref(null); // 보험 모달 설정
+  const loanModalConfig = ref(null); // 대출 모달 설정
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
@@ -41,6 +43,22 @@ export const useUiStore = defineStore('ui', () => {
   const closeRoadViewModal = () => {
     isRoadViewModalOpen.value = false;
   };
+  
+  // 보험 모달 여닫
+  const openInsuranceModal = (config) => {
+    insuranceModalConfig.value = config;
+  };
+  const closeInsuranceModal = () => {
+    insuranceModalConfig.value = null;
+  };
+
+  // 대출 모달 여닫
+  const openLoanModal = (config) => {
+    loanModalConfig.value = config;
+  };
+  const closeLoanModal = () => {
+    loanModalConfig.value = null;
+  };
 
   return {
     isDetailOpen,
@@ -56,5 +74,11 @@ export const useUiStore = defineStore('ui', () => {
     openRoadViewModal,
     closeRoadViewModal,
     toggleDetailPanel,
+    insuranceModalConfig,
+    openInsuranceModal,
+    closeInsuranceModal,
+    loanModalConfig,
+    openLoanModal,
+    closeLoanModal,
   };
 });

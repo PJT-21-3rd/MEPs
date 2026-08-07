@@ -2,7 +2,9 @@
 import { ref, computed } from 'vue';
 import { Scale, Sparkles, Info, LandPlot, Building2, Layers } from '@lucide/vue';
 import { compareData } from '@/mocks/compareData';
-import CompareColumn from './CompareColumn.vue';
+import CompareBasicInfo from './CompareBasicInfo.vue';
+import CompareAiReport from './CompareAiReport.vue';
+import CompareTable from './CompareTable.vue';
 
 const compareBuildings = computed(() => {
   return props.selectedIds.map((id) => compareData[id]);
@@ -38,9 +40,9 @@ function isActive(key) {
 </script>
 
 <template>
-  <section class="flex-1 min-w-0 flex flex-col h-full">
-    <!-- 헤더: 제목 + 섹션 표시 개수 + 토글 -->
-    <div class="pb-4 border-b border-surface-gray pl-6">
+  <section class="flex-1 min-w-0 flex flex-col h-full pt-4">
+    <!-- 제목 + 섹션 표시 개수 + 섹션 토글 -->
+    <div class="pb-4 border-b border-surface-gray px-6">
       <div class="flex items-center justify-between mb-3">
         <h2 class="flex items-center gap-2 text-base font-bold">
           <Scale :size="18" class="text-primary" />
@@ -69,8 +71,8 @@ function isActive(key) {
       </div>
     </div>
     <!-- 스크롤 영역 -->
-    <div class="flex-1 overflow-y-auto pt-4 flex flex-col bg-surface-gray">
-      <!-- 2개 미만: 안내 문구 -->
+    <div class="flex-1 overflow-y-auto px-6 flex flex-col bg-surface-gray">
+      <!-- 2개 미만일 때 안내 문구 -->
       <div
         v-if="compareBuildings.length < 2"
         class="flex-1 flex flex-col items-center justify-center text-text-sub"
@@ -84,14 +86,12 @@ function isActive(key) {
         </p>
       </div>
 
-      <!-- 2개 이상: 비교 뷰 -->
-      <div v-else class="pt-4 flex gap-4">
-        <CompareColumn
-          v-for="building in compareBuildings"
-          :key="building.buildingId"
-          :building="building"
-          :activeSections="activeSections"
-        />
+      <!-- 비교 뷰 -->
+
+      <div v-else class="pt-4">
+        <CompareBasicInfo :buildings="compareBuildings" />
+        <CompareAiReport :buildings="compareBuildings" :activeSections="activeSections" />
+        <CompareTable :buildings="compareBuildings" :activeSections="activeSections" />
       </div>
     </div>
   </section>

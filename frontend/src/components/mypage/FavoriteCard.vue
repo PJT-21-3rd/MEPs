@@ -1,5 +1,10 @@
 <script setup>
 import { Heart } from '@lucide/vue';
+import { getGradeByScore, GRADE_META } from '@/constants/reportConstants';
+
+function gradeMeta(score) {
+  return GRADE_META[getGradeByScore(score)];
+}
 
 defineProps({
   building: Object,
@@ -7,20 +12,6 @@ defineProps({
 });
 
 const emit = defineEmits(['toggle']);
-
-function gradeClass(grade) {
-  if (grade === '안전') return 'bg-grade-safe text-text-safe';
-  if (grade === '양호') return 'bg-grade-good text-text-good';
-  if (grade === '주의') return 'bg-grade-warn text-text-warn';
-  return '';
-}
-
-function scoreColorClass(score) {
-  if (score >= 90) return 'text-text-safe';
-  if (score >= 80) return 'text-text-good';
-  if (score >= 70) return 'text-text-warn';
-  return '';
-}
 </script>
 
 <template>
@@ -39,15 +30,18 @@ function scoreColorClass(score) {
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-1.5">
         <span class="text-[13px] font-bold truncate">{{ building.address }}</span>
-        <span class="text-[13px] px-[7px] py-0.5 rounded" :class="gradeClass(building.grade)">
-          {{ building.grade }}
+        <span
+          class="text-[13px] px-[7px] py-0.5 rounded"
+          :class="[gradeMeta(building.score).badgeBg, gradeMeta(building.score).text]"
+        >
+          {{ gradeMeta(building.score).label }}
         </span>
       </div>
       <p class="text-xs text-text-sub mt-[3px]">{{ building.name }}</p>
     </div>
 
     <div class="flex items-center gap-2.5 shrink-0">
-      <span class="text-[17px] font-bold" :class="scoreColorClass(building.score)">
+      <span class="text-[17px] font-bold" :class="gradeMeta(building.score).text">
         {{ building.score }}
       </span>
       <Heart :size="18" fill="currentColor" class="text-status-like" />
