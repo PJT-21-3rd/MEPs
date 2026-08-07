@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 @Service
 @RequiredArgsConstructor
 public class BuildingService {
-    private static final int MIN_ZOOM = 17;
+    private static final int MIN_ZOOM = 10;
     private static final int MAX_RESULTS = 20;
     private final BuildingMapper buildingMapper;
     private static final Pattern BUILDING_ID_PATTERN = Pattern.compile("\\d{25}");

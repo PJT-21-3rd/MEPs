@@ -53,7 +53,7 @@ class BuildingControllerIntegrationTest {
         mockMvc.perform(get("/api/buildings/nearby")
                         .param("swLat", "37.5250").param("swLng", "127.0550")
                         .param("neLat", "37.5450").param("neLng", "127.1000")
-                        .param("zoom", "16"))
+                        .param("zoom", "9"))
                 .andExpect(status().isOk());
     }
 
