@@ -1,71 +1,47 @@
 <script setup>
-import { Info, LandPlot, Building2, Layers } from '@lucide/vue';
+import { LandPlot, Building2, Layers } from '@lucide/vue';
 import { formatDate } from '@/utils/formatters';
 const props = defineProps({
   buildings: Array, // 비교할 매물들 (compareBuildings)
   activeSections: Array, // 켜진 섹션
 });
+import { getBuildingCoverageRatio } from '@/utils/formatters';
 
 function isActive(key) {
   return props.activeSections.includes(key);
 }
 
-// 기본 정보 섹션의 항목 정의
-const basicRows = [
-  { label: '용도', get: (b) => b.mainPurps },
-  { label: '대지면적', get: (b) => `${b.platArea.toLocaleString()}㎡` },
-  { label: '연면적', get: (b) => `${b.totArea.toLocaleString()}㎡` },
-  { label: '세대수/호수', get: (b) => `${b.hoCnt}호` },
-];
-
 // 토지 정보 항목
 const landRows = [
+  { label: '면적', get: (b) => `${b.platArea.toLocaleString()}㎡` },
   { label: '지목', get: (b) => b.land.lndcgrCodeNm },
   { label: '용도지역', get: (b) => b.land.prposAreaNm },
-  { label: '도로조건', get: (b) => b.land.roadSideCodeNm },
+  { label: '도로접면', get: (b) => b.land.roadSideCodeNm },
   { label: '공시지가', get: (b) => `${b.land.pbIntfPcInd.toLocaleString()}원/㎡` },
 ];
 
 // 건축물 정보 항목
 const buildingRows = [
+  { label: '건물이름', get: (b) => b.bldNm },
+  { label: '주용도', get: (b) => b.mainPurps },
   { label: '주구조', get: (b) => b.detail.strctCdNm },
-  { label: '층수', get: (b) => `지상 ${b.detail.grndFlr}층 / 지하 ${b.detail.ugrndFlr}층` },
+  { label: '높이', get: (b) => `${b.detail.heit}m` },
+  { label: '지상/지하', get: (b) => `지상 ${b.detail.grndFlr}층 / 지하 ${b.detail.ugrndFlr}층` },
+  { label: '대지면적', get: (b) => `${b.platArea.toLocaleString()}㎡` },
+  { label: '연면적', get: (b) => `${b.totArea.toLocaleString()}㎡` },
+  {
+    label: '건축면적',
+    get: (b) =>
+      `${b.detail.archArea.toLocaleString()}㎡ (건폐율 ${getBuildingCoverageRatio(b.detail.archArea, b.platArea)}%)`,
+  },
+  { label: '호수', get: (b) => `${b.detail.hoCnt}호` },
   { label: '사용승인일', get: (b) => formatDate(b.detail.useAprDay) },
-  { label: '경과연차', get: (b) => `${b.detail.elapsedYear}년` },
   { label: '위반건축물', get: (b) => (b.detail.violBdYn === 'Y' ? '해당' : '해당없음') },
 ];
 </script>
 
 <template>
   <div>
-    <!-- 기본 정보 섹션 -->
-    <div v-if="isActive('basic')" class="mt-4">
-      <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
-        <Info :size="17" />
-        기본 정보
-      </h4>
-      <div class="bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm">
-        <table class="w-full text-[13px] table-fixed">
-          <tbody>
-            <tr v-for="row in basicRows" :key="row.label" class="odd:bg-white even:bg-surface-gray">
-              <!-- 항목명 (왼쪽 고정 열) -->
-              <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">
-                {{ row.label }}
-              </td>
-              <!-- 각 매물의 값 (가로로) -->
-              <td
-                v-for="building in buildings"
-                :key="building.buildingId"
-                class="py-3 px-4 align-top border-l border-surface-gray"
-              >
-                {{ row.get(building) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- 토지 정보 섹션 -->
     <div v-if="isActive('land')" class="mt-4">
       <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">

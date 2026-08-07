@@ -33,3 +33,9 @@ export function formatDate(yyyymmdd) {
   if (!yyyymmdd || yyyymmdd.length !== 8) return yyyymmdd;
   return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
 }
+
+// 건폐율(%) = 건축면적 / 대지면적 × 100
+export function getBuildingCoverageRatio(archArea, platArea) {
+  if (!archArea || !platArea) return null;
+  return Math.round((archArea / platArea) * 1000) / 10; // 소수점 1자리
+}
