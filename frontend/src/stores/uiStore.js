@@ -7,6 +7,8 @@ export const useUiStore = defineStore('ui', () => {
   const selectedBuildingId = ref(null); // 건물선택
   const isDetailOpen = ref(false); // 상세화면 열람
   const isReportOpen = ref(false); // 리포트화면 열람
+  const isRoadViewModalOpen = ref(false); // 로드뷰
+  const roadViewCoords = ref({ lat: null, lng: null });
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
@@ -31,15 +33,28 @@ export const useUiStore = defineStore('ui', () => {
     isReportOpen.value = false;
   };
 
+  // 로드뷰 여닫
+  const openRoadViewModal = (lat, lng) => {
+    roadViewCoords.value = { lat, lng };
+    isRoadViewModalOpen.value = true;
+  };
+  const closeRoadViewModal = () => {
+    isRoadViewModalOpen.value = false;
+  };
+
   return {
     isDetailOpen,
     isReportOpen,
+    isRoadViewModalOpen,
     searchQuery,
     selectedBuildingId,
+    roadViewCoords,
     openBuildingDetail,
     closeBuildingDetail,
     openReport,
     closeReport,
+    openRoadViewModal,
+    closeRoadViewModal,
     toggleDetailPanel,
   };
 });
