@@ -6,6 +6,9 @@ import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.util.SafetyGrade;
 import org.meps.fire.dto.FireScoreResult;
 import org.meps.fire.service.FireScoreService;
+import org.meps.flood.dto.FloodIncidentDto;
+import org.meps.flood.dto.FloodScoreResultDto;
+import org.meps.flood.service.FloodScoreService;
 import org.meps.report.dto.BasicReportResponseDto;
 import org.meps.report.dto.BriefingInput;
 import org.meps.report.dto.FactorBriefingDto;
@@ -15,6 +18,9 @@ import org.meps.report.mapper.SafetyReportMapper;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.sinkhole.service.SinkholeScoreService;
+import org.meps.structure.dto.StructuralFactorDto;
+import org.meps.structure.dto.StructuralStabilityScoreResultDto;
+import org.meps.structure.service.StructuralStabilityScoreService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,50 +38,48 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SafetyReportService {
 
-    // TODO: 구조·침수 점수 서비스 병합 시 실제 산출로 교체.
-    //  결측 = 중립(감점 없음) 컨벤션을 따라 임시 만점으로 두고 사실은 "정보 없음"으로 전달한다.
-    //  실제 서비스가 붙으면 점수가 달라져 캐시된 브리핑도 자동 재생성된다
-    private static final int PENDING_FACTOR_SCORE = 100;
     private static final String NO_FACTS = BriefingInput.NO_FACTS;
 
     private final FireScoreService fireScoreService;
     private final SinkholeScoreService sinkholeScoreService;
+    private final StructuralStabilityScoreService structuralStabilityScoreService;
+    private final FloodScoreService floodScoreService;
+    private final TotalScoreService totalScoreService;
     private final BriefingService briefingService;
     private final SafetyReportMapper safetyReportMapper;
 
     public BasicReportResponseDto getBasicReport(String buildingId) {
         FireScoreResult fire = fireScoreService.getFireScore(buildingId); // 미존재 건물이면 여기서 404
         SinkholeScoreResult sink = sinkholeScoreService.getSinkholeScore(buildingId);
-        int structScore = PENDING_FACTOR_SCORE;
-        int floodScore = PENDING_FACTOR_SCORE;
+        StructuralStabilityScoreResultDto struct = structuralStabilityScoreService.getStructuralStabilityScore(buildingId);
+        FloodScoreResultDto flood = floodScoreService.getFloodScore(buildingId);
 
-        // TODO: 종합 산식(가중치)은 안전점수 엔진 파트 확정 시 교체. 임시로 4팩터 평균
-        int totalScore = (int) Math.round(
-                (fire.getScore() + sink.getScore() + structScore + floodScore) / 4.0);
+        int totalScore = totalScoreService.calculateTotalScore(
+                struct.getScore(), fire.getScore(), sink.getScore(), flood.getScore());
 
         BriefingInput input = BriefingInput.builder()
                 .totalGrade(SafetyGrade.fromScore(totalScore))
-                .structGrade(SafetyGrade.fromScore(structScore))
-                .structFacts(NO_FACTS)
+                .structGrade(struct.getGrade())
+                .structFacts(buildStructFacts(struct))
                 .fireGrade(fire.getGrade())
                 .fireFacts(buildFireFacts(fire))
                 .sinkGrade(sink.getGrade())
                 .sinkFacts(buildSinkFacts(sink))
-                .floodGrade(SafetyGrade.fromScore(floodScore))
-                .floodFacts(NO_FACTS)
+                .floodGrade(flood.getGrade())
+                .floodFacts(buildFloodFacts(flood))
                 .build();
 
         SafetyReportRowDto row = safetyReportMapper.findByBdMgtSn(buildingId);
         boolean scoreChanged = row == null
                 || row.getTotalScore() != totalScore
-                || row.getFloodScore() != floodScore
+                || row.getFloodScore() != flood.getScore()
                 || row.getSinkScore() != sink.getScore()
                 || row.getFireScore() != fire.getScore()
-                || row.getStructScore() != structScore;
+                || row.getStructScore() != struct.getScore();
 
         if (scoreChanged) {
             safetyReportMapper.upsertScores(buildingId, briefingService.getModelName(),
-                    totalScore, floodScore, sink.getScore(), fire.getScore(), structScore);
+                    totalScore, flood.getScore(), sink.getScore(), fire.getScore(), struct.getScore());
         }
 
         if (!scoreChanged && hasAllBriefs(row)) {
@@ -182,6 +186,49 @@ public class SafetyReportService {
         sb.append("반경 500m 내 지반침하 사고 이력: ").append(sink.getIncidentCount()).append('건');
         sb.append(" / 최근 사고: ").append(formatSagoDate(latest.getSagoDate()))
                 .append(", 거리 ").append(Math.round(latest.getDistanceM())).append('m');
+        return sb.toString();
+    }
+
+    /** 구조 팩터 사실 나열. 근거는 StructuralStabilityScoreService가 이미 정리한 factors 리스트를 그대로 인용한다 */
+    static String buildStructFacts(StructuralStabilityScoreResultDto struct) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("사용승인일: ").append(structFactorDetail(struct, "USE_APR_DAY"));
+        sb.append(" / 주구조: ").append(structFactorDetail(struct, "STRUCTURE_TYPE"));
+        sb.append(" / 위반건축물 여부: ").append(violationLabel(structFactorDetail(struct, "VIOLATION")));
+        sb.append(" / 지하층: ").append(structFactorDetail(struct, "UNDERGROUND_FLOOR"));
+        return sb.toString();
+    }
+
+    private static String structFactorDetail(StructuralStabilityScoreResultDto struct, String factorCode) {
+        return struct.getFactors().stream()
+                .filter(f -> f.getFactor().equals(factorCode))
+                .findFirst()
+                .map(StructuralFactorDto::getDetail)
+                .orElse(NO_FACTS);
+    }
+
+    private static String violationLabel(String raw) {
+        if ("Y".equals(raw)) {
+            return "있음";
+        }
+        if ("N".equals(raw)) {
+            return "없음";
+        }
+        return raw; // "정보 없음" 등은 그대로 노출
+    }
+
+    /** 침수 팩터 사실 나열
+     * 이력 있으면 건수 + 최근 이력의 연도·등급·원인 */
+    static String buildFloodFacts(FloodScoreResultDto flood) {
+        if (!flood.isFloodHistory()) {
+            return "최근 침수 이력: 없음";
+        }
+        // 매퍼가 연도 내림차순 정렬로 반환하므로 첫 건이 최근 이력
+        FloodIncidentDto latest = flood.getIncidents().get(0);
+        StringBuilder sb = new StringBuilder();
+        sb.append("최근 침수 이력: ").append(flood.getIncidentCount()).append('건');
+        sb.append(" / 최근 침수: ").append(latest.getYear()).append("년(")
+                .append(latest.getGrade()).append("등급, ").append(orNoInfo(latest.getCause())).append(')');
         return sb.toString();
     }
 
