@@ -6,6 +6,7 @@ import { ref, shallowRef } from 'vue';
 export const useMapStore = defineStore('map', () => {
   const mapInstance = shallowRef(null);
   const isMapMoved = ref(false);
+  const isRoadViewMode = ref(false);
 
   const setMapInstance = (map) => {
     mapInstance.value = map;
@@ -14,6 +15,10 @@ export const useMapStore = defineStore('map', () => {
   const setMapMoved = (status) => {
     isMapMoved.value = status;
   }; // 맵 변경 상태 업데이트
+
+  const toggleRoadViewMode = () => {
+    isRoadViewMode.value = !isRoadViewMode.value;
+  };
 
   const zoomIn = () => {
     if (mapInstance.value) {
@@ -53,8 +58,10 @@ export const useMapStore = defineStore('map', () => {
   return {
     mapInstance,
     isMapMoved,
+    isRoadViewMode,
     setMapInstance,
     setMapMoved,
+    toggleRoadViewMode,
     zoomIn,
     zoomOut,
     moveToMyLocation,

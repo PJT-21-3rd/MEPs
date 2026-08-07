@@ -60,7 +60,11 @@
       </MapControlButton>
     </div>
 
-    <MapControlButton title="로드뷰" @click="handleRoadView">
+    <MapControlButton
+      title="로드뷰"
+      :active="mapStore.isRoadViewMode"
+      @click="mapStore.toggleRoadViewMode"
+    >
       <Webcam size="18px" />
     </MapControlButton>
   </div>
@@ -82,6 +86,7 @@ const controlsContainer = ref(null);
 
 let cadastralLayer = null;
 
+// 일반/위성 지도 전환
 const setBaseLayer = (type) => {
   activeBaseLayer.value = type;
   if (!mapStore.mapInstance) return;
@@ -109,10 +114,6 @@ const toggleCadastral = () => {
       cadastralLayer.setMap(null);
     }
   }
-};
-
-const handleRoadView = () => {
-  console.log('로드뷰');
 };
 
 useClickOutside(controlsContainer, () => {
