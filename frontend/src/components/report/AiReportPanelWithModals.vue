@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import AiReportPanel from './AiReportPanel.vue';
+import InsuranceModal from '@/components/finance/InsuranceModal.vue';
+import LoanModal from '@/components/finance/LoanModal.vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import {
   getFloodInsuranceProducts,
@@ -104,6 +106,27 @@ const LOAN_PRODUCTS = [
 function handleOpenLoan() {
   uiStore.openLoanModal({ products: LOAN_PRODUCTS });
 }
+
+// 외부 링크를 새 탭으로 여는 공통 헬퍼
+function openExternalLink(url) {
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+// 보험 모달(풍수해/사업장종합 공통) 하단 배너 클릭 → KB손해보험 안내 페이지 이동 + 모달 닫기
+function handleInsuranceSubmit() {
+  openExternalLink('https://www.kbinsure.co.kr/main.ec?mdmn=0101');
+  uiStore.closeInsuranceModal();
+}
+
+// 대출 모달 - 인근 KB국민은행 영업점 찾기 배너 클릭
+function handleFindBranch() {
+  openExternalLink('https://map.naver.com/p/search/%EA%B5%AD%EB%AF%BC%EC%9D%80%ED%96%89');
+}
+
+// 대출 모달 - KB스타뱅킹 앱으로 신청하기 배너 클릭
+function handleOpenStarbanking() {
+  openExternalLink('https://zloan.kbstar.com/quics?page=opzloan');
+}
 </script>
 
 <template>
@@ -116,5 +139,21 @@ function handleOpenLoan() {
     @open-insurance="handleOpenInsurance"
     @open-loan="handleOpenLoan"
     @report-loaded="handleReportLoaded"
+  />
+
+  <InsuranceModal
+    v-if="uiStore.insuranceModalConfig"
+    v-bind="uiStore.insuranceModalConfig"
+    @close="uiStore.closeInsuranceModal"
+    @submit="handleInsuranceSubmit"
+  />
+
+  <LoanModal
+    v-if="uiStore.loanModalConfig"
+    v-bind="uiStore.loanModalConfig"
+    @close="uiStore.closeLoanModal"
+    @view-detail="(product) => console.log('상세보기', product)"
+    @find-branch="handleFindBranch"
+    @open-app="handleOpenStarbanking"
   />
 </template>
