@@ -13,6 +13,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -213,5 +215,47 @@ class BuildingControllerIntegrationTest {
 
         assertTrue(body.contains("\"platArea\""));
         assertTrue(body.contains("\"totArea\""));
+    }
+
+    @Test
+    void 상세조회_응답에_건축물정보가_포함된다() throws Exception {
+        // 삼환엘리트빌 (광진구 중곡동)
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180078020441"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"detail\""));
+        assertTrue(body.contains("strctCdNm"));
+        assertTrue(body.contains("useAprDay"));
+    }
+
+    @Test
+    void 좌표조회_응답에_건축물정보가_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.5639438")
+                        .param("lng", "127.08737850000001"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"detail\""));
+        assertTrue(body.contains("strctCdNm"));
+        assertTrue(body.contains("useAprDay"));
+    }
+
+    @Test
+    void 좌표조회_응답이_건물관리번호_조회와_동일하다() throws Exception {
+        String byId = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180078020441"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String byPoint = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.5639438")
+                        .param("lng", "127.08737850000001"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertEquals(byId, byPoint);
     }
 }

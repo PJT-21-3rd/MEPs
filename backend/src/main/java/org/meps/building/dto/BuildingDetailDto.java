@@ -11,17 +11,19 @@ import lombok.*;
 @AllArgsConstructor
 public class BuildingDetailDto {
 
+    // ---- 기본 정보 ----
     private String buildingId;
-    private String bldNm;        // 역삼 스타빌딩
-    private String mainPurpsNm;  // 일반음식점
+    private String bldNm;
     private String roadAddr;
     private String jibunAddr;
+    private String mainPurpsNm;
 
+    // ---- 면적 ----
     private Double platArea;
-    private Double totArea;;
+    private Double totArea;
 
     @JsonRawValue
-    private String floors;
+    private String center;
 
     @JsonRawValue
     private String footprint;
@@ -29,5 +31,13 @@ public class BuildingDetailDto {
     @JsonRawValue
     private String parcelGeom;
 
+    // ---- 토지 정보 ----
     private BuildingLandDto land;
+
+    // ---- 건축물 정보 ----
+    private BuildingStructureDto detail;
+
+    // ---- 층별 현황 ----
+    @JsonRawValue
+    private String floors;
 }
