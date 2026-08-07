@@ -33,7 +33,9 @@ defineEmits(['close', 'submit']);
     style="background-color: rgba(245, 245, 245, 0.95)"
     @click.self="$emit('close')"
   >
-    <div class="w-[760px] max-h-[944px] bg-white rounded-[24px] overflow-hidden flex flex-col">
+    <div
+      class="w-[760px] h-[944px] max-h-[90vh] bg-white rounded-[24px] overflow-hidden flex flex-col"
+    >
       <!-- 헤더 -->
       <div class="bg-secondary px-8 py-5 flex items-center gap-2.5">
         <span class="w-8 h-8 rounded-[10px] bg-primary flex items-center justify-center shrink-0">
