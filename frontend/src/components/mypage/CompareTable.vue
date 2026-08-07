@@ -56,7 +56,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top font-bold border-l border-surface-gray"
+                class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -80,7 +80,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top font-bold border-l border-surface-gray"
+                class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -108,7 +108,7 @@ const buildingRows = [
               <td
                 v-for="building in buildings"
                 :key="building.buildingId"
-                class="py-3 px-4 align-top font-bold border-l border-surface-gray"
+                class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
               </td>
@@ -129,11 +129,8 @@ const buildingRows = [
         <div
           v-for="building in buildings"
           :key="building.buildingId"
-          class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm p-4"
+          class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm px-4 py-1.5"
         >
-          <div class="-mx-4 -mt-4 px-4 pt-2 pb-2 mb-2 border-b border-surface-gray bg-surface-gray">
-            <p class="text-[15px] font-semibold">{{ building.bldNm }}</p>
-          </div>
           <table class="w-full text-[12px] table-fixed">
             <thead>
               <tr class="text-text-sub border-b border-surface-gray">
@@ -148,9 +145,9 @@ const buildingRows = [
                 :key="index"
                 class="border-b border-surface-gray"
               >
-                <td class="py-1.5 font-bold">{{ floor.flrGbNm }} {{ floor.flrNoNm }}</td>
-                <td class="py-1.5 font-bold">{{ floor.mainPurpsNm }}</td>
-                <td class="py-1.5 font-bold">{{ floor.etcPurps }}</td>
+                <td class="py-1.5">{{ floor.flrGbNm }} {{ floor.flrNoNm }}</td>
+                <td class="py-1.5">{{ floor.mainPurpsNm }}</td>
+                <td class="py-1.5">{{ floor.etcPurps }}</td>
               </tr>
             </tbody>
           </table>

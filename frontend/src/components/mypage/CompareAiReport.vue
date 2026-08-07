@@ -31,10 +31,10 @@ function gradeClass(grade) {
       <div
         v-for="building in buildings"
         :key="building.buildingId"
-        class="flex-1 min-w-0 p-3 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm"
+        class="flex-1 min-w-0 p-4 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm"
       >
         <!-- 매물 헤더 -->
-        <div class="-mx-3 -mt-3 px-3 py-2.5 bg-surface-gray flex items-center justify-between">
+        <div class="-mx-4 -mt-4 px-3 py-2.5 bg-surface-gray flex items-center justify-between">
           <!-- 왼쪽: 아이콘+건물명-->
           <div class="flex items-center gap-1.5">
             <Sparkles :size="15" class="text-secondary" />
@@ -48,7 +48,7 @@ function gradeClass(grade) {
         </div>
 
         <!-- 게이지+브리핑 -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 py-2">
           <div class="scale-[0.7] origin-center shrink-0 -mx-6 -my-6">
             <ScoreGauge :score="building.score" :showLabel="false" />
           </div>
