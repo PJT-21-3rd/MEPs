@@ -1,5 +1,10 @@
 <template>
-  <div id="map" ref="mapContainer" class="w-full h-full bg-surface-gray"></div>
+  <div
+    id="map"
+    ref="mapContainer"
+    class="w-full h-full bg-surface-gray"
+    :class="{ 'cursor-pointer': mapStore.isRoadViewMode }"
+  ></div>
 </template>
 
 <script setup>
@@ -45,8 +50,8 @@ const drawBuildingPolygons = (data) => {
       map: map,
       paths: landPaths,
       fillColor: '#0071AC',
-      fillOpacity: 0.3, // 투명 배경
-      strokeColor: '#0071AC', // 빨간색
+      fillOpacity: 0.3,
+      strokeColor: '#0071AC',
       strokeWeight: 2,
       strokeStyle: 'shortdash', // 점선
     });
@@ -127,13 +132,16 @@ const fetchPolygonByCoord = async (lat, lng) => {
 watch(
   () => mapStore.isRoadViewMode,
   (isActive) => {
-    if (!mapStore.mapInstance) return;
+    const map = mapStore.mapInstance;
+    if (!map) return;
 
     if (isActive) {
       if (!streetLayer) streetLayer = new window.naver.maps.StreetLayer();
-      streetLayer.setMap(mapStore.mapInstance);
+      streetLayer.setMap(map);
+      map.setCursor('crosshair');
     } else {
       if (streetLayer) streetLayer.setMap(null);
+      map.setCursor('grab');
     }
   },
 );
