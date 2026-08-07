@@ -141,7 +141,10 @@ const safeDetailReport = {
 </script>
 
 <template>
-  <Story title="AI 리포트 컴포넌트/AiReportWithModals" :layout="{ type: 'single', iframe: false }">
+  <Story
+    title="AI 리포트 컴포넌트/AiReportPanelWithModals"
+    :layout="{ type: 'single', iframe: false }"
+  >
     <Variant title="주의 등급 - 배너 클릭 → 모달 전체 흐름 확인">
       <div style="width: 400px; height: 700px; border: 1px solid #eee; position: relative">
         <AiReportPanelWithModals
@@ -155,7 +158,7 @@ const safeDetailReport = {
 
     <Variant title="안전 등급 - 특약/의무보험 없음 (엣지케이스)">
       <div style="width: 400px; height: 700px; border: 1px solid #eee; position: relative">
-        <AiReportWithModals
+        <AiReportPanelWithModals
           :building-id="1"
           building-name="역삼 스타빌딩"
           :initial-report-data="safeReport"

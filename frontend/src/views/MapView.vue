@@ -5,7 +5,7 @@
       v-if="uiStore.isReportOpen"
       class="absolute top-0 bottom-0 left-[400px] z-20 w-[400px] bg-white shadow-2xl border-l border-surface-base flex flex-col"
     >
-      <AiReportPanel
+      <AiReportPanelWithModals
         :building-id="3"
         building-name="그린타워"
         :initial-report-data="warningReport"
@@ -34,7 +34,7 @@ import MapResearch from '@/components/map/MapResearch.vue';
 import NaverMap from '@/components/map/NaverMap.vue';
 import QuickNavigation from '@/components/map/QuickNavigation.vue';
 import SearchBar from '@/components/map/SearchBar.vue';
-import AiReportPanel from '@/components/report/AiReportPanel.vue';
+import AiReportPanelWithModals from '@/components/report/AiReportPanelWithModals.vue';
 import { useUiStore } from '@/stores/uiStore';
 
 const uiStore = useUiStore();
