@@ -42,7 +42,7 @@ class HjdControllerIntegrationTest {
 
     @Test
     void 행정동_리스트_조회는_200과_425건을_반환한다() throws Exception {
-        String body = mockMvc.perform(get("/api/hjd"))
+        String body = mockMvc.perform(get("/api"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
@@ -50,4 +50,25 @@ class HjdControllerIntegrationTest {
 
         assertThat(regions.size()).isEqualTo(425);
     }
+
+    @Test
+    void 구별_AI_브리핑_조회는_200과_통계_브리핑을_반환한다() throws Exception {
+        // 11110 종로구
+        String body = mockMvc.perform(get("/api/ssg/{sggCd}/briefing", "11110"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        JsonNode root = new ObjectMapper().readTree(body);
+
+        assertThat(root.get("sggName").asText()).isNotBlank();
+        assertThat(root.get("dailyFlpop").asInt()).isPositive();
+        assertThat(root.get("overallBriefing").asText()).isNotBlank();
+    }
+
+    @Test
+    void 존재하지_않는_구_코드로_조회하면_404를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/ssg/{sggCd}/briefing", "99999"))
+                .andExpect(status().isNotFound());
+    }
+
 }
