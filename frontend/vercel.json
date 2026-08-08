@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "http://13.209.21.145:8080/api/:path*"
+    },
+    {
+      "source": "/api-hub/:path*",
+      "destination": "https://naverapihub.apigw.ntruss.com/:path*"
     }
   ]
 }
