@@ -20,6 +20,18 @@
         <result property="overallBriefing" column="ai_brf"/>
     </resultMap>
 
+    <resultMap id="sggBriefingResultMap" type="org.meps.hjd.dto.SggBriefingResponseDto">
+        <result property="sggName" column="sgg_nm"/>
+        <result property="dailyFlpop" column="daily_flpop"/>
+        <result property="flpopChangeRate" column="flpop_chg_rate"/>
+        <result property="topIndustryName" column="top_induty_nm"/>
+        <result property="topIndustryCnt" column="top_induty_stor_cnt"/>
+        <result property="avgBuildingAge" column="avg_bld_age"/>
+        <result property="majorAgeGroup" column="major_age_grp"/>
+        <result property="majorAgeRatio" column="major_age_ratio"/>
+        <result property="overallBriefing" column="ai_brf"/>
+    </resultMap>
+
     <!-- 상권분석 통계 테이블들(hjd_flpop 등)과 같은 행정동 코드 체계인 hjd/sgg 기준 -->
     <select id="findAllNames" resultType="org.meps.hjd.dto.HjdNameDto">
         SELECT
@@ -86,6 +98,28 @@
                  JOIN sgg s ON s.sgg_cd = h.sgg_cd
                  LEFT JOIN hjd_stat st ON st.hjd_cd = b.hjd_cd
         WHERE b.hjd_cd = #{hjdCd}
+    </select>
+
+    <select id="findBySggCd" resultMap="sggBriefingResultMap">
+        SELECT
+            s.sgg_nm,
+            b.daily_flpop,
+            b.flpop_chg_rate,
+            b.top_induty_nm,
+            b.top_induty_stor_cnt,
+            ROUND(st.avg_bld_age, 1) AS avg_bld_age,
+            b.major_age_grp,
+            b.major_age_ratio,
+            b.ai_brf
+        FROM sgg_ai_briefing b
+                 JOIN sgg s ON s.sgg_cd = b.sgg_cd
+                 LEFT JOIN (
+                     SELECT h.sgg_cd, SUM(hs.avg_bld_age * hs.bld_cnt) / SUM(hs.bld_cnt) AS avg_bld_age
+                     FROM hjd_stat hs
+                              JOIN hjd h ON h.hjd_cd = hs.hjd_cd
+                     GROUP BY h.sgg_cd
+                 ) st ON st.sgg_cd = b.sgg_cd
+        WHERE b.sgg_cd = #{sggCd}
     </select>
 
 </mapper>

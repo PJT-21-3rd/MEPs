@@ -8,6 +8,7 @@ import org.meps.building.exception.InvalidKeywordException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
+import org.meps.hjd.exception.SggNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -36,6 +37,13 @@ public class GlobalExceptionHandler {
     /** 좌표에 대응하는 행정동 없음 → 404 */
     @ExceptionHandler(HjdNotFoundException.class)
     public ResponseEntity<Void> handleHjdNotFound(HjdNotFoundException e) {
+        log.warn("조회 결과 없음: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    /** 구(시군구) 코드에 대응하는 데이터 없음 → 404 */
+    @ExceptionHandler(SggNotFoundException.class)
+    public ResponseEntity<Void> handleSggNotFound(SggNotFoundException e) {
         log.warn("조회 결과 없음: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
