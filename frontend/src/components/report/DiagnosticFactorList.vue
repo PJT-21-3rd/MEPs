@@ -20,8 +20,8 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
-    <p class="text-base font-bold text-text-main">진단 근거 데이터</p>
+  <div class="flex flex-col" :class="mode === 'detail' ? 'gap-2' : 'gap-3'">
+    <p v-if="mode === 'summary'" class="text-base font-bold text-text-main">진단 근거 데이터</p>
 
     <StructureStabilityItem v-bind="items.structure" :mode="mode" />
     <FireSafetyItem v-bind="items.fire" :mode="mode" />
