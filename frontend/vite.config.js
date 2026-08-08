@@ -9,6 +9,16 @@ import { HstVue } from '@histoire/plugin-vue';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss()],
+  server: {
+    proxy: {
+      // '/api-hub'로 시작하는 요청을 Ncloud API HUB로 우회
+      '/api-hub': {
+        target: 'https://naverapihub.apigw.ntruss.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-hub/, ''),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
