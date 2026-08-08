@@ -27,7 +27,7 @@
 
       <NaverMap />
 
-      <div v-if="uiStore.isDetailOpen" class="absolute top-5 left-6 z-20 w-[360px]">
+      <div v-if="uiStore.isDetailOpen" class="absolute top-5 left-6 z-10 w-[360px]">
         <SearchBar />
       </div>
       <div v-else><QuickNavigation /></div>
