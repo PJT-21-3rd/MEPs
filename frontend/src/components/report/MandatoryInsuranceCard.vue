@@ -3,10 +3,15 @@ import { ShieldCheck } from '@lucide/vue';
 
 defineProps({
   name: { type: String, required: true },
-  required: { type: Boolean, required: true },
+  required: { type: Boolean, required: null },
   description: { type: String, required: true },
   evidenceTags: { type: Array, default: () => [] },
 });
+
+function badgeLabel(required) {
+  if (required === null) return '확인 중';
+  return required ? '필수' : '해당없음';
+}
 </script>
 
 <template>
@@ -21,7 +26,7 @@ defineProps({
         class="px-2.5 py-1 rounded-full text-[13px] font-regular shrink-0"
         :class="required ? 'bg-status-like text-white' : 'bg-badge-neutral text-text-muted'"
       >
-        {{ required ? '필수' : '해당없음' }}
+        {{ badgeLabel(required) }}
       </span>
     </div>
 
