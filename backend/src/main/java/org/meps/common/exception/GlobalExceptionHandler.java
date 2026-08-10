@@ -8,7 +8,7 @@ import org.meps.building.exception.InvalidKeywordException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
-import org.meps.hjd.exception.SggNotFoundException;
+import org.meps.sgg.exception.SggNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;

@@ -6,10 +6,8 @@ import org.meps.hjd.dto.HjdBboxDto;
 import org.meps.hjd.dto.HjdBriefingResponseDto;
 import org.meps.hjd.dto.HjdNamesDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
-import org.meps.hjd.dto.SggBriefingResponseDto;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
-import org.meps.hjd.exception.SggNotFoundException;
 import org.meps.hjd.mapper.HjdMapper;
 import org.springframework.stereotype.Service;
 
@@ -61,16 +59,5 @@ public class HjdService {
         return briefing;
     }
 
-    public SggBriefingResponseDto getSggBriefing(String sggCd) {
-        SggBriefingResponseDto briefing = hjdMapper.findBySggCd(sggCd);
 
-        if (briefing == null) {
-            throw new SggNotFoundException(sggCd);
-        }
-
-        if (briefing.getOverallBriefing() == null) {
-            throw new AiBriefingNotAvailableException("AI 브리핑이 아직 생성되지 않은 구입니다: " + sggCd);
-        }
-        return briefing;
-    }
 }

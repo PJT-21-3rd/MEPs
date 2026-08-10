@@ -6,7 +6,6 @@ import org.meps.hjd.dto.HjdBboxDto;
 import org.meps.hjd.dto.HjdBriefingResponseDto;
 import org.meps.hjd.dto.HjdNameDto;
 import org.meps.hjd.dto.HjdNavigateResponseDto;
-import org.meps.hjd.dto.SggBriefingResponseDto;
 
 import java.util.List;
 
@@ -22,5 +21,5 @@ public interface HjdMapper {
 
     HjdBriefingResponseDto findByHjdCd(@Param("hjdCd") String hjdCd);
 
-    SggBriefingResponseDto findBySggCd(@Param("sggCd") String sggCd);
+
 }

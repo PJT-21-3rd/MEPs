@@ -1,4 +1,4 @@
-package org.meps.hjd.dto;
+package org.meps.sgg.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package org.meps.hjd.exception;
+package org.meps.sgg.exception;
 
 public class SggNotFoundException extends RuntimeException {
     public SggNotFoundException(String sggCd) {
