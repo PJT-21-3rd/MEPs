@@ -1,16 +1,15 @@
 <script setup>
-import { ref } from 'vue';
 import { X } from '@lucide/vue';
 import mepsLogo from '@/assets/images/MEPS_LOGO.png';
+import { useRouter } from 'vue-router';
+import LoginForm from './LoginForm.vue';
 
 const emit = defineEmits(['close']);
+const router = useRouter();
 
-const email = ref('');
-const password = ref('');
-
-function handleLogin() {
-  console.log('로그인 시도: ', email.value, password.value);
-  //이곳에 백엔드 API 호출
+function handleSignup() {
+  emit('close'); // 모달 닫고
+  router.push('/signup'); // 회원가입 페이지로
 }
 </script>
 
@@ -33,31 +32,8 @@ function handleLogin() {
       <p class="text-[13px] text-text-sub mb-5">
         안전 진단 점수 및 근거 설명은 로그인 후 확인하실 수 있습니다.
       </p>
-      <!-- 아이디 -->
-      <label class="text-[13px] font-medium">아이디</label>
-      <input
-        v-model="email"
-        type="text"
-        placeholder="아이디를 입력하세요"
-        class="w-full px-3 py-2.5 mt-1 mb-3 border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-      />
-      <!-- 비밀번호 -->
-      <label class="text-[13px] font-medium">비밀번호</label>
-      <input
-        v-model="password"
-        type="password"
-        placeholder="비밀번호를 입력하세요"
-        class="w-full px-3 py-2.5 mt-1 mb-5 border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-      />
-      <!-- 로그인버튼 -->
-      <button @click="handleLogin" class="w-full py-3 bg-primary text-white font-bold rounded-lg">
-        로그인
-      </button>
-      <!-- 회원가입 링크 -->
-      <p class="text-center text-[13px] text-text-sub mt-4">
-        아직 회원이 아니신가요?
-        <button class="text-primary font-medium">회원가입</button>
-      </p>
+      <!-- 로그인 폼 (공통) -->
+      <LoginForm @signup="handleSignup" />
     </div>
   </div>
 </template>
