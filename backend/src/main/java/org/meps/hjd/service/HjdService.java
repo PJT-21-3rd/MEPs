@@ -58,4 +58,6 @@ public class HjdService {
         }
         return briefing;
     }
+
+
 }
