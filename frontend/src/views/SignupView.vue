@@ -1,18 +1,31 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+// import { useRouter } from 'vue-router';
 import mepsLogo from '@/assets/images/MEPS_LOGO.png';
 
-const router = useRouter();
+// const router = useRouter();
 
 const email = ref('');
 const password = ref('');
 const passwordConfirm = ref('');
+const errorMessage = ref('');
 
 function handleSignup() {
-  // 입력값만 확인
-  console.log('회원가입 시도:', email.value, password.value, passwordConfirm.value);
-  // 백엔드 API 호출
+  //에러 초기화
+  errorMessage.value = '';
+  //빈 칸 검사
+  if (!email.value || !password.value || !passwordConfirm.value) {
+    errorMessage.value = '모든 항목을 입력해주세요';
+    return;
+  }
+  // 비밀번호 일치 검사
+  if (password.value !== passwordConfirm.value) {
+    errorMessage.value = '비밀번호가 일치하지 않습니다';
+    return;
+  }
+  // 통과하면 회원가입 진행
+  console.log('회원가입 시도:', email.value, password.value);
+  // TODO: 백엔드 API 호출
 }
 
 function goLogin() {
@@ -76,6 +89,11 @@ function goLogin() {
         placeholder="비밀번호를 한번 더 입력하세요"
         class="w-full px-3 py-2.5 mt-1 mb-5 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
       />
+
+      <!-- 에러 메시지 -->
+      <p v-if="errorMessage" class="text-[13px] text-status-danger mb-3">
+        {{ errorMessage }}
+      </p>
 
       <!-- 회원가입 버튼 -->
       <button @click="handleSignup" class="w-full py-3 bg-primary text-white font-bold rounded-lg">
