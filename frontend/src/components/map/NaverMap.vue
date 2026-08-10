@@ -206,7 +206,7 @@ onMounted(() => {
   // 지도 초기 옵션 설정
   const mapOptions = {
     center: new window.naver.maps.LatLng(initialLat, initialLng),
-    zoom: 15,
+    zoom: 17,
     zoomControl: false,
   };
 
@@ -233,7 +233,7 @@ onMounted(() => {
 
       const currentCenter = map.getCenter();
       updateHjdBriefing(currentCenter.lat(), currentCenter.lng());
-      updateNearbyBuildings();
+      // updateNearbyBuildings();
     }, 800);
   };
 
