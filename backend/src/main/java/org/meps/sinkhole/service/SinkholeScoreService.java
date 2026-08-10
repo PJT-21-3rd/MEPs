@@ -31,8 +31,9 @@ public class SinkholeScoreService {
     // 가중치 합 1.0당 남은 안전 마진(score−70)을 27%로 줄이는 감쇠율
     private static final double RISK_DECAY = 0.27;
 
-    private static final double DIST_NEAR_M = 100.0;
-    private static final double DIST_MID_M = 300.0;
+    // 상세 리포트 details의 거리 구간 라벨(0~100/100~300/300~500)과 세트 — 변경 시 함께 갱신
+    public static final double DIST_NEAR_M = 100.0;
+    public static final double DIST_MID_M = 300.0;
     private static final double W_DIST_NEAR = 1.0; // 직접 영향권
     private static final double W_DIST_MID = 0.5; // 간접 신호(동일 노후 관로망·공사 영향권 공유 개연성)
     private static final double W_DIST_FAR = 0.2; // 표시 범위(매핑 배치가 500m로 컷하므로 그 외 = 300~500m)

@@ -93,6 +93,7 @@ public class DetailedReportService {
         details.add(buildDetail("주구조", findFactorDetail(struct, "STRUCTURE_TYPE"), "건축물대장 표제부"));
         details.add(buildDetail("사용승인일", findFactorDetail(struct, "USE_APR_DAY"), "건축물대장 표제부"));
         details.add(buildDetail("위반건축물 여부", violationValue(findFactorDetail(struct, "VIOLATION")), "건축물대장 표제부"));
+        details.add(buildDetail("지하층수", findFactorDetail(struct, "UNDERGROUND_FLOOR"), "건축물대장 표제부"));
         return details;
     }
 
@@ -101,41 +102,74 @@ public class DetailedReportService {
         List<ReportDetailDto> details = new ArrayList<>();
         details.add(buildDetail("도로접면", roadSideValue(fire.getRoadSideCodeNm()), "토지특성정보"));
         details.add(buildDetail("주구조", orNoInfo(fire.getStrctCdNm()), "건축물대장 표제부"));
-        details.add(buildDetail("행정동 화재 건수(3년 평균)", fireCountValue(fire.getDongFireAvgCnt()), "소방청 화재통계"));
+        details.add(buildDetail("행정동 화재 건수(3년 평균)", fireCountValue(fire), "소방청 화재통계"));
         details.add(buildDetail("최근접 소방서 거리", stationValue(fire), "소방서 위치정보"));
         return details;
     }
 
-    /** 지반침하 details */
+    /**
+     * 지반침하 details — 산식의 거리 가중 구간과 1:1 대응하는 3행 고정.
+     * 사고 없는 구간도 "없음"으로 내보내 조회 범위(0~500m)를 명시한다
+     */
     static List<ReportDetailDto> buildSinkDetails(SinkholeScoreResult sink) {
+        String[] labels = {"0m~100m 사고 이력", "100m~300m 사고 이력", "300m~500m 사고 이력"};
+        int[] counts = new int[labels.length];
+        String[] latestSagoDates = new String[labels.length];
+        for (SinkholeIncidentDto incident : sink.getIncidents()) {
+            int band = calculateBandIndex(incident.getDistanceM());
+            counts[band]++;
+            if (latestSagoDates[band] == null) {
+                // 매퍼가 사고일 내림차순 정렬로 반환하므로 구간 내 첫 매칭이 최근 사고
+                latestSagoDates[band] = incident.getSagoDate();
+            }
+        }
+
         List<ReportDetailDto> details = new ArrayList<>();
-        details.add(buildDetail("반경 내 사고 이력", sink.getIncidentCount() + "건", "지하안전정보 사고이력"));
-        if (sink.getIncidentCount() > 0) {
-            // 매퍼가 사고일 내림차순 정렬로 반환하므로 첫 건이 최근 사고
-            SinkholeIncidentDto latest = sink.getIncidents().get(0);
-            details.add(buildDetail("최근 사고",
-                    SafetyReportService.formatSagoDate(latest.getSagoDate())
-                            + ", 거리 " + Math.round(latest.getDistanceM()) + "m",
-                    "지하안전정보 사고이력"));
+        for (int i = 0; i < labels.length; i++) {
+            String value;
+            if (counts[i] == 0) {
+                value = "없음";
+            } else {
+                value = counts[i] + "건(최근 " + SafetyReportService.formatSagoDate(latestSagoDates[i]) + ")";
+            }
+            details.add(buildDetail(labels[i], value, "지하안전정보 사고이력"));
         }
         return details;
     }
 
-    /** 침수 details. 패키지 프라이빗 — 단위 테스트 대상 */
+    /** 침수 details */
     static List<ReportDetailDto> buildFloodDetails(FloodScoreResultDto flood) {
         List<ReportDetailDto> details = new ArrayList<>();
         if (!flood.isFloodHistory()) {
             details.add(buildDetail("지번 침수 이력", "이력 없음", "행정안전부 침수흔적도"));
-            details.add(buildDetail("침수위험등급", "해당 없음", "행정안전부 침수흔적도"));
+            details.add(buildDetail("최고 침수심 등급", "해당 없음", "행정안전부 침수흔적도"));
             return details;
         }
-        // 매퍼가 연도 내림차순 정렬로 반환하므로 첫 건이 최근 이력
+        // 매퍼가 연도 내림차순 정렬로 반환하므로 첫 건이 최근 이력이고,
+        // 최고 등급이 여러 건이면 순회상 첫 매칭(최근 연도)을 대표로 쓴다
         FloodIncidentDto latest = flood.getIncidents().get(0);
+        FloodIncidentDto worst = latest;
+        for (FloodIncidentDto incident : flood.getIncidents()) {
+            if (incident.getGrade() > worst.getGrade()) {
+                worst = incident;
+            }
+        }
         details.add(buildDetail("지번 침수 이력",
                 flood.getIncidentCount() + "건(최근 " + latest.getYear() + "년)", "행정안전부 침수흔적도"));
-        details.add(buildDetail("침수위험등급",
-                latest.getGrade() + "등급(" + latest.getYear() + "년)", "행정안전부 침수흔적도"));
+        details.add(buildDetail("최고 침수심 등급",
+                worst.getGrade() + "등급(" + worst.getYear() + "년)", "행정안전부 침수흔적도"));
         return details;
+    }
+
+    /** 지반침하점수화 로직과 동일한 구간 경계로 사고를 분류한다 */
+    private static int calculateBandIndex(double distanceM) {
+        if (distanceM <= SinkholeScoreService.DIST_NEAR_M) {
+            return 0;
+        }
+        if (distanceM <= SinkholeScoreService.DIST_MID_M) {
+            return 1;
+        }
+        return 2; // 매핑 배치가 500m로 컷하므로 그 외 = 300~500m
     }
 
     private static ReportDetailDto buildDetail(String label, String value, String source) {
@@ -169,12 +203,29 @@ public class DetailedReportService {
         return roadSideCodeNm;
     }
 
-    private static String fireCountValue(Double dongFireAvgCnt) {
-        if (dongFireAvgCnt == null) {
+    private static String fireCountValue(FireScoreResult fire) {
+        if (fire.getDongFireAvgCnt() == null) {
             return NO_INFO;
         }
         // SQL AVG의 원시 소수(19.3333…)가 그대로 노출되지 않게 소수 1자리로 반올림
-        return Math.round(dongFireAvgCnt * 10.0) / 10.0 + "건";
+        String value = Math.round(fire.getDongFireAvgCnt() * 10.0) / 10.0 + "건";
+        if (fire.getDongFireQuartile() != null) {
+            value += "(" + quartileShortLabel(fire.getDongFireQuartile()) + ")";
+        }
+        return value;
+    }
+
+    private static String quartileShortLabel(int quartile) {
+        if (quartile == 1) {
+            return "서울 하위 25%";
+        }
+        if (quartile == 2) {
+            return "서울 하위 25~50%";
+        }
+        if (quartile == 3) {
+            return "서울 상위 25~50%";
+        }
+        return "서울 상위 25%";
     }
 
     private static String stationValue(FireScoreResult fire) {
