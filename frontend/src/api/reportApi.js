@@ -7,7 +7,7 @@ const REPORT_ENDPOINT = (buildingId) => `/api/buildings/${buildingId}/safety-rep
 // TODO: 정확한 엔드포인트 경로는 BE API 문서 확인 후 수정 필요
 const DETAILED_REPORT_ENDPOINT = (buildingId) =>
   `/api/buildings/${buildingId}/safety-report/detailed`;
-const INSURANCE_RIDERS_ENDPOINT = '/insurances/riders';
+const INSURANCE_RIDERS_ENDPOINT = '/api/insurances/riders';
 
 function transformReportResponse(raw) {
   const dangerItems = {};
