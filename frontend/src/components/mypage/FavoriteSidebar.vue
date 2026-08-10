@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { ArrowLeft, Scale, FolderHeart } from '@lucide/vue';
 import FavoriteCard from '@/components/mypage/FavoriteCard.vue';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   buildings: Array,
@@ -21,13 +22,19 @@ function selectOrder(id) {
   const index = props.selectedIds.indexOf(id);
   return index === -1 ? null : index + 1;
 }
+
+const router = useRouter();
+
+function goBack() {
+  router.push('/');
+}
 </script>
 
 <template>
   <aside class="w-[330px] shrink-0 flex flex-col h-full pt-4 px-4">
     <div class="shrink-0">
       <header class="flex items-start gap-2 mb-4">
-        <ArrowLeft :size="22" class="mt-0.5" />
+        <ArrowLeft :size="22" class="mt-0.5" @click="goBack" />
         <div>
           <h1 class="flex items-center gap-1 text-lg font-bold m-0">
             마이페이지
