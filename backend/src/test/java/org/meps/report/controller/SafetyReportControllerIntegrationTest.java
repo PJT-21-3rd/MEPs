@@ -51,7 +51,7 @@ class SafetyReportControllerIntegrationTest {
 
     @Test
     void 기본_리포트는_브리핑을_생성해_캐시하고_재호출시_동일_응답을_반환한다() throws Exception {
-        String first = callBasicReport();
+        String first = callGetBasicReport();
         JsonNode root = new ObjectMapper().readTree(first);
 
         assertThat(root.get("safetyScore").asInt()).isBetween(70, 100);
@@ -79,11 +79,11 @@ class SafetyReportControllerIntegrationTest {
         assertThat(row.getFloodBrief()).isNotBlank();
 
         // 점수 불변 + brief 존재 → 캐시 hit, LLM 재호출 없이 동일 문장
-        String second = callBasicReport();
+        String second = callGetBasicReport();
         assertThat(second).isEqualTo(first);
     }
 
-    private String callBasicReport() throws Exception {
+    private String callGetBasicReport() throws Exception {
         return mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/basic", BUILDING_ID))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);

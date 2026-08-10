@@ -115,7 +115,7 @@ public class SafetyReportService {
                 && row.getFloodBrief() != null;
     }
 
-    /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 (명세) */
+    /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 */
     private BasicReportResponseDto buildResponse(int totalScore, BriefingInput input, SafetyBriefingDto briefs) {
         List<FactorBriefingDto> factors = new ArrayList<>();
         factors.add(factor("STRUCTURE", input.getStructGrade(), briefs.getStructBrief()));
@@ -144,10 +144,7 @@ public class SafetyReportService {
     private static final double STATION_GOLDEN_LIMIT_M = 1800.0;
 
     /**
-     * 화재 팩터 사실 나열. NULL은 "정보 없음" (FireScoreResult 주석 컨벤션).
-     * 거리·접면엔 룰 엔진 구간 기준의 맥락 주석(골든타임, 도로 폭)을 붙여 LLM이
-     * "골든타임 내 출동 가능" 같은 해석 문장을 환각 없이 쓸 수 있게 한다.
-     * 패키지 프라이빗 — 단위 테스트 대상
+     * 화재 팩터 사실 나열. NULL은 "정보 없음"
      */
     static String buildFireFacts(FireScoreResult fire) {
         StringBuilder sb = new StringBuilder();
@@ -175,7 +172,7 @@ public class SafetyReportService {
         return sb.toString();
     }
 
-    /** 지반침하 팩터 사실 나열. 사고 있으면 건수 + 최근 사고의 시기·거리. 패키지 프라이빗 — 단위 테스트 대상 */
+    /** 지반침하 팩터 사실 나열 - 사고 있으면 건수 + 최근 사고의 시기·거리 */
     static String buildSinkFacts(SinkholeScoreResult sink) {
         if (sink.getIncidentCount() == 0) {
             return "반경 500m 내 지반침하 사고 이력: 없음";
@@ -189,7 +186,7 @@ public class SafetyReportService {
         return sb.toString();
     }
 
-    /** 구조 팩터 사실 나열. 근거는 StructuralStabilityScoreService가 이미 정리한 factors 리스트를 그대로 인용한다 */
+    /** 구조 팩터 사실 나열 */
     static String buildStructFacts(StructuralStabilityScoreResultDto struct) {
         StringBuilder sb = new StringBuilder();
         sb.append("사용승인일: ").append(structFactorDetail(struct, "USE_APR_DAY"));
@@ -217,8 +214,7 @@ public class SafetyReportService {
         return raw; // "정보 없음" 등은 그대로 노출
     }
 
-    /** 침수 팩터 사실 나열
-     * 이력 있으면 건수 + 최근 이력의 연도·등급·원인 */
+    /** 침수 팩터 사실 나열 - 이력 있으면 건수 + 최근 이력의 연도·등급·원인 */
     static String buildFloodFacts(FloodScoreResultDto flood) {
         if (!flood.isFloodHistory()) {
             return "최근 침수 이력: 없음";
@@ -232,8 +228,8 @@ public class SafetyReportService {
         return sb.toString();
     }
 
-    /** "20230401" → "2023년 4월". 형식이 다르면 원문 그대로 */
-    private static String formatSagoDate(String sagoDate) {
+    /** "20230401" → "2023년 4월". 형식이 다르면 원문 그대로. 상세 리포트 details 조립에서도 사용 */
+    static String formatSagoDate(String sagoDate) {
         if (sagoDate == null || sagoDate.length() < 6) {
             return orNoInfo(sagoDate);
         }
