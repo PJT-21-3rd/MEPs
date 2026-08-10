@@ -94,9 +94,9 @@ class DetailedReportServiceTest {
         List<ReportDetailDto> details = DetailedReportService.buildSinkDetails(sink);
 
         assertThat(details).hasSize(3);
-        assertBuildDetail(details.get(0), "0m~100m 사고 이력", "없음", "지하안전정보 사고이력");
-        assertBuildDetail(details.get(1), "100m~300m 사고 이력", "없음", "지하안전정보 사고이력");
-        assertBuildDetail(details.get(2), "300m~500m 사고 이력", "없음", "지하안전정보 사고이력");
+        assertBuildDetail(details.get(0), "0m~100m 사고 이력", "없음", "지반침하 사고이력");
+        assertBuildDetail(details.get(1), "100m~300m 사고 이력", "없음", "지반침하 사고이력");
+        assertBuildDetail(details.get(2), "300m~500m 사고 이력", "없음", "지반침하 사고이력");
     }
 
     @Test
@@ -112,9 +112,9 @@ class DetailedReportServiceTest {
         List<ReportDetailDto> details = DetailedReportService.buildSinkDetails(sink);
 
         assertThat(details).hasSize(3);
-        assertBuildDetail(details.get(0), "0m~100m 사고 이력", "1건(최근 2023년 4월)", "지하안전정보 사고이력");
-        assertBuildDetail(details.get(1), "100m~300m 사고 이력", "없음", "지하안전정보 사고이력");
-        assertBuildDetail(details.get(2), "300m~500m 사고 이력", "2건(최근 2021년 8월)", "지하안전정보 사고이력");
+        assertBuildDetail(details.get(0), "0m~100m 사고 이력", "1건(최근 2023년 4월)", "지반침하 사고이력");
+        assertBuildDetail(details.get(1), "100m~300m 사고 이력", "없음", "지반침하 사고이력");
+        assertBuildDetail(details.get(2), "300m~500m 사고 이력", "2건(최근 2021년 8월)", "지반침하 사고이력");
     }
 
     @Test
