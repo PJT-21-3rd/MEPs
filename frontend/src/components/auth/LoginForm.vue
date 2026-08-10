@@ -1,0 +1,61 @@
+<script setup>
+import { ref } from 'vue';
+
+const email = ref('');
+const password = ref('');
+const errorMessage = ref('');
+
+const emit = defineEmits(['signup']);
+
+function handleLogin() {
+  errorMessage.value = '';
+  if (!email.value || !password.value) {
+    errorMessage.value = '아이디와 비밀번호를 입력해주세요';
+    return;
+  }
+  console.log('로그인 시도:', email.value, password.value);
+  // TODO: 백엔드 API 호출
+}
+
+function goSignup() {
+  emit('signup'); // 회원가입으로 가라고 부모에게 알림
+}
+</script>
+
+<template>
+  <div>
+    <!-- 아이디 -->
+    <label class="text-[13px] font-medium">아이디</label>
+    <input
+      v-model="email"
+      type="text"
+      placeholder="아이디를 입력하세요"
+      class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+    />
+
+    <!-- 비밀번호 -->
+    <label class="text-[13px] font-medium">비밀번호</label>
+    <input
+      v-model="password"
+      type="password"
+      placeholder="비밀번호를 입력하세요"
+      class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+    />
+
+    <!-- 에러 메시지 -->
+    <p v-if="errorMessage" class="text-[13px] text-status-danger mb-3">
+      {{ errorMessage }}
+    </p>
+
+    <!-- 로그인 버튼 -->
+    <button @click="handleLogin" class="w-full py-3 bg-primary text-white font-bold rounded-lg">
+      로그인
+    </button>
+
+    <!-- 회원가입 링크 -->
+    <p class="text-center text-[13px] text-text-sub mt-4">
+      아직 회원이 아니신가요?
+      <button @click="goSignup" class="text-primary font-medium underline">회원가입</button>
+    </p>
+  </div>
+</template>

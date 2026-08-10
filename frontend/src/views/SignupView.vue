@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
-// import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import mepsLogo from '@/assets/images/MEPS_LOGO.png';
 import { ChevronRight } from '@lucide/vue';
 
-// const router = useRouter();
+const router = useRouter();
 
 const step = ref('terms');
 
@@ -61,14 +61,17 @@ function handleSignup() {
 }
 
 function goLogin() {
-  // 로그인으로 이동 (나중에 연결)
-  console.log('로그인으로 이동');
+  router.push('/login');
 }
 
 // 약관 상세 (지금은 자리만)
 function showTerms(type) {
   // TODO: 약관 텍스트 준비되면 상세 모달/페이지 연결
   console.log('약관 상세:', type);
+}
+
+function goHome() {
+  router.push('/');
 }
 </script>
 
@@ -81,7 +84,7 @@ function showTerms(type) {
     <div class="absolute bottom-[25%] left-[15%] w-10 h-10 rounded-lg bg-white/5 rotate-45"></div>
     <div class="absolute bottom-[20%] right-[18%] w-14 h-14 rounded-lg bg-white/5 rotate-12"></div>
 
-    <div class="flex items-center gap-2 mb-6">
+    <div class="flex items-center gap-2 mb-6 cursor-pointer" @click="goHome">
       <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
         <img :src="mepsLogo" alt="MEPS" class="h-8" />
       </div>
@@ -91,7 +94,9 @@ function showTerms(type) {
     <!-- 1단계: 이용약관 -->
     <div v-if="step === 'terms'" class="relative bg-white rounded-2xl p-6 w-[380px]">
       <div class="flex items-center gap-2 mb-1">
-        <img :src="mepsLogo" alt="" class="h-5" />
+        <div class="w-8 h-8 rounded-lg bg-surface-gray flex items-center justify-center">
+          <img :src="mepsLogo" alt="" class="h-8" />
+        </div>
         <span class="font-bold">MEPS 이용약관</span>
       </div>
       <p class="text-[13px] text-text-sub mb-5">
@@ -140,6 +145,12 @@ function showTerms(type) {
       <button @click="goToForm" class="w-full py-3 mt-4 bg-primary text-white font-bold rounded-lg">
         다음
       </button>
+
+      <!-- 로그인 링크 -->
+      <p class="text-center text-[13px] text-text-sub mt-4">
+        이미 계정이 있으신가요?
+        <button @click="goLogin" class="text-primary font-medium underline">로그인</button>
+      </p>
     </div>
 
     <!-- 2단계: 회원가입 폼 -->
@@ -195,7 +206,7 @@ function showTerms(type) {
       <!-- 로그인 링크 -->
       <p class="text-center text-[13px] text-text-sub mt-4">
         이미 계정이 있으신가요?
-        <button @click="goLogin" class="text-primary font-medium">로그인</button>
+        <button @click="goLogin" class="text-primary font-medium underline">로그인</button>
       </p>
     </div>
   </div>
