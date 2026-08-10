@@ -10,33 +10,38 @@
     </div>
 
     <!-- 정보(건물명, 주소, 찜) -->
-    <div class="min-w-0 flex-1">
-      <div class="flex items-start justify-between gap-2">
-        <div class="min-w-0">
+    <div class="min-w-0 flex-1 flex flex-col justify-around">
+      <div class="min-w-0">
+        <div class="flex items-start justify-between gap-2">
           <p class="truncate text-[16px] tracking-tight text-text-main">{{ displayAddress }}</p>
-          <p v-if="displayName" class="mt-0.5 truncate text-[14px] text-text-sub">
-            {{ displayName }}
-          </p>
+
+          <span
+            @click.prevent.stop="toggleFavorite"
+            class="-mr-1 -mt-1 shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/70"
+          >
+            <Heart
+              :size="20"
+              :class="isFavorite ? 'fill-status-like text-status-like' : 'text-text-secondary/50'"
+            />
+          </span>
         </div>
-        <span
-          @click.prevent.stop="toggleFavorite"
-          class="-mr-1 shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/70"
-        >
-          <Heart
-            :size="20"
-            :class="isFavorite ? 'fill-status-like text-status-like' : 'text-text-secondary/50'"
-          />
-        </span>
+        <p v-if="displayName" class="-mt-1 truncate text-[14px] text-text-secondary">
+          {{ displayName }}
+        </p>
       </div>
 
       <!-- 건물 스펙(준공연차, 주용도, 층수) -->
-      <div class="mt-2.5 flex flex-wrap items-center gap-x-0.5 gap-y-1 text-[13px] text-text-sub">
-        <span>{{ formattedYear }}</span>
-        <span>·</span>
-        <span>{{ building.mainPurpsNm || '용도 미정' }}</span>
-        <span>·</span>
-        <span>{{ formattedFloor }}</span>
-        <span class="ml-auto text-text-sub/70">120m</span>
+      <div class="flex items-center justify-between text-[12px] text-text-sub gap-5">
+        <div class="flex items-center gap-x-0.5 gap-y-1 min-w-0 truncate pr-2">
+          <span>{{ formattedYear }}</span>
+          <span>·</span>
+          <span>{{ building.mainPurpsNm || '용도 미정' }}</span>
+          <span>·</span>
+          <span>{{ formattedFloor }}</span>
+        </div>
+
+        <!-- todo: api에 거리 정보 추가 되면 매핑 -->
+        <span class="text-text-sub/70 ml-auto"> 120m </span>
       </div>
     </div>
   </button>
