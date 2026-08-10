@@ -13,6 +13,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
 import { fetchReverseGeocoding } from '@/api/map';
 import { fetchHjdBriefing } from '@/api/aiBrief';
+import { fetchNearbyBuildings } from '@/api/building';
 
 const mapContainer = ref(null);
 const mapStore = useMapStore();
@@ -146,6 +147,34 @@ const updateHjdBriefing = async (lat, lng) => {
   }
 };
 
+// 건물리스트 업데이트
+const updateNearbyBuildings = async () => {
+  const map = mapStore.mapInstance;
+  if (!map) return;
+
+  const bounds = map.getBounds();
+  const sw = bounds.getSW();
+  const ne = bounds.getNE();
+  const currentZoom = map.getZoom();
+
+  try {
+    const data = await fetchNearbyBuildings(sw.lat(), sw.lng(), ne.lat(), ne.lng(), currentZoom);
+
+    uiStore.setBuildingsData(data);
+    console.log(data);
+
+    if (!data.zoomRequired && data.buildings) {
+      // drawMarkers(data.buildings);
+    } else {
+      currentMarkers.forEach((m) => m.setMap(null));
+      currentMarkers = [];
+      console.log('줌 아웃 상태: 마커를 표시하려면 지도를 확대해 주세요.');
+    }
+  } catch (error) {
+    console.error('주변 건물 데이터를 불러오는 데 실패했습니다.', error);
+  }
+};
+
 // 로드뷰 토글 감지 & 거리뷰레이어 표시
 watch(
   () => mapStore.isRoadViewMode,
@@ -187,6 +216,7 @@ onMounted(() => {
   window.naver.maps.Event.once(map, 'init', () => {
     const center = map.getCenter();
     updateHjdBriefing(center.lat(), center.lng());
+    updateNearbyBuildings();
   });
 
   const handleMapStart = () => {
@@ -203,6 +233,7 @@ onMounted(() => {
 
       const currentCenter = map.getCenter();
       updateHjdBriefing(currentCenter.lat(), currentCenter.lng());
+      updateNearbyBuildings();
     }, 800);
   };
 
