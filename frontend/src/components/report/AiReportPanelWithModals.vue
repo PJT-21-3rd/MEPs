@@ -54,7 +54,14 @@ const businessItems = computed(() => {
   return mandatory ? [mandatory, ...riders] : riders;
 });
 
+// 보험 신청 URL — 풍수해/사업장종합 각각 별도 상품 페이지로 연결
+const FLOOD_INSURANCE_APPLY_URL =
+  'https://direct.kbinsure.co.kr/home/#/GL/DSF/GN_CM0101M/?pid=5110983&code=5703&utm_source=google&utm_medium=google_pc&utm_term=%EC%82%AC%EC%97%85%EC%9E%A5%EC%A2%85%ED%95%A9%EB%B3%B4%ED%97%98&utm_campaign=sa_bizFire&utm_content=51109835703&gclid=CjwKCAjwyuDTBhB-EiwANCQhLJaL56UhXSYTyJVm7DtlfOsVeyk_QfKlFKqkZbX-ynbDASB-kJcJQxoCzzYQAvD_BwE';
+const BUSINESS_INSURANCE_APPLY_URL =
+  'https://direct.kbinsure.co.kr/home/#/GL/BF/LT_CM0101M/?pid=5110983&code=5703&utm_source=google&utm_medium=google_pc&utm_term=%EC%82%AC%EC%97%85%EC%9E%A5%EC%A2%85%ED%95%A9%EB%B3%B4%ED%97%98&utm_campaign=sa_bizFire&utm_content=51109835703&gclid=CjwKCAjwyuDTBhB-EiwANCQhLJaL56UhXSYTyJVm7DtlfOsVeyk_QfKlFKqkZbX-ynbDASB-kJcJQxoCzzYQAvD_BwE';
+
 // 배너 클릭 시 필터링된 items로 config를 구성해 uiStore에 위임
+// applyUrl은 타입별로 달라서 config에 함께 실어보냄 (submit 시 이 값을 그대로 사용)
 function handleOpenInsurance(type) {
   if (type === 'flood') {
     uiStore.openInsuranceModal({
@@ -62,6 +69,7 @@ function handleOpenInsurance(type) {
       subtitle: '침수 피해 복구비 보장',
       items: floodItems.value,
       ctaText: '사장님 맞춤 보험 상담 신청하기',
+      applyUrl: FLOOD_INSURANCE_APPLY_URL,
     });
   } else if (type === 'business') {
     uiStore.openInsuranceModal({
@@ -69,36 +77,42 @@ function handleOpenInsurance(type) {
       subtitle: '진단 결과에 맞춰 필요한 상품과 특약을 골라봤어요.',
       items: businessItems.value,
       ctaText: '사장님 맞춤 보험 상담 신청하기',
+      applyUrl: BUSINESS_INSURANCE_APPLY_URL,
     });
   }
 }
 
 // 대출 상품 4종 — 진단 결과와 무관하게 고정 노출 (BE 확정 전 임시값)
 // TODO: 4개 상품명·금리 BE 확정되면 constants 파일로 분리
+// detailUrl: 각 상품 '상세보기' 클릭 시 이동할 상세 페이지 URL
 const LOAN_PRODUCTS = [
   {
     category: '창업 자금',
     name: 'KB사장님+ 마이너스통장',
     rateText: '연 최저 3.8%~',
     description: '우량 상권 입점 예정 소상공인을 위한 창업 자금 대출입니다.',
+    detailUrl: 'https://zloan.kbstar.com/quics?page=C110940',
   },
   {
     category: '신용대출',
     name: 'KB소상공인 신용대출',
     rateText: '연 최저 4.2%~',
     description: '소상공인 신용등급에 따라 우대금리를 제공하는 대출 상품입니다.',
+    detailUrl: 'https://zloan.kbstar.com/quics?page=C106666',
   },
   {
     category: '보증서 대출',
     name: 'KB소상공인 보증서대출(온택트)',
     rateText: '연 최저 3.5%~',
     description: '신용보증재단 보증서 기반 비대면 대출 상품입니다.',
+    detailUrl: 'http://zloan.kbstar.com/quics?page=C109681',
   },
   {
     category: '셀러론',
     name: 'KB셀러론',
     rateText: '연 최저 5.0%~',
     description: '온라인 셀러를 위한 매출 기반 신속 대출 상품입니다.',
+    detailUrl: 'https://zloan.kbstar.com/quics?page=C108424',
   },
 ];
 
@@ -112,10 +126,19 @@ function openExternalLink(url) {
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-// 보험 모달(풍수해/사업장종합 공통) 하단 배너 클릭 → KB손해보험 안내 페이지 이동 + 모달 닫기
+// 보험 모달(풍수해/사업장종합 공통) 하단 배너 클릭 → 타입별 신청 페이지 이동 + 모달 닫기
 function handleInsuranceSubmit() {
-  openExternalLink('https://www.kbinsure.co.kr/main.ec?mdmn=0101');
+  const url = uiStore.insuranceModalConfig?.applyUrl;
+  if (url) {
+    openExternalLink(url);
+  }
   uiStore.closeInsuranceModal();
+}
+// 대출 모달 - 상품별 '상세보기' 클릭 → 해당 상품의 KB스타뱅킹 페이지로 이동
+function handleViewLoanDetail(product) {
+  if (product?.detailUrl) {
+    openExternalLink(product.detailUrl);
+  }
 }
 
 // 대출 모달 - 인근 KB국민은행 영업점 찾기 배너 클릭
@@ -125,7 +148,7 @@ function handleFindBranch() {
 
 // 대출 모달 - KB스타뱅킹 앱으로 신청하기 배너 클릭
 function handleOpenStarbanking() {
-  openExternalLink('https://zloan.kbstar.com/quics?page=opzloan');
+  openExternalLink('https://obank.kbstar.com/quics?page=C110260');
 }
 </script>
 
@@ -152,7 +175,7 @@ function handleOpenStarbanking() {
     v-if="uiStore.loanModalConfig"
     v-bind="uiStore.loanModalConfig"
     @close="uiStore.closeLoanModal"
-    @view-detail="(product) => console.log('상세보기', product)"
+    @view-detail="handleViewLoanDetail"
     @find-branch="handleFindBranch"
     @open-app="handleOpenStarbanking"
   />

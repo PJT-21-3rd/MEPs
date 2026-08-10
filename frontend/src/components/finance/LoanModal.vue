@@ -68,8 +68,14 @@ defineEmits(['close', 'view-detail', 'find-branch', 'open-app']);
                 class="flex items-center gap-0.5 text-[14px] font-medium text-primary"
                 @click="$emit('view-detail', product)"
               >
-                상세 보기
-                <ChevronRight class="w-3.5 h-3.5" />
+                <button
+                  type="button"
+                  class="flex items-center gap-0.5 text-[14px] font-medium text-primary transition-transform duration-100 active:scale-95"
+                  @click="$emit('view-detail', product)"
+                >
+                  상세 보기
+                  <ChevronRight class="w-3.5 h-3.5" />
+                </button>
               </button>
             </div>
           </div>
