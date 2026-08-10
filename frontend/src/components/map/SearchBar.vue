@@ -4,8 +4,7 @@ import { useUiStore } from '@/stores/uiStore';
 import { useMapStore } from '@/stores/mapStore';
 import { onMounted, ref } from 'vue';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import api from '@/api';
-import axios from 'axios';
+import { fetchBackendSearch, fetchNcloudLocalSearch } from '@/api/search';
 
 const uiStore = useUiStore();
 const mapStore = useMapStore();
@@ -15,7 +14,6 @@ const isDropdownOpen = ref(false);
 const searchContainerRef = ref(null);
 const recentSearches = ref([]); // 최근검색어s
 const autoCompletes = ref([]); // 자동완성
-let debounceTimeout = null;
 
 // 최근 검색어 관련 로직
 const loadRecentSearches = () => {
@@ -61,12 +59,7 @@ const executeSearch = async (keyword) => {
   if (!map) return;
 
   try {
-    console.log(`백엔드 자체 DB 검색 요청 중... (/api/buildings/search)`);
-    const response = await api.get('/api/buildings/search', {
-      params: { keyword: validKeyword },
-    });
-    const responseData = response.data;
-    const data = Array.isArray(responseData) ? responseData[0] : responseData;
+    const data = await fetchBackendSearch(validKeyword);
 
     // 응답 분기 처리
     if (data && data.searchType === 'BUILDING') {
@@ -97,36 +90,18 @@ const executeSearch = async (keyword) => {
     console.log(`Ncloud 지역 검색 API로 넘어갑니다... (/api-hub/search/v1/local)`);
 
     // track2: naver api
-    const ncloudRes = await axios.get('/api-hub/search/v1/local', {
-      params: {
-        query: validKeyword,
-        display: 1,
-        format: 'json',
-      },
-      headers: {
-        'X-NCP-APIGW-API-KEY-ID': import.meta.env.VITE_NCLOUD_CLIENT_ID,
-        'X-NCP-APIGW-API-KEY': import.meta.env.VITE_NCLOUD_CLIENT_SECRET,
-        Accept: 'application/json',
-      },
-    });
+    const firstPlace = await fetchNcloudLocalSearch(validKeyword);
 
-    const items = ncloudRes.data.items;
-
-    if (items && items.length > 0) {
-      const firstPlace = items[0];
-
+    if (firstPlace) {
       console.log(`Ncloud 지역 검색 API 검색 성공!`);
       console.log(`    분기: POI (장소/지하철역 등)`);
       console.log(`    데이터:`, firstPlace);
 
       // 지역 검색 API는 TM128 좌표계를 사용
-      // (문서에 'WGS84 좌표계 기준'이라고 적혀있지만 실제 mapx, mapy 값은 보통 정수형 TM128로 옵니다.
-      // 만약 mapx값이 127.xxx 형태라면 변환이 필요 없으니 아래 코드를 수정해야 함.)
       const rawX = firstPlace.mapx;
       const rawY = firstPlace.mapy;
-
       let latLng;
-      // 좌표가 120, 30 대의 WGS84 형태인지, TM128 형태인지
+
       if (rawX.indexOf('.') === -1 && rawX.length >= 9) {
         // 10^7 곱해진 WGS84
         latLng = new window.naver.maps.LatLng(parseInt(rawY) / 10000000, parseInt(rawX) / 10000000);
