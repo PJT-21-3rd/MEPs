@@ -45,6 +45,12 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Building2, Heart } from '@lucide/vue';
+import {
+  formatBuildingAge,
+  formatFloor,
+  formatShortAddress,
+  formatDistance,
+} from '@/utils/formatters';
 
 const props = defineProps({
   building: {
@@ -64,44 +70,10 @@ const displayName = computed(() => {
   return props.building.bldNm || '';
 });
 
-// 주소 표시 (지번 || 도로명)
-const displayAddress = computed(() => {
-  const rawAddr = props.building.jibunAddr || props.building.roadAddr;
-
-  if (rawAddr) {
-    const parts = rawAddr.split(' ');
-
-    if (parts.length >= 2 && (parts[0].endsWith('시') || parts[0].endsWith('도'))) {
-      return parts.slice(1).join(' ');
-    }
-
-    return rawAddr;
-  }
-
-  return props.building.bldNm || '상세 주소 미상';
-});
-
-// 연식 포맷팅 (YYYYMMDD -> 준공 n년차)
-const formattedYear = computed(() => {
-  const dateStr = props.building.useAprDay;
-  if (!dateStr || dateStr.length < 4) return '연식 미상';
-
-  const year = parseInt(dateStr.substring(0, 4));
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - year + 1; // n년차 계산
-
-  return `준공 ${age}년차`;
-});
-
-// 층수 텍스트 포맷팅 (예: 44F/B3)
-const formattedFloor = computed(() => {
-  const up = props.building.grndFlr || 0;
-  const down = props.building.ugrndFlr || 0;
-
-  let floorText = '';
-  floorText += `${up}F`;
-  if (down > 0) floorText += `/B${down}`;
-
-  return floorText;
-});
+const displayAddress = computed(() =>
+  formatShortAddress(props.building.jibunAddr, props.building.roadAddr, props.building.bldNm),
+);
+const formattedYear = computed(() => formatBuildingAge(props.building.useAprDay));
+const formattedFloor = computed(() => formatFloor(props.building.grndFlr, props.building.ugrndFlr));
+const formattedDistance = computed(() => formatDistance(props.building.distance));
 </script>
