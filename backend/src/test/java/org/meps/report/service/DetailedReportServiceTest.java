@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DetailedReportServiceTest {
 
     @Test
-    @DisplayName("구조 details는 주구조·사용승인일·위반건축물을 건축물대장 출처로 나열한다")
+    @DisplayName("구조 details는 룰 엔진 감점 4요소를 건축물대장 출처로 나열한다")
     void buildStructDetails_listsRegisterBackedFactors() {
         StructuralStabilityScoreResultDto struct = structOf(
                 buildFactorOf("USE_APR_DAY", "1978-12-29"),
@@ -30,10 +30,11 @@ class DetailedReportServiceTest {
 
         List<ReportDetailDto> details = DetailedReportService.buildStructDetails(struct);
 
-        assertThat(details).hasSize(3);
+        assertThat(details).hasSize(4);
         assertBuildDetail(details.get(0), "주구조", "철근콘크리트구조", "건축물대장 표제부");
         assertBuildDetail(details.get(1), "사용승인일", "1978-12-29", "건축물대장 표제부");
         assertBuildDetail(details.get(2), "위반건축물 여부", "있음", "건축물대장 표제부");
+        assertBuildDetail(details.get(3), "지하층수", "지하 1층", "건축물대장 표제부");
     }
 
     @Test
@@ -47,6 +48,7 @@ class DetailedReportServiceTest {
 
         assertBuildDetail(details.get(1), "사용승인일", "정보 없음", "건축물대장 표제부");
         assertBuildDetail(details.get(2), "위반건축물 여부", "없음", "건축물대장 표제부");
+        assertBuildDetail(details.get(3), "지하층수", "정보 없음", "건축물대장 표제부");
     }
 
     @Test
@@ -65,7 +67,7 @@ class DetailedReportServiceTest {
         assertThat(details).hasSize(4);
         assertBuildDetail(details.get(0), "도로접면", "광대한면", "토지특성정보");
         assertBuildDetail(details.get(1), "주구조", "철근콘크리트구조", "건축물대장 표제부");
-        assertBuildDetail(details.get(2), "행정동 화재 건수(3년 평균)", "12.3건", "소방청 화재통계");
+        assertBuildDetail(details.get(2), "행정동 화재 건수(3년 평균)", "12.3건(서울 상위 25%)", "소방청 화재통계");
         assertBuildDetail(details.get(3), "최근접 소방서 거리", "광진소방서 약 850m", "소방서 위치정보");
     }
 
@@ -85,29 +87,34 @@ class DetailedReportServiceTest {
     }
 
     @Test
-    @DisplayName("지반침하 사고 없음은 반경 내 사고 이력 0건만 나열한다")
-    void buildSinkDetails_withoutIncidentListsZeroCountOnly() {
+    @DisplayName("지반침하 사고 없음은 세 거리 구간을 모두 없음으로 나열한다")
+    void buildSinkDetails_withoutIncidentMarksAllBandsAsNone() {
         SinkholeScoreResult sink = SinkholeScoreResult.of(100, List.of());
 
         List<ReportDetailDto> details = DetailedReportService.buildSinkDetails(sink);
 
-        assertThat(details).hasSize(1);
-        assertBuildDetail(details.get(0), "반경 내 사고 이력", "0건", "지하안전정보 사고이력");
+        assertThat(details).hasSize(3);
+        assertBuildDetail(details.get(0), "0m~100m 사고 이력", "없음", "지하안전정보 사고이력");
+        assertBuildDetail(details.get(1), "100m~300m 사고 이력", "없음", "지하안전정보 사고이력");
+        assertBuildDetail(details.get(2), "300m~500m 사고 이력", "없음", "지하안전정보 사고이력");
     }
 
     @Test
-    @DisplayName("지반침하 사고가 있으면 건수와 최근 사고의 시기·거리를 추가한다")
-    void buildSinkDetails_withIncidentAddsLatestIncidentRow() {
-        // 매퍼 정렬(사고일 내림차순) 전제 — 첫 건이 최근 사고
-        SinkholeScoreResult sink = SinkholeScoreResult.of(78, List.of(
-                SinkholeIncidentDto.builder().sagoDate("20230401").distanceM(120.6).build(),
+    @DisplayName("지반침하 사고는 거리 구간별 건수와 구간 내 최근 사고 시기로 표기한다")
+    void buildSinkDetails_groupsIncidentsByDistanceBand() {
+        // 매퍼 정렬(사고일 내림차순) 전제 — 구간 내 첫 매칭이 최근 사고.
+        // 100.0m는 산식(distanceWeight)과 동일하게 0~100m 구간에 포함된다
+        SinkholeScoreResult sink = SinkholeScoreResult.of(75, List.of(
+                SinkholeIncidentDto.builder().sagoDate("20230401").distanceM(100.0).build(),
+                SinkholeIncidentDto.builder().sagoDate("20210805").distanceM(450.0).build(),
                 SinkholeIncidentDto.builder().sagoDate("20191115").distanceM(410.0).build()));
 
         List<ReportDetailDto> details = DetailedReportService.buildSinkDetails(sink);
 
-        assertThat(details).hasSize(2);
-        assertBuildDetail(details.get(0), "반경 내 사고 이력", "2건", "지하안전정보 사고이력");
-        assertBuildDetail(details.get(1), "최근 사고", "2023년 4월, 거리 121m", "지하안전정보 사고이력");
+        assertThat(details).hasSize(3);
+        assertBuildDetail(details.get(0), "0m~100m 사고 이력", "1건(최근 2023년 4월)", "지하안전정보 사고이력");
+        assertBuildDetail(details.get(1), "100m~300m 사고 이력", "없음", "지하안전정보 사고이력");
+        assertBuildDetail(details.get(2), "300m~500m 사고 이력", "2건(최근 2021년 8월)", "지하안전정보 사고이력");
     }
 
     @Test
@@ -119,21 +126,21 @@ class DetailedReportServiceTest {
 
         assertThat(details).hasSize(2);
         assertBuildDetail(details.get(0), "지번 침수 이력", "이력 없음", "행정안전부 침수흔적도");
-        assertBuildDetail(details.get(1), "침수위험등급", "해당 없음", "행정안전부 침수흔적도");
+        assertBuildDetail(details.get(1), "최고 침수심 등급", "해당 없음", "행정안전부 침수흔적도");
     }
 
     @Test
-    @DisplayName("침수 이력이 있으면 건수·최근 연도와 최근 이력의 등급을 표기한다")
-    void buildFloodDetails_withHistoryListsCountAndLatestGrade() {
-        // 매퍼 정렬(연도 내림차순) 전제 — 첫 건이 최근 이력
+    @DisplayName("침수 이력이 있으면 건수·최근 연도와 최고 침수심 등급·해당 연도를 표기한다")
+    void buildFloodDetails_withHistoryListsCountAndWorstGrade() {
+        // 매퍼 정렬(연도 내림차순) 전제 — 첫 건이 최근 이력. 최고 등급(5)은 과거 건이라도 대표로 노출된다
         FloodScoreResultDto flood = FloodScoreResultDto.of(77, List.of(
-                FloodIncidentDto.builder().year("2022").grade(5).sggCd("11380").cause("호우").build(),
-                FloodIncidentDto.builder().year("2020").grade(3).sggCd("11380").cause("호우").build()));
+                FloodIncidentDto.builder().year("2022").grade(3).sggCd("11380").cause("호우").build(),
+                FloodIncidentDto.builder().year("2020").grade(5).sggCd("11380").cause("호우").build()));
 
         List<ReportDetailDto> details = DetailedReportService.buildFloodDetails(flood);
 
         assertBuildDetail(details.get(0), "지번 침수 이력", "2건(최근 2022년)", "행정안전부 침수흔적도");
-        assertBuildDetail(details.get(1), "침수위험등급", "5등급(2022년)", "행정안전부 침수흔적도");
+        assertBuildDetail(details.get(1), "최고 침수심 등급", "5등급(2020년)", "행정안전부 침수흔적도");
     }
 
     private static void assertBuildDetail(ReportDetailDto detail, String label, String value, String source) {
