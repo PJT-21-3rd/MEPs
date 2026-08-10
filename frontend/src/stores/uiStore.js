@@ -11,6 +11,7 @@ export const useUiStore = defineStore('ui', () => {
   const roadViewCoords = ref({ lat: null, lng: null });
   const insuranceModalConfig = ref(null); // 보험 모달 설정
   const loanModalConfig = ref(null); // 대출 모달 설정
+  const hjdBriefingData = ref(null); // 행정동 브리핑 데이터
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
@@ -43,7 +44,7 @@ export const useUiStore = defineStore('ui', () => {
   const closeRoadViewModal = () => {
     isRoadViewModalOpen.value = false;
   };
-  
+
   // 보험 모달 여닫
   const openInsuranceModal = (config) => {
     insuranceModalConfig.value = config;
@@ -60,6 +61,10 @@ export const useUiStore = defineStore('ui', () => {
     loanModalConfig.value = null;
   };
 
+  const setHjdBriefingData = (data) => {
+    hjdBriefingData.value = data;
+  };
+
   return {
     isDetailOpen,
     isReportOpen,
@@ -67,6 +72,9 @@ export const useUiStore = defineStore('ui', () => {
     searchQuery,
     selectedBuildingId,
     roadViewCoords,
+    insuranceModalConfig,
+    hjdBriefingData,
+    loanModalConfig,
     openBuildingDetail,
     closeBuildingDetail,
     openReport,
@@ -74,11 +82,10 @@ export const useUiStore = defineStore('ui', () => {
     openRoadViewModal,
     closeRoadViewModal,
     toggleDetailPanel,
-    insuranceModalConfig,
     openInsuranceModal,
     closeInsuranceModal,
-    loanModalConfig,
     openLoanModal,
     closeLoanModal,
+    setHjdBriefingData,
   };
 });

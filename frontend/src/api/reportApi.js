@@ -1,4 +1,4 @@
-import http from './axios';
+import http from '.';
 import { getGradeByStatusCode, FACTOR_CODE_TO_KEY } from '@/constants/reportConstants';
 
 // AI 안심 진단 리포트 조회 API (기능 6·7·8번)

@@ -11,6 +11,8 @@
 import { ref, onMounted, watch } from 'vue';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
+import { fetchReverseGeocoding } from '@/api/map';
+import { fetchHjdBriefing } from '@/api/building';
 
 const mapContainer = ref(null);
 const mapStore = useMapStore();
@@ -128,6 +130,22 @@ const fetchPolygonByCoord = async (lat, lng) => {
   return await fetchPolygonData('1168010100102160000'); // 가짜 데이터 반환
 };
 
+// 행정동 브리핑 호출
+const updateHjdBriefing = async (lat, lng) => {
+  try {
+    const hjdCode = await fetchReverseGeocoding(lat, lng);
+    if (!hjdCode) return;
+
+    const briefingData = await fetchHjdBriefing(hjdCode);
+    if (briefingData) {
+      uiStore.setHjdBriefingData(briefingData);
+      console.log(`#${briefingData.hjdName} AI 브리핑 데이터 업데이트 완료`);
+    }
+  } catch (error) {
+    console.error('브리핑 업데이트 실패');
+  }
+};
+
 // 로드뷰 토글 감지 & 거리뷰레이어 표시
 watch(
   () => mapStore.isRoadViewMode,
@@ -153,9 +171,12 @@ onMounted(() => {
     return;
   }
 
+  const initialLat = 37.4979;
+  const initialLng = 127.0276;
+
   // 지도 초기 옵션 설정
   const mapOptions = {
-    center: new window.naver.maps.LatLng(37.4979, 127.0276),
+    center: new window.naver.maps.LatLng(initialLat, initialLng),
     zoom: 15,
     zoomControl: false,
   };
@@ -174,6 +195,9 @@ onMounted(() => {
 
     timeOut = setTimeout(() => {
       mapStore.setMapMoved(true); // 800ms이후 맵움직임 true
+
+      const currentCenter = map.getCenter();
+      updateHjdBriefing(currentCenter.lat(), currentCenter.lng());
     }, 800);
   };
 
