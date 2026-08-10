@@ -1,4 +1,4 @@
-package org.meps.hjd.controller;
+package org.meps.sgg.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         @ContextConfiguration(classes = RootConfig.class),
         @ContextConfiguration(classes = ServletConfig.class)
 })
-class HjdControllerIntegrationTest {
-
+class SggControllerIntegrationTest {
     @Autowired
     private WebApplicationContext context;
 
@@ -41,16 +40,22 @@ class HjdControllerIntegrationTest {
     }
 
     @Test
-    void 행정동_리스트_조회는_200과_425건을_반환한다() throws Exception {
-        String body = mockMvc.perform(get("/api/hjd"))
+    void 구별_AI_브리핑_조회는_200과_통계_브리핑을_반환한다() throws Exception {
+        // 11110 종로구
+        String body = mockMvc.perform(get("/api/sgg/{sggCd}/briefing", "11110"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        JsonNode regions = new ObjectMapper().readTree(body).get("regions");
+        JsonNode root = new ObjectMapper().readTree(body);
 
-        assertThat(regions.size()).isEqualTo(425);
+        assertThat(root.get("sggName").asText()).isNotBlank();
+        assertThat(root.get("dailyFlpop").asInt()).isPositive();
+        assertThat(root.get("overallBriefing").asText()).isNotBlank();
     }
 
-
-
+    @Test
+    void 존재하지_않는_구_코드로_조회하면_404를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/sgg/{sggCd}/briefing", "99999"))
+                .andExpect(status().isNotFound());
+    }
 }

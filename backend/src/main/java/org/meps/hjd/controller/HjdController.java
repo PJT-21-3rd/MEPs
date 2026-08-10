@@ -31,4 +31,5 @@ public class HjdController {
     public HjdBriefingResponseDto getBriefing(@PathVariable("hjdCd") String hjdCd) {
         return hjdService.getBriefing(hjdCd);
     }
+
 }

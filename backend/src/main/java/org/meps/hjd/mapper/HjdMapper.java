@@ -20,4 +20,6 @@ public interface HjdMapper {
     HjdBboxDto findBboxByHjdCd(@Param("hjdCd") String hjdCd);
 
     HjdBriefingResponseDto findByHjdCd(@Param("hjdCd") String hjdCd);
+
+
 }
