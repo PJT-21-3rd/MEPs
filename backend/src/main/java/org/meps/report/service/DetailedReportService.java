@@ -132,7 +132,7 @@ public class DetailedReportService {
             } else {
                 value = counts[i] + "건(최근 " + SafetyReportService.formatSagoDate(latestSagoDates[i]) + ")";
             }
-            details.add(buildDetail(labels[i], value, "지하안전정보 사고이력"));
+            details.add(buildDetail(labels[i], value, "지반침하 사고이력"));
         }
         return details;
     }
