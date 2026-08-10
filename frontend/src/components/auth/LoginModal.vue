@@ -16,10 +16,7 @@ function handleLogin() {
 
 <template>
   <!-- 배경 어둡게 (오버레이) -->
-  <div
-    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-    @click="emit('close')"
-  >
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
     <!-- 모달 카드 -->
     <div class="bg-white rounded-2xl p-6 w-[360px]" @click.stop>
       <!-- 헤더 -->
