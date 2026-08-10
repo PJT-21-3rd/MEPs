@@ -1,11 +1,11 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.llm.OpenAiClient;
 import org.meps.common.util.SafetyGrade;
-import org.meps.report.dto.BriefingInput;
-import org.meps.report.dto.SafetyBriefingDto;
+import org.meps.safetyreport.dto.BriefingInput;
+import org.meps.safetyreport.dto.BasicBriefingDto;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class BriefingService {
+public class BasicBriefingService {
 
     // 예시는 입력, 출력 쌍으로 제공 (출력만 주면 모델이 입력과 무관하게 예시 문형을 복사)
     // 톤은 친근한 해요체 — 사실 기반은 유지하되 딱딱하지 않게 (팀 결정 2026-08-07)
@@ -66,7 +66,7 @@ public class BriefingService {
     }
 
     /** 5문장 생성. 호출·파싱·검증 어느 단계든 실패하면 LlmCallFailedException */
-    public SafetyBriefingDto generate(BriefingInput input) {
+    public BasicBriefingDto generate(BriefingInput input) {
         String content = openAiClient.completeJson(SYSTEM_PROMPT, buildUserPrompt(input));
 
         JsonNode root;
@@ -79,7 +79,7 @@ public class BriefingService {
         String overall = root.path("overall").asText(null);
         validateSentence("overall", overall);
 
-        return SafetyBriefingDto.builder()
+        return BasicBriefingDto.builder()
                 .totalBrief(overall + " " + closingPhrase(input))
                 .structBrief(factorSentence("structure", "구조", input.getStructFacts(), root))
                 .fireBrief(factorSentence("fire", "화재", input.getFireFacts(), root))
@@ -143,8 +143,8 @@ public class BriefingService {
     }
 
     /** 등급별 고정 템플릿 폴백. 명세상 브리핑이 Mandatory라 LLM 장애 시에도 응답을 채운다 */
-    public SafetyBriefingDto fallback(BriefingInput input) {
-        return SafetyBriefingDto.builder()
+    public BasicBriefingDto fallback(BriefingInput input) {
+        return BasicBriefingDto.builder()
                 .totalBrief(totalFallbackLead(input.getTotalGrade()) + " " + closingPhrase(input))
                 .structBrief(factorFallbackSentence("구조", input.getStructGrade()))
                 .fireBrief(factorFallbackSentence("화재", input.getFireGrade()))

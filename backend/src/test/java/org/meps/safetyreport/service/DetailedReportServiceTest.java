@@ -1,4 +1,4 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -6,7 +6,7 @@ import org.meps.fire.dto.FireScoreInput;
 import org.meps.fire.dto.FireScoreResult;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
-import org.meps.report.dto.ReportDetailDto;
+import org.meps.safetyreport.dto.DetailedFactorBaseDto;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.structure.dto.StructuralFactorDto;
@@ -28,7 +28,7 @@ class DetailedReportServiceTest {
                 buildFactorOf("VIOLATION", "Y"),
                 buildFactorOf("UNDERGROUND_FLOOR", "지하 1층"));
 
-        List<ReportDetailDto> details = DetailedReportService.buildStructDetails(struct);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildStructDetails(struct);
 
         assertThat(details).hasSize(4);
         assertBuildDetail(details.get(0), "주구조", "철근콘크리트구조", "건축물대장 표제부");
@@ -44,7 +44,7 @@ class DetailedReportServiceTest {
                 buildFactorOf("STRUCTURE_TYPE", "벽돌구조"),
                 buildFactorOf("VIOLATION", "N"));
 
-        List<ReportDetailDto> details = DetailedReportService.buildStructDetails(struct);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildStructDetails(struct);
 
         assertBuildDetail(details.get(1), "사용승인일", "정보 없음", "건축물대장 표제부");
         assertBuildDetail(details.get(2), "위반건축물 여부", "없음", "건축물대장 표제부");
@@ -62,7 +62,7 @@ class DetailedReportServiceTest {
                 .dongFireAvgCnt(12.3333)
                 .build(), 4);
 
-        List<ReportDetailDto> details = DetailedReportService.buildFireDetails(fire);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildFireDetails(fire);
 
         assertThat(details).hasSize(4);
         assertBuildDetail(details.get(0), "도로접면", "광대한면", "토지특성정보");
@@ -78,7 +78,7 @@ class DetailedReportServiceTest {
                 .roadSideCodeNm("지정되지않음")
                 .build(), null);
 
-        List<ReportDetailDto> details = DetailedReportService.buildFireDetails(fire);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildFireDetails(fire);
 
         assertBuildDetail(details.get(0), "도로접면", "정보 없음", "토지특성정보");
         assertBuildDetail(details.get(1), "주구조", "정보 없음", "건축물대장 표제부");
@@ -91,7 +91,7 @@ class DetailedReportServiceTest {
     void buildSinkDetails_withoutIncidentMarksAllBandsAsNone() {
         SinkholeScoreResult sink = SinkholeScoreResult.of(100, List.of());
 
-        List<ReportDetailDto> details = DetailedReportService.buildSinkDetails(sink);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildSinkDetails(sink);
 
         assertThat(details).hasSize(3);
         assertBuildDetail(details.get(0), "0m~100m 사고 이력", "없음", "지반침하 사고이력");
@@ -109,7 +109,7 @@ class DetailedReportServiceTest {
                 SinkholeIncidentDto.builder().sagoDate("20210805").distanceM(450.0).build(),
                 SinkholeIncidentDto.builder().sagoDate("20191115").distanceM(410.0).build()));
 
-        List<ReportDetailDto> details = DetailedReportService.buildSinkDetails(sink);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildSinkDetails(sink);
 
         assertThat(details).hasSize(3);
         assertBuildDetail(details.get(0), "0m~100m 사고 이력", "1건(최근 2023년 4월)", "지반침하 사고이력");
@@ -122,7 +122,7 @@ class DetailedReportServiceTest {
     void buildFloodDetails_withoutHistoryMarksNoHistory() {
         FloodScoreResultDto flood = FloodScoreResultDto.of(100, List.of());
 
-        List<ReportDetailDto> details = DetailedReportService.buildFloodDetails(flood);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildFloodDetails(flood);
 
         assertThat(details).hasSize(2);
         assertBuildDetail(details.get(0), "지번 침수 이력", "이력 없음", "행정안전부 침수흔적도");
@@ -137,13 +137,13 @@ class DetailedReportServiceTest {
                 FloodIncidentDto.builder().year("2022").grade(3).sggCd("11380").cause("호우").build(),
                 FloodIncidentDto.builder().year("2020").grade(5).sggCd("11380").cause("호우").build()));
 
-        List<ReportDetailDto> details = DetailedReportService.buildFloodDetails(flood);
+        List<DetailedFactorBaseDto> details = DetailedReportService.buildFloodDetails(flood);
 
         assertBuildDetail(details.get(0), "지번 침수 이력", "2건(최근 2022년)", "행정안전부 침수흔적도");
         assertBuildDetail(details.get(1), "최고 침수심 등급", "5등급(2020년)", "행정안전부 침수흔적도");
     }
 
-    private static void assertBuildDetail(ReportDetailDto detail, String label, String value, String source) {
+    private static void assertBuildDetail(DetailedFactorBaseDto detail, String label, String value, String source) {
         assertThat(detail.getLabel()).isEqualTo(label);
         assertThat(detail.getValue()).isEqualTo(value);
         assertThat(detail.getSource()).isEqualTo(source);

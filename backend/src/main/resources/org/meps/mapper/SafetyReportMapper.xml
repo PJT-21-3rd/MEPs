@@ -2,10 +2,10 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.meps.report.mapper.SafetyReportMapper">
+<mapper namespace="org.meps.safetyreport.mapper.SafetyReportMapper">
 
     <!-- 기본 리포트 캐시 행 조회 (상세 리포트용 *_report 컬럼은 제외) -->
-    <select id="findByBdMgtSn" resultType="org.meps.report.dto.SafetyReportRowDto">
+    <select id="findByBdMgtSn" resultType="org.meps.safetyreport.dto.SafetyReportRowDto">
         SELECT bd_mgt_sn,
                ai_model_nm,
                total_score,

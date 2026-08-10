@@ -1,4 +1,4 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.common.util.SafetyGrade;
@@ -7,11 +7,11 @@ import org.meps.fire.service.FireScoreService;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
 import org.meps.flood.service.FloodScoreService;
-import org.meps.report.dto.BriefingInput;
-import org.meps.report.dto.DetailedReportResponseDto;
-import org.meps.report.dto.FactorReportDto;
-import org.meps.report.dto.ReportDetailDto;
-import org.meps.report.dto.SafetyBriefingDto;
+import org.meps.safetyreport.dto.BriefingInput;
+import org.meps.safetyreport.dto.DetailedReportResponseDto;
+import org.meps.safetyreport.dto.DetailedFactorDto;
+import org.meps.safetyreport.dto.DetailedFactorBaseDto;
+import org.meps.safetyreport.dto.BasicBriefingDto;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.sinkhole.service.SinkholeScoreService;
@@ -41,7 +41,7 @@ public class DetailedReportService {
     private final StructuralStabilityScoreService structuralStabilityScoreService;
     private final FloodScoreService floodScoreService;
     private final TotalScoreService totalScoreService;
-    private final BriefingService briefingService;
+    private final BasicBriefingService basicBriefingService;
 
     public DetailedReportResponseDto getDetailedReport(String buildingId) {
         FireScoreResult fire = fireScoreService.getFireScore(buildingId); // 미존재 건물이면 여기서 404
@@ -55,18 +55,18 @@ public class DetailedReportService {
         BriefingInput input = BriefingInput.builder()
                 .totalGrade(SafetyGrade.fromScore(totalScore))
                 .structGrade(struct.getGrade())
-                .structFacts(SafetyReportService.buildStructFacts(struct))
+                .structFacts(BasicReportService.buildStructFacts(struct))
                 .fireGrade(fire.getGrade())
-                .fireFacts(SafetyReportService.buildFireFacts(fire))
+                .fireFacts(BasicReportService.buildFireFacts(fire))
                 .sinkGrade(sink.getGrade())
-                .sinkFacts(SafetyReportService.buildSinkFacts(sink))
+                .sinkFacts(BasicReportService.buildSinkFacts(sink))
                 .floodGrade(flood.getGrade())
-                .floodFacts(SafetyReportService.buildFloodFacts(flood))
+                .floodFacts(BasicReportService.buildFloodFacts(flood))
                 .build();
-        SafetyBriefingDto placeholder = briefingService.fallback(input);
+        BasicBriefingDto placeholder = basicBriefingService.fallback(input);
 
         // factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 (명세)
-        List<FactorReportDto> factors = new ArrayList<>();
+        List<DetailedFactorDto> factors = new ArrayList<>();
         factors.add(buildFactor("STRUCTURE", struct.getGrade(), placeholder.getStructBrief(), buildStructDetails(struct)));
         factors.add(buildFactor("FIRE", fire.getGrade(), placeholder.getFireBrief(), buildFireDetails(fire)));
         factors.add(buildFactor("SINKHOLE", sink.getGrade(), placeholder.getSinkBrief(), buildSinkDetails(sink)));
@@ -78,8 +78,8 @@ public class DetailedReportService {
                 .build();
     }
 
-    private FactorReportDto buildFactor(String code, SafetyGrade grade, String aiReport, List<ReportDetailDto> details) {
-        return FactorReportDto.builder()
+    private DetailedFactorDto buildFactor(String code, SafetyGrade grade, String aiReport, List<DetailedFactorBaseDto> details) {
+        return DetailedFactorDto.builder()
                 .code(code)
                 .status(grade.name())
                 .aiReport(aiReport)
@@ -88,8 +88,8 @@ public class DetailedReportService {
     }
 
     /** 구조 details */
-    static List<ReportDetailDto> buildStructDetails(StructuralStabilityScoreResultDto struct) {
-        List<ReportDetailDto> details = new ArrayList<>();
+    static List<DetailedFactorBaseDto> buildStructDetails(StructuralStabilityScoreResultDto struct) {
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         details.add(buildDetail("주구조", findFactorDetail(struct, "STRUCTURE_TYPE"), "건축물대장 표제부"));
         details.add(buildDetail("사용승인일", findFactorDetail(struct, "USE_APR_DAY"), "건축물대장 표제부"));
         details.add(buildDetail("위반건축물 여부", violationValue(findFactorDetail(struct, "VIOLATION")), "건축물대장 표제부"));
@@ -98,8 +98,8 @@ public class DetailedReportService {
     }
 
     /** 화재 details */
-    static List<ReportDetailDto> buildFireDetails(FireScoreResult fire) {
-        List<ReportDetailDto> details = new ArrayList<>();
+    static List<DetailedFactorBaseDto> buildFireDetails(FireScoreResult fire) {
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         details.add(buildDetail("도로접면", roadSideValue(fire.getRoadSideCodeNm()), "토지특성정보"));
         details.add(buildDetail("주구조", orNoInfo(fire.getStrctCdNm()), "건축물대장 표제부"));
         details.add(buildDetail("행정동 화재 건수(3년 평균)", fireCountValue(fire), "소방청 화재통계"));
@@ -111,7 +111,7 @@ public class DetailedReportService {
      * 지반침하 details — 산식의 거리 가중 구간과 1:1 대응하는 3행 고정.
      * 사고 없는 구간도 "없음"으로 내보내 조회 범위(0~500m)를 명시한다
      */
-    static List<ReportDetailDto> buildSinkDetails(SinkholeScoreResult sink) {
+    static List<DetailedFactorBaseDto> buildSinkDetails(SinkholeScoreResult sink) {
         String[] labels = {"0m~100m 사고 이력", "100m~300m 사고 이력", "300m~500m 사고 이력"};
         int[] counts = new int[labels.length];
         String[] latestSagoDates = new String[labels.length];
@@ -124,13 +124,13 @@ public class DetailedReportService {
             }
         }
 
-        List<ReportDetailDto> details = new ArrayList<>();
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         for (int i = 0; i < labels.length; i++) {
             String value;
             if (counts[i] == 0) {
                 value = "없음";
             } else {
-                value = counts[i] + "건(최근 " + SafetyReportService.formatSagoDate(latestSagoDates[i]) + ")";
+                value = counts[i] + "건(최근 " + BasicReportService.formatSagoDate(latestSagoDates[i]) + ")";
             }
             details.add(buildDetail(labels[i], value, "지반침하 사고이력"));
         }
@@ -138,8 +138,8 @@ public class DetailedReportService {
     }
 
     /** 침수 details */
-    static List<ReportDetailDto> buildFloodDetails(FloodScoreResultDto flood) {
-        List<ReportDetailDto> details = new ArrayList<>();
+    static List<DetailedFactorBaseDto> buildFloodDetails(FloodScoreResultDto flood) {
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         if (!flood.isFloodHistory()) {
             details.add(buildDetail("지번 침수 이력", "이력 없음", "행정안전부 침수흔적도"));
             details.add(buildDetail("최고 침수심 등급", "해당 없음", "행정안전부 침수흔적도"));
@@ -172,8 +172,8 @@ public class DetailedReportService {
         return 2; // 매핑 배치가 500m로 컷하므로 그 외 = 300~500m
     }
 
-    private static ReportDetailDto buildDetail(String label, String value, String source) {
-        return ReportDetailDto.builder().label(label).value(value).source(source).build();
+    private static DetailedFactorBaseDto buildDetail(String label, String value, String source) {
+        return DetailedFactorBaseDto.builder().label(label).value(value).source(source).build();
     }
 
     private static String findFactorDetail(StructuralStabilityScoreResultDto struct, String factorCode) {

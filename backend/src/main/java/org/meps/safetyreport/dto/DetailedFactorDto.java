@@ -1,4 +1,4 @@
-package org.meps.report.dto;
+package org.meps.safetyreport.dto;
 
 import lombok.*;
 
@@ -10,9 +10,9 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class FactorReportDto {
+public class DetailedFactorDto {
     private String code;
     private String status;
     private String aiReport;
-    private List<ReportDetailDto> details;
+    private List<DetailedFactorBaseDto> details;
 }

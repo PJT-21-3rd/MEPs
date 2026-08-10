@@ -1,9 +1,9 @@
-package org.meps.report.mapper;
+package org.meps.safetyreport.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.meps.report.dto.SafetyBriefingDto;
-import org.meps.report.dto.SafetyReportRowDto;
+import org.meps.safetyreport.dto.BasicBriefingDto;
+import org.meps.safetyreport.dto.SafetyReportRowDto;
 
 @Mapper
 public interface SafetyReportMapper {
@@ -29,6 +29,6 @@ public interface SafetyReportMapper {
     void updateBriefs(
             @Param("bdMgtSn") String bdMgtSn,
             @Param("aiModelNm") String aiModelNm,
-            @Param("briefs") SafetyBriefingDto briefs
+            @Param("briefs") BasicBriefingDto briefs
     );
 }

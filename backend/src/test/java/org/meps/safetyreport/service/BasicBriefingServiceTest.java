@@ -1,18 +1,18 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import org.junit.jupiter.api.Test;
 import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.llm.OpenAiClient;
 import org.meps.common.util.SafetyGrade;
-import org.meps.report.dto.BriefingInput;
-import org.meps.report.dto.SafetyBriefingDto;
+import org.meps.safetyreport.dto.BriefingInput;
+import org.meps.safetyreport.dto.BasicBriefingDto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class BriefingServiceTest {
+class BasicBriefingServiceTest {
 
     /** 고정 응답을 돌려주는 OpenAiClient 스텁 (Mockito 미사용 프로젝트라 서브클래스로 대체) */
     private static OpenAiClient stubClient(String cannedContent) {
@@ -24,8 +24,8 @@ class BriefingServiceTest {
         };
     }
 
-    private static BriefingService serviceWith(String cannedContent) {
-        return new BriefingService(stubClient(cannedContent), new ObjectMapper());
+    private static BasicBriefingService serviceWith(String cannedContent) {
+        return new BasicBriefingService(stubClient(cannedContent), new ObjectMapper());
     }
 
     private static BriefingInput input() {
@@ -51,7 +51,7 @@ class BriefingServiceTest {
 
     @Test
     void 정상_JSON이면_5문장이_DTO로_매핑된다() {
-        SafetyBriefingDto dto = serviceWith(VALID_JSON).generate(input());
+        BasicBriefingDto dto = serviceWith(VALID_JSON).generate(input());
 
         assertThat(dto.getTotalBrief()).contains("양호");
         // 마무리 문구는 LLM이 아니라 코드가 붙인다 — 종합 GOOD + 구조·침수 정보 없음
@@ -79,7 +79,7 @@ class BriefingServiceTest {
     @Test
     void 정보없음_팩터는_LLM_문장을_버리고_고정_문장으로_대체한다() {
         // VALID_JSON의 structure 문장 대신 고정 문장 — 예시·타 항목 사실이 섞이는 환각 차단 가드
-        SafetyBriefingDto dto = serviceWith(VALID_JSON).generate(input());
+        BasicBriefingDto dto = serviceWith(VALID_JSON).generate(input());
 
         assertThat(dto.getStructBrief()).isEqualTo("구조 관련 정보는 아직 확인되지 않았어요.");
         assertThat(dto.getFloodBrief()).isEqualTo("침수 관련 정보는 아직 확인되지 않았어요.");
@@ -115,7 +115,7 @@ class BriefingServiceTest {
 
     @Test
     void 폴백은_등급별_고정_문장을_돌려준다() {
-        SafetyBriefingDto dto = serviceWith(VALID_JSON).fallback(input());
+        BasicBriefingDto dto = serviceWith(VALID_JSON).fallback(input());
 
         // 종합 GOOD, 화재 CAUTION, 나머지 SAFE — 종합엔 마무리 문구와 미확인 단서까지 붙는다
         assertThat(dto.getTotalBrief()).isEqualTo(
