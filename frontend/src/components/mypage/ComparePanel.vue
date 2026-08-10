@@ -70,7 +70,7 @@ function isActive(key) {
       </div>
     </div>
     <!-- 스크롤 영역 -->
-    <div class="flex-1 overflow-y-auto px-6 flex flex-col bg-surface-gray">
+    <div class="flex-1 overflow-y-auto px-6 flex flex-col bg-surface-base">
       <!-- 2개 미만일 때 안내 문구 -->
       <div
         v-if="compareBuildings.length < 2"
