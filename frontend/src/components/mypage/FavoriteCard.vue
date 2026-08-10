@@ -17,7 +17,7 @@ const emit = defineEmits(['toggle']);
 <template>
   <li
     @click="emit('toggle')"
-    class="flex items-center gap-3 py-3.5 px-4 border rounded-xl cursor-pointer"
+    class="flex items-center gap-3 py-3.5 px-4 border rounded-xl cursor-pointer hover:bg-surface-blue hover: transition-colors"
     :class="order ? 'border-primary bg-surface-blue' : 'border-surface-gray'"
   >
     <span
