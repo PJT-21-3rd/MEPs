@@ -3,9 +3,10 @@ import { getGradeByStatusCode, FACTOR_CODE_TO_KEY } from '@/constants/reportCons
 
 // AI 안심 진단 리포트 조회 API (기능 6·7·8번)
 
-const REPORT_ENDPOINT = (buildingId) => `/buildings/${buildingId}/safety-report/basic`;
+const REPORT_ENDPOINT = (buildingId) => `/api/buildings/${buildingId}/safety-report/basic`;
 // TODO: 정확한 엔드포인트 경로는 BE API 문서 확인 후 수정 필요
-const DETAILED_REPORT_ENDPOINT = (buildingId) => `/buildings/${buildingId}/safety-report/detailed`;
+const DETAILED_REPORT_ENDPOINT = (buildingId) =>
+  `/api/buildings/${buildingId}/safety-report/detailed`;
 const INSURANCE_RIDERS_ENDPOINT = '/insurances/riders';
 
 function transformReportResponse(raw) {
