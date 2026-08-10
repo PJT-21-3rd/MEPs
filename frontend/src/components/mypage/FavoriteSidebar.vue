@@ -57,6 +57,7 @@ function goBack() {
         :building="building"
         :order="selectOrder(building.id)"
         @toggle="emit('toggle', building.id)"
+        @unlike="emit('unlike', $event)"
       />
     </ul>
   </aside>

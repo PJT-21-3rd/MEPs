@@ -11,13 +11,13 @@ defineProps({
   order: Number,
 });
 
-const emit = defineEmits(['toggle']);
+const emit = defineEmits(['toggle', 'unlike']);
 </script>
 
 <template>
   <li
     @click="emit('toggle')"
-    class="flex items-center gap-3 py-3.5 px-4 border rounded-xl cursor-pointer hover:bg-surface-blue hover: transition-colors"
+    class="flex items-center gap-3 py-3.5 px-4 border rounded-xl cursor-pointer hover:bg-surface-blue transition-colors"
     :class="order ? 'border-primary bg-surface-blue' : 'border-surface-gray'"
   >
     <span
@@ -44,7 +44,13 @@ const emit = defineEmits(['toggle']);
       <span class="text-[17px] font-bold" :class="gradeMeta(building.score).text">
         {{ building.score }}
       </span>
-      <Heart :size="18" fill="currentColor" class="text-status-like" />
+      <button @click.stop="emit('unlike', building.id)" class="cursor-pointer group">
+        <Heart
+          :size="18"
+          fill="currentColor"
+          class="text-status-like group-hover:fill-transparent transition-all"
+        />
+      </button>
     </div>
   </li>
 </template>
