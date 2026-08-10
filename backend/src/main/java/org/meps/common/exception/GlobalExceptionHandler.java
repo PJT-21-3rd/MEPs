@@ -8,9 +8,12 @@ import org.meps.building.exception.InvalidKeywordException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
+import org.meps.user.exception.DuplicateEmailException;
+import org.meps.user.exception.PasswordMismatchException;
 import org.meps.sgg.exception.SggNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -82,5 +85,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> handleAiBriefingNotAvailable(AiBriefingNotAvailableException e) {
         log.warn("AI 브리핑 미생성: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+    }
+
+    /** 입력값 검증 실패 (@Valid) → 400 */
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            PasswordMismatchException.class
+    })
+    public ResponseEntity<Void> handleValidation(Exception e) {
+        log.warn("입력값 오류: {}", e.getMessage());
+        return ResponseEntity.badRequest().build();
+    }
+
+    /** 이메일 중복 → 409 */
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<Void> handleDuplicateEmail(DuplicateEmailException e) {
+        log.warn("가입 충돌: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 }
