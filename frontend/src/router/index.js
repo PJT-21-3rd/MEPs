@@ -13,11 +13,11 @@ const routes = [
     component: () => import('../views/MyPage.vue'),
     meta: { requiresAuth: true }, // 로그인 가드
   },
-  // {
-  //   path: '/login',
-  //   name: 'Login',
-  //   component: () => import('@/views/LoginView.vue'),
-  // },
+  {
+    path: '/signup',
+    name: 'Signup',
+    component: () => import('@/views/SignupView.vue'),
+  },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
