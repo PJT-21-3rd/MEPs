@@ -3,33 +3,39 @@ import { getGradeByStatusCode, FACTOR_CODE_TO_KEY } from '@/constants/reportCons
 
 // AI 안심 진단 리포트 조회 API (기능 6·7·8번)
 
-const REPORT_ENDPOINT = (buildingId) => `/buildings/${buildingId}/safety-report/basic`;
+const REPORT_ENDPOINT = (buildingId) => `/api/buildings/${buildingId}/safety-report/basic`;
 // TODO: 정확한 엔드포인트 경로는 BE API 문서 확인 후 수정 필요
-const DETAILED_REPORT_ENDPOINT = (buildingId) => `/buildings/${buildingId}/safety-report/detailed`;
-const INSURANCE_RIDERS_ENDPOINT = '/insurance/riders';
+const DETAILED_REPORT_ENDPOINT = (buildingId) =>
+  `/api/buildings/${buildingId}/safety-report/detailed`;
+const INSURANCE_RIDERS_ENDPOINT = '/api/insurances/riders';
 
 function transformReportResponse(raw) {
   const dangerItems = {};
+  // 비로그인 응답엔 factors 필드 자체가 없음
+  const hasDetail = Array.isArray(raw.factors);
 
-  raw.factors.forEach((factor) => {
-    const key = FACTOR_CODE_TO_KEY[factor.code];
-    if (!key) {
-      // 매핑 안 된 factor 코드 로그
-      console.warn(`[reportApi] Unknown factor code: ${factor.code}`);
-      return;
-    }
+  if (hasDetail) {
+    raw.factors.forEach((factor) => {
+      const key = FACTOR_CODE_TO_KEY[factor.code];
+      if (!key) {
+        // 매핑 안 된 factor 코드 로그
+        console.warn(`[reportApi] Unknown factor code: ${factor.code}`);
+        return;
+      }
 
-    dangerItems[key] = {
-      status: getGradeByStatusCode(factor.status), // 내부 키로 변환
-      summary: factor.briefing,
-    };
-  });
+      dangerItems[key] = {
+        status: getGradeByStatusCode(factor.status), // 내부 키로 변환
+        summary: factor.briefing,
+      };
+    });
+  }
 
   return {
     score: raw.safetyScore,
     grade: getGradeByStatusCode(raw.overallStatus),
     overallBriefing: raw.overallBriefing,
     dangerItems,
+    hasDetail,
   };
 }
 
@@ -85,15 +91,17 @@ function groupInsuranceRidersByFactor(items) {
 /**
  * 건물 ID로 AI 안심 진단 리포트 조회
  * (GET /buildings/{buildingId}/safety-report/basic)
+ *  비로그인 응답은 factors가 없는 축약 형태로 옴 — transformReportResponse가 hasDetail로 처리
  * @param {string|number} buildingId
- * @returns {Promise<{score: number, grade: string, overallBriefing: string, dangerItems: object}>}
+ * @returns {Promise<{score: number, grade: string, overallBriefing: string, dangerItems: object, hasDetail: boolean}>}
  * @throws
  */
 export async function fetchReportData(buildingId) {
   const { data } = await http.get(REPORT_ENDPOINT(buildingId));
   const result = transformReportResponse(data);
 
-  const cautionCodes = getCautionFactorCodes(data.factors);
+  // factors 없는(비로그인) 응답이면 특약 조회 자체를 스킵
+  const cautionCodes = data.factors ? getCautionFactorCodes(data.factors) : [];
   result.insuranceRidersByFactor = {};
 
   if (cautionCodes.length > 0) {

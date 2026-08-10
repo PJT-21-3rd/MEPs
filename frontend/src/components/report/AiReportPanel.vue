@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+// import { useRouter } from 'vue-router';
 import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
 import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
 import ReportBanners from './ReportBanners.vue';
@@ -39,7 +39,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'open-insurance', 'open-loan', 'report-loaded']);
-const router = useRouter();
+// const router = useRouter();
 const uiStore = useUiStore();
 
 const currentView = ref('summary');
@@ -97,12 +97,9 @@ async function loadReport() {
   try {
     reportData.value = await fetchReportData(props.buildingId);
     emit('report-loaded', reportData.value);
-  } catch {
-    // TODO: 404 라우트 이름/경로는 router/index.js에 NotFoundView 등록 후 확정 필요
-    router.push({ name: 'NotFound' });
-    return;
-  } finally {
     isLoading.value = false;
+  } catch (err) {
+    console.error('[AiReportPanel] 리포트 조회 실패:', err);
   }
 }
 
@@ -242,7 +239,11 @@ const mockAgent = {
       </div>
 
       <!-- 기본 리포트일 때  -->
-      <DiagnosticFactorList :items="reportData.dangerItems" mode="summary" />
+      <DiagnosticFactorList
+        v-if="reportData.hasDetail"
+        :items="reportData.dangerItems"
+        mode="summary"
+      />
 
       <button
         type="button"
