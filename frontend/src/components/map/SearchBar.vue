@@ -4,7 +4,7 @@ import { useUiStore } from '@/stores/uiStore';
 import { useMapStore } from '@/stores/mapStore';
 import { onMounted, ref } from 'vue';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import api from '@/api/axios';
+import api from '@/api';
 import axios from 'axios';
 
 const uiStore = useUiStore();

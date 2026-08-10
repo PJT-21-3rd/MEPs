@@ -16,7 +16,7 @@
         </template>
       </div>
 
-      <div class="relative flex-1 overflow-y-auto">
+      <div v-if="uiStore.hjdBriefingData" class="relative flex-1 overflow-y-auto">
         <div ref="sentinelRef" class="h-px" />
         <!-- 스티키 헤더 -->
         <div class="sticky top-0 z-20 px-6">
@@ -35,13 +35,15 @@
               >
                 <Sparkles :size="12" /> AI 브리핑
               </span>
-              <p class="text-[18px] tracking-tight text-text-main">{{ apiData.adstrdName }}</p>
-              <p class="text-[14px] text-text-sub">{{ apiData.sggName }}</p>
+              <p class="text-[18px] tracking-tight text-text-main">
+                {{ uiStore.hjdBriefingData.hjdName }}
+              </p>
+              <p class="text-[14px] text-text-sub">{{ uiStore.hjdBriefingData.sggName }}</p>
             </div>
           </div>
         </div>
         <!-- 상권 요약 카드 -->
-        <CommercialAiBriefing :summary="apiData" />
+        <CommercialAiBriefing v-if="uiStore.hjdBriefingData" :summary="uiStore.hjdBriefingData" />
 
         <!-- 매물 리스트 -->
         <BuildingList />
@@ -61,20 +63,6 @@ import BuildingList from '../property/BuildingList.vue';
 import BuildingDetail from '../detail/BuildingDetail.vue';
 
 const uiStore = useUiStore();
-
-const apiData = ref({
-  sggName: '강남구',
-  adstrdName: '대치동',
-  dailyFlpop: 125000, // 120000 이상 숫자
-  flpopChangeRate: 10.24, // 증감률 (Float)
-  topIndustryName: '일반음식점', // 주요업종
-  topIndustryEtcCnt: 3, // 기타 업종 수
-  avgBuildingAge: 11.2, // 노후도
-  majorAgeGroup: '20대', // 주요 연령층
-  majorAgeRatio: 58.02, // 비율
-  overallBriefing:
-    '일 평균 유동인구 3.8만 명의 활발한 상권으로, 음식점·카페 창업 수요가 특히 높아요. 주 소비층은 20~30대 직장인이 58%로, 트렌디한 업종이 유리해요. 평균 노후도 15년으로 건물 상태는 양호하지만, 최근 3년간 저지대 침수가 2건 있었으니 1층 매장은 주의가 필요해요.',
-});
 
 const sentinelRef = ref(null);
 const briefingStuck = ref(false);

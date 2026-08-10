@@ -1,5 +1,5 @@
 <script setup>
-import { Users, Store, Building2, ChartNetwork, Summary } from '@lucide/vue';
+import { Users, Store, Building2, ChartNetwork } from '@lucide/vue';
 import StatChip from './StatChip.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { formatPopulation, formatRate } from '@/utils/formatters';
@@ -50,7 +50,7 @@ onUnmounted(() => {
           label="주요 업종"
           :icon="Store"
           :value="summary.topIndustryName"
-          :sub="`외 ${summary.topIndustryEtcCnt}종`"
+          :sub="summary.topIndustryCnt ? `외 ${summary.topIndustryCnt}종` : ''"
         />
         <StatChip label="평균 노후도" :icon="Building2" :value="`${summary.avgBuildingAge}년`" />
         <StatChip

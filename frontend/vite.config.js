@@ -17,6 +17,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api-hub/, ''),
       },
+      '/maps-api': {
+        target: 'https://maps.apigw.ntruss.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/maps-api/, ''),
+      },
       '/api': {
         target: 'http://13.209.21.145:8080',
         changeOrigin: true,
