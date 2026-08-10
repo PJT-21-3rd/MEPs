@@ -12,7 +12,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
 import { fetchReverseGeocoding } from '@/api/map';
-import { fetchHjdBriefing } from '@/api/building';
+import { fetchHjdBriefing } from '@/api/aiBrief';
 
 const mapContainer = ref(null);
 const mapStore = useMapStore();
@@ -171,8 +171,8 @@ onMounted(() => {
     return;
   }
 
-  const initialLat = 37.4979;
-  const initialLng = 127.0276;
+  const initialLat = 37.5445;
+  const initialLng = 127.0716;
 
   // 지도 초기 옵션 설정
   const mapOptions = {
@@ -183,6 +183,11 @@ onMounted(() => {
 
   const map = new window.naver.maps.Map(mapContainer.value, mapOptions);
   mapStore.setMapInstance(map);
+
+  window.naver.maps.Event.once(map, 'init', () => {
+    const center = map.getCenter();
+    updateHjdBriefing(center.lat(), center.lng());
+  });
 
   const handleMapStart = () => {
     if (timeOut) clearTimeout(timeOut);

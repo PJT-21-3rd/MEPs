@@ -19,9 +19,13 @@ export const fetchReverseGeocoding = async (lat, lng) => {
     if (!results || results.length === 0) return null;
 
     const admResult = results.find((r) => r.name === 'admcode');
-    console.log(`현재 위치 행정동 코드 확인: ${hjdCode} (${admResult.region.area3.name})`);
+    if (!admResult || !admResult.code) return null;
 
-    return admResult?.code?.id || null;
+    const originalCode = admResult.code.id;
+    const hjdCode8Digits = originalCode.substring(0, 8);
+    console.log(`[코드 파싱] 원본 10자리: ${originalCode} ➔ 변환된 8자리: ${hjdCode8Digits}`);
+
+    return hjdCode8Digits;
   } catch (error) {
     console.error('Reverse Geocoding API Error:', error);
     throw error;
