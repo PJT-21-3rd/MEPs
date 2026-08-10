@@ -150,13 +150,13 @@ onMounted(() => {
       @keyup.enter="executeSearch(uiStore.searchQuery)"
       @focus="isDropdownOpen = true"
       placeholder="주소, 지역 또는 건물명 검색"
-      class="w-full h-14 rounded-2xl border-0 bg-neutral-100 pl-12 pr-11 text-[16px] placeholder:text-neutral-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+      class="w-full h-14 rounded-2xl border-0 bg-surface-gray pl-12 pr-11 text-[16px] placeholder:text-text-sub focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
       :class="{ 'bg-white': uiStore.isDetailOpen || isDropdownOpen }"
     />
     <button
       v-if="uiStore.searchQuery"
       @click="clearSearch"
-      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-neutral-300/70 rounded-full text-white hover:bg-neutral-400"
+      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-text-disabled/70 rounded-full text-white hover:bg-text-sub"
     >
       <X size="14px" />
     </button>
@@ -164,7 +164,7 @@ onMounted(() => {
     <!-- 최근 검색 드롭다운 -->
     <div
       v-if="isDropdownOpen"
-      class="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xl"
+      class="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-surface-gray bg-white shadow-xl"
     >
       <template v-if="!uiStore.searchQuery">
         <div class="flex items-center justify-between px-4 pb-1.5 pt-3">
@@ -172,14 +172,14 @@ onMounted(() => {
         </div>
         <ul v-if="recentSearches.length > 0" class="pb-1">
           <li v-for="(item, index) in recentSearches" :key="index" @click="executeSearch(item)">
-            <div class="group flex items-center gap-2.5 px-4 py-2.5 hover:bg-neutral-50">
+            <div class="group flex items-center gap-2.5 px-4 py-2.5 hover:bg-surface-base">
               <Clock class="shrink-0 text-text-sub" size="16px" />
               <span class="min-w-0 flex-1 truncate text-left text-[15px] text-text-main">
                 {{ item }}
               </span>
               <button
                 @click.stop="removeRecentSearch(item)"
-                class="rounded-full p-1 text-neutral-300 hover:bg-neutral-200 hover:text-neutral-500"
+                class="rounded-full p-1 text-text-disabled hover:bg-text-disabled hover:text-text-modal"
               >
                 <X size="14px" />
               </button>
@@ -191,7 +191,7 @@ onMounted(() => {
             최근 검색 내역이 없습니다.
           </p>
         </div>
-        <div class="flex items-center justify-between border-t border-neutral-100 px-4 py-2.5">
+        <div class="flex items-center justify-between border-t border-surface-gray px-4 py-2.5">
           <button
             @click="clearAllRecentSearches"
             class="text-[13px] text-text-sub hover:text-text-main"
@@ -207,11 +207,11 @@ onMounted(() => {
         </div>
       </template>
 
-      <template v-else>
+      <!-- <template v-else>
         <ul class="py-1">
           <li
             @click="executeSearch(uiStore.searchQuery)"
-            class="flex items-center gap-2.5 px-4 py-3 hover:bg-neutral-50 cursor-pointer border-b border-neutral-100"
+            class="flex items-center gap-2.5 px-4 py-3 hover:bg-neutral-50 cursor-pointer border-b border-surface-gray"
           >
             <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50">
               <Search />
@@ -221,7 +221,7 @@ onMounted(() => {
             </span>
           </li>
         </ul>
-      </template>
+      </template> -->
     </div>
   </div>
 </template>
