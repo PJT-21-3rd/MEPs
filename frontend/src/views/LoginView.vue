@@ -8,6 +8,9 @@ const router = useRouter();
 function handleSignup() {
   router.push('/signup'); // 회원가입 페이지로
 }
+function goHome() {
+  router.push('/');
+}
 </script>
 
 <template>
@@ -21,7 +24,7 @@ function handleSignup() {
     <div class="absolute bottom-[20%] right-[18%] w-14 h-14 rounded-lg bg-white/5 rotate-12"></div>
 
     <!-- 로고 -->
-    <div class="flex items-center gap-2 mb-6">
+    <div class="flex items-center gap-2 mb-6 cursor-pointer" @click="goHome">
       <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
         <img :src="mepsLogo" alt="MEPS" class="h-8" />
       </div>

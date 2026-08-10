@@ -69,6 +69,10 @@ function showTerms(type) {
   // TODO: 약관 텍스트 준비되면 상세 모달/페이지 연결
   console.log('약관 상세:', type);
 }
+
+function goHome() {
+  router.push('/');
+}
 </script>
 
 <template>
@@ -80,7 +84,7 @@ function showTerms(type) {
     <div class="absolute bottom-[25%] left-[15%] w-10 h-10 rounded-lg bg-white/5 rotate-45"></div>
     <div class="absolute bottom-[20%] right-[18%] w-14 h-14 rounded-lg bg-white/5 rotate-12"></div>
 
-    <div class="flex items-center gap-2 mb-6">
+    <div class="flex items-center gap-2 mb-6 cursor-pointer" @click="goHome">
       <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
         <img :src="mepsLogo" alt="MEPS" class="h-8" />
       </div>
