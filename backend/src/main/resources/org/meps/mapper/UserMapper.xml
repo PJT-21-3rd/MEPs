@@ -20,4 +20,14 @@
         VALUES (#{email}, #{password})
     </insert>
 
+    <!-- 로그인용 조회 -->
+    <select id="findByEmail" resultType="org.meps.user.dto.UserDto">
+        SELECT user_id    AS userId,
+               email,
+               password,
+               created_at AS createdAt
+        FROM users
+        WHERE email = #{email}
+    </select>
+
 </mapper>

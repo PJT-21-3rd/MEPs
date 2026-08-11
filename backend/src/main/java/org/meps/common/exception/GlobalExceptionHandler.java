@@ -9,6 +9,7 @@ import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.meps.user.exception.DuplicateEmailException;
+import org.meps.user.exception.LoginFailedException;
 import org.meps.user.exception.PasswordMismatchException;
 import org.meps.sgg.exception.SggNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -102,5 +103,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> handleDuplicateEmail(DuplicateEmailException e) {
         log.warn("가입 충돌: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    /** 로그인 실패 → 401 */
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<Void> handleLoginFailed(LoginFailedException e) {
+        log.warn("로그인 실패: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

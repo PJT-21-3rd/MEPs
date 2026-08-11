@@ -1,6 +1,8 @@
 package org.meps.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.user.dto.LoginRequestDto;
+import org.meps.user.dto.LoginResponseDto;
 import org.meps.user.dto.SignupRequestDto;
 import org.meps.user.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -21,5 +23,11 @@ public class UserController {
     public ResponseEntity<Void> signup(@Valid @RequestBody SignupRequestDto request) {
         userService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    /** 로그인 */
+    @PostMapping("/login")
+    public LoginResponseDto login(@Valid @RequestBody LoginRequestDto request) {
+        return userService.login(request);
     }
 }
