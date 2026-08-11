@@ -12,7 +12,7 @@ function handleAction(toast) {
 </script>
 
 <template>
-  <div class="fixed top-6 left-[366px] z-[100] flex flex-col gap-2">
+  <div class="fixed top-10 left-1/2 z-[100] flex flex-col gap-2">
     <div
       v-for="toast in toastStore.toasts"
       :key="toast.id"

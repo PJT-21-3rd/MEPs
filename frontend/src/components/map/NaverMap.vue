@@ -9,12 +9,15 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
 import { fetchReverseGeocoding } from '@/api/map';
 import { fetchHjdBriefing } from '@/api/aiBrief';
 import { fetchNearbyBuildings } from '@/api/building';
 
+const route = useRoute();
+const router = useRouter();
 const mapContainer = ref(null);
 const mapStore = useMapStore();
 const uiStore = useUiStore();
@@ -130,6 +133,22 @@ const updateNearbyBuildings = async () => {
   }
 };
 
+// 지도 위치(좌표,줌) 쿼리파라미터에 업데이트
+const syncMapStateToUrl = () => {
+  const map = mapStore.mapInstance;
+  if (!map) return;
+
+  const center = map.getCenter();
+  const zoom = map.getZoom();
+  const newQuery = {
+    ...route.query,
+    lat: center.lat().toFixed(6),
+    lng: center.lng().toFixed(6),
+    zoom: zoom,
+  };
+  router.replace({ query: newQuery }); // history 오염방지
+};
+
 // 로드뷰 토글 감지 & 거리뷰레이어 표시
 watch(
   () => mapStore.isRoadViewMode,
@@ -148,7 +167,7 @@ watch(
   },
 );
 
-// 폴리곤 그리기
+// 건물 상세 데이터 갱신 시 폴리곤 그리기
 watch(
   () => uiStore.currentBuildingDetail,
   (newData) => {
@@ -157,6 +176,22 @@ watch(
     } else {
       currentPolygons.forEach((polygon) => polygon.setMap(null));
       currentPolygons = [];
+    }
+  },
+);
+
+// 주소창 파라미터 동기화
+watch(
+  () => route.query.buildingId,
+  (newId) => {
+    if (newId) {
+      if (uiStore.selectedBuildingId !== newId) {
+        uiStore.openBuildingDetail(newId);
+      }
+    } else {
+      uiStore.closeBuildingDetail();
+      const center = mapStore.mapInstance.getCenter();
+      updateHjdBriefing(center.lat(), center.lng());
     }
   },
 );
@@ -170,13 +205,18 @@ onMounted(() => {
     return;
   }
 
-  const initialLat = 37.5445;
-  const initialLng = 127.0716;
+  const queryLat = parseFloat(route.query.lat);
+  const queryLng = parseFloat(route.query.lng);
+  const queryZoom = parseInt(route.query.zoom);
+
+  const initialLat = !isNaN(queryLat) ? queryLat : 37.5445;
+  const initialLng = !isNaN(queryLng) ? queryLng : 127.0716;
+  const initialZoom = !isNaN(queryZoom) ? queryZoom : 17;
 
   // 지도 초기 옵션 설정
   const mapOptions = {
     center: new window.naver.maps.LatLng(initialLat, initialLng),
-    zoom: 17,
+    zoom: initialZoom,
     zoomControl: false,
   };
 
@@ -184,9 +224,14 @@ onMounted(() => {
   mapStore.setMapInstance(map);
 
   window.naver.maps.Event.once(map, 'init', () => {
-    const center = map.getCenter();
-    updateHjdBriefing(center.lat(), center.lng());
-    updateNearbyBuildings();
+    const queryBuildingId = route.query.buildingId;
+    if (queryBuildingId) {
+      uiStore.openBuildingDetail(queryBuildingId);
+    } else {
+      const center = map.getCenter();
+      updateHjdBriefing(center.lat(), center.lng());
+      updateNearbyBuildings();
+    }
   });
 
   const handleMapStart = () => {
@@ -204,6 +249,7 @@ onMounted(() => {
       const currentCenter = map.getCenter();
       updateHjdBriefing(currentCenter.lat(), currentCenter.lng());
       // updateNearbyBuildings();
+      syncMapStateToUrl();
     }, 800);
   };
 
@@ -220,7 +266,14 @@ onMounted(() => {
       uiStore.openRoadViewModal(lat, lng);
       return;
     }
-    uiStore.openBuildingDetailByCoord(lat, lng);
+    const clickedBuildingId = await uiStore.openBuildingDetailByCoord(lat, lng);
+    if (clickedBuildingId) {
+      router.push({ query: { ...route.query, buildingId: clickedBuildingId } });
+    } else {
+      const newQuery = { ...route.query };
+      delete newQuery.buildingId;
+      router.push({ query: newQuery });
+    }
   });
 });
 </script>
