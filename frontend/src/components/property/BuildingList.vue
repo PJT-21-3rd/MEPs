@@ -5,11 +5,11 @@
         v-for="tab in TABS"
         :key="tab.value"
         @click="activeTab = tab.value"
-        class="rounded-lg text-[14px] transition-all duration-200"
+        class="rounded-lg text-[14px] transition-all duration-200 cursor-pointer"
         :class="
           activeTab === tab.value
             ? 'bg-white text-text-main shadow-sm'
-            : 'text-neutral-500 hover:text-neutral-700'
+            : 'text-text-modal hover:text-text-detail'
         "
       >
         {{ tab.label }}
@@ -17,8 +17,8 @@
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-      <p class="text-[14px] text-neutral-500 font-medium">
-        총 <span class="text-text-main font-bold"> {{ sortedBuildings.length }} </span>개
+      <p class="text-[14px] text-text-modal">
+        총 <span class="text-text-main font-bold"> {{ displayBuildings.length }} </span>개
       </p>
 
       <div class="relative" ref="sortDropdownRef">
@@ -59,9 +59,9 @@
   </div>
 
   <div class="px-6 pb-6 pt-1">
-    <div v-if="sortedBuildings.length > 0" class="flex flex-col gap-3">
+    <div v-if="displayBuildings.length > 0" class="flex flex-col gap-3">
       <BuildingCard
-        v-for="building in sortedBuildings"
+        v-for="building in displayBuildings"
         :key="building.buildingId"
         :building="building"
         @click="openDetail(building.buildingId)"
@@ -85,166 +85,6 @@ import { useClickOutside } from '@/hooks/useClickOutside.js';
 
 const router = useRouter();
 const uiStore = useUiStore();
-
-// Mock
-const mockBuildings = ref([
-  {
-    buildingId: '1121510700102120012',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102160011',
-    lat: 37.5469847,
-    lng: 127.0725513,
-    jibunAddr: '서울특별시 광진구 화양동 216',
-    roadAddr: null,
-    bldNm: null,
-    mainPurpsNm: '근린생활시설',
-    grndFlr: 4,
-    ugrndFlr: 1,
-    useAprDay: '19950310',
-    distance: 50,
-  },
-  {
-    buildingId: '1121510700102180010',
-    lat: 37.5461111,
-    lng: 127.0711111,
-    jibunAddr: '서울특별시 광진구 화양동 111',
-    roadAddr: '서울특별시 광진구 능동로 111',
-    bldNm: '화양빌딩',
-    mainPurpsNm: '위락시설',
-    grndFlr: 5,
-    ugrndFlr: 2,
-    useAprDay: '20150505',
-    distance: 300,
-  },
-  {
-    buildingId: '1121510700102120009',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120008',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120007',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120006',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120005',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120004',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120003',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120002',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-  {
-    buildingId: '1121510700102120001',
-    lat: 37.5473051,
-    lng: 127.073132,
-    jibunAddr: '서울특별시 광진구 화양동 212',
-    roadAddr: '서울특별시 광진구 광나루로 392',
-    bldNm: '메가타워',
-    mainPurpsNm: '제2종근린생활시설',
-    grndFlr: 12,
-    ugrndFlr: 1,
-    useAprDay: '19781229',
-    distance: 120,
-  },
-]);
 
 const TABS = [
   { label: '주변 상가', value: 'nearby' },
@@ -277,18 +117,24 @@ useClickOutside(sortDropdownRef, () => {
 });
 
 // 리스트 정렬 및 필터링 로직 (api)
-const sortedBuildings = computed(() => {
+// const sortedBuildings = computed(() => {
+//   if (activeTab.value !== 'nearby') return [];
+
+//   const list = [...mockBuildings.value];
+
+//   if (currentSort.value === 'distance') {
+//     return list.sort((a, b) => a.distance - b.distance);
+//   } else if (currentSort.value === 'recent') {
+//     return list.sort((a, b) => parseInt(b.useAprDay) - parseInt(a.useAprDay));
+//   }
+
+//   return list;
+// });
+const displayBuildings = computed(() => {
+  // TODOS '주변 상가' 탭이 아닐 때는 일단 빈 배열 처리 (나중에 탭 로직 추가 시 수정)
   if (activeTab.value !== 'nearby') return [];
 
-  const list = [...mockBuildings.value];
-
-  if (currentSort.value === 'distance') {
-    return list.sort((a, b) => a.distance - b.distance);
-  } else if (currentSort.value === 'recent') {
-    return list.sort((a, b) => parseInt(b.useAprDay) - parseInt(a.useAprDay));
-  }
-
-  return list;
+  return uiStore.currentBuildings || [];
 });
 
 const openDetail = (buildingId) => {
@@ -298,8 +144,6 @@ const openDetail = (buildingId) => {
 
   if (router) {
     router.push({ query: { buildingId } });
-  } else {
-    console.warn('라우터가 설정되지 않아 URL이 변경되지 않았습니다.');
   }
 };
 </script>

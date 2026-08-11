@@ -19,27 +19,36 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/stores/uiStore';
 import { useMapStore } from '@/stores/mapStore';
+import { fetchNearbyBuildings } from '@/api/building';
 import { RotateCw } from '@lucide/vue';
 
 const mapStore = useMapStore();
+const uiStore = useUiStore();
 
-const handleReSearch = () => {
+const handleReSearch = async () => {
   const map = mapStore.mapInstance;
+  if (!map) return;
 
-  if (map) {
-    // 현재 화면에 보이는 지도의 BBox 가져옴
-    const bounds = map.getBounds();
+  const bounds = map.getBounds();
+  const sw = bounds.getSW();
+  const ne = bounds.getNE();
+  const currentZoom = map.getZoom();
 
-    // 네이버 지도 bounds 객체에서 남서쪽/북동쪽 좌표 추출
-    const sw = bounds.getSW();
-    const ne = bounds.getNE();
+  console.log(
+    `[재검색] 영역: 좌하단(${sw.lat()}, ${sw.lng()}) ~ 우상단(${ne.lat()}, ${ne.lng()}) | 줌: ${currentZoom}`,
+  );
 
-    console.log(`재검색 영역: 좌하단(${sw.lat()}, ${sw.lng()}) ~ 우상단(${ne.lat()}, ${ne.lng()})`);
+  try {
+    const data = await fetchNearbyBuildings(sw.lat(), sw.lng(), ne.lat(), ne.lng(), currentZoom);
 
-    // TODO: 백엔드 API에 이 좌표를 보내서 상가/매물 데이터 새로 요청
+    uiStore.setBuildingsData(data);
+  } catch (error) {
+    console.error('재검색 중 오류 발생:', error);
+    alert('데이터를 불러오는데 실패했습니다.');
+  } finally {
+    mapStore.setMapMoved(false);
   }
-
-  mapStore.setMapMoved(false);
 };
 </script>

@@ -12,6 +12,8 @@ export const useUiStore = defineStore('ui', () => {
   const insuranceModalConfig = ref(null); // 보험 모달 설정
   const loanModalConfig = ref(null); // 대출 모달 설정
   const hjdBriefingData = ref(null); // 행정동 브리핑 데이터
+  const currentBuildings = ref([]); // 현재 화면의 건물 배열
+  const isZoomRequired = ref(false);
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
@@ -65,6 +67,11 @@ export const useUiStore = defineStore('ui', () => {
     hjdBriefingData.value = data;
   };
 
+  const setBuildingsData = (data) => {
+    isZoomRequired.value = data.zoomRequired;
+    currentBuildings.value = data.buildings || [];
+  };
+
   return {
     isDetailOpen,
     isReportOpen,
@@ -75,6 +82,8 @@ export const useUiStore = defineStore('ui', () => {
     insuranceModalConfig,
     hjdBriefingData,
     loanModalConfig,
+    currentBuildings,
+    isZoomRequired,
     openBuildingDetail,
     closeBuildingDetail,
     openReport,
@@ -87,5 +96,6 @@ export const useUiStore = defineStore('ui', () => {
     openLoanModal,
     closeLoanModal,
     setHjdBriefingData,
+    setBuildingsData,
   };
 });
