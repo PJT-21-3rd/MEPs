@@ -9,12 +9,15 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
 import { fetchReverseGeocoding } from '@/api/map';
 import { fetchHjdBriefing } from '@/api/aiBrief';
 import { fetchNearbyBuildings } from '@/api/building';
 
+const route = useRoute();
+const router = useRouter();
 const mapContainer = ref(null);
 const mapStore = useMapStore();
 const uiStore = useUiStore();
@@ -130,6 +133,21 @@ const updateNearbyBuildings = async () => {
   }
 };
 
+watch(
+  () => route.query.buildingId,
+  (newId) => {
+    if (newId) {
+      if (uiStore.selectedBuildingId !== newId) {
+        uiStore.openBuildingDetail(newId);
+      }
+    } else {
+      uiStore.closeBuildingDetail();
+      const center = mapStore.mapInstance.getCenter();
+      updateHjdBriefing(center.lat(), center.lng());
+    }
+  },
+);
+
 // 로드뷰 토글 감지 & 거리뷰레이어 표시
 watch(
   () => mapStore.isRoadViewMode,
@@ -184,9 +202,14 @@ onMounted(() => {
   mapStore.setMapInstance(map);
 
   window.naver.maps.Event.once(map, 'init', () => {
-    const center = map.getCenter();
-    updateHjdBriefing(center.lat(), center.lng());
-    updateNearbyBuildings();
+    const queryBuildingId = route.query.buildingId;
+    if (queryBuildingId) {
+      uiStore.openBuildingDetail(queryBuildingId);
+    } else {
+      const center = map.getCenter();
+      updateHjdBriefing(center.lat(), center.lng());
+      updateNearbyBuildings();
+    }
   });
 
   const handleMapStart = () => {
@@ -220,7 +243,12 @@ onMounted(() => {
       uiStore.openRoadViewModal(lat, lng);
       return;
     }
-    uiStore.openBuildingDetailByCoord(lat, lng);
+    const clickedBuildingId = await uiStore.openBuildingDetailByCoord(lat, lng);
+    if (clickedBuildingId) {
+      router.push({ query: { buildingId: clickedBuildingId } });
+    } else {
+      router.push({ query: {} });
+    }
   });
 });
 </script>

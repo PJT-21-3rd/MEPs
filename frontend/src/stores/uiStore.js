@@ -53,12 +53,15 @@ export const useUiStore = defineStore('ui', () => {
       if (data && data.buildingId) {
         selectedBuildingId.value = data.buildingId;
         currentBuildingDetail.value = data;
+        return data.buildingId;
       } else {
         closeBuildingDetail(); // 길거리나 빈 땅
+        return null;
       }
     } catch (error) {
       closeBuildingDetail();
       console.log('클릭한 위치에 건물 정보가 없습니다.');
+      return null;
     } finally {
       isDetailLoading.value = false;
     }
