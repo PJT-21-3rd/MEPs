@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import mepsLogo from '@/assets/images/MEPS_LOGO.png';
 import { ChevronRight } from '@lucide/vue';
+import { signup } from '@/api/auth';
 
 const router = useRouter();
 
@@ -42,12 +43,35 @@ function goToForm() {
   step.value = 'form';
 }
 
-function handleSignup() {
-  //에러 초기화
+// function handleSignup() {
+//   //에러 초기화
+//   errorMessage.value = '';
+//   //빈 칸 검사
+//   if (!email.value || !password.value || !passwordConfirm.value) {
+//     errorMessage.value = '모든 항목을 입력해주세요';
+//     return;
+//   }
+//   // 비밀번호 일치 검사
+//   if (password.value !== passwordConfirm.value) {
+//     errorMessage.value = '비밀번호가 일치하지 않습니다';
+//     return;
+//   }
+//   // 통과하면 회원가입 진행
+//   console.log('회원가입 시도:', email.value, password.value);
+//   // TODO: 백엔드 API 호출
+// }
+
+async function handleSignup() {
   errorMessage.value = '';
-  //빈 칸 검사
+  // 빈 칸 검사
   if (!email.value || !password.value || !passwordConfirm.value) {
     errorMessage.value = '모든 항목을 입력해주세요';
+    return;
+  }
+  // 비밀번호 형식 검사 (명세: 8~20자, 영문+숫자+특수문자)
+  const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,20}$/;
+  if (!pwRegex.test(password.value)) {
+    errorMessage.value = '비밀번호는 8~20자, 영문·숫자·특수문자를 모두 포함해야 합니다';
     return;
   }
   // 비밀번호 일치 검사
@@ -55,9 +79,23 @@ function handleSignup() {
     errorMessage.value = '비밀번호가 일치하지 않습니다';
     return;
   }
-  // 통과하면 회원가입 진행
-  console.log('회원가입 시도:', email.value, password.value);
-  // TODO: 백엔드 API 호출
+  // API 호출
+  try {
+    await signup({
+      email: email.value,
+      password: password.value,
+      passwordConfirm: passwordConfirm.value,
+    });
+    router.push('/login');
+  } catch (error) {
+    if (error.response?.status === 409) {
+      errorMessage.value = '이미 사용 중인 이메일입니다';
+    } else if (error.response?.status === 400) {
+      errorMessage.value = '입력값을 확인해주세요';
+    } else {
+      errorMessage.value = '회원가입에 실패했습니다';
+    }
+  }
 }
 
 function goLogin() {
@@ -181,8 +219,9 @@ function goHome() {
         v-model="password"
         type="password"
         placeholder="비밀번호를 입력하세요"
-        class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+        class="w-full px-3 py-2.5 mt-1 mb-1 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
       />
+      <p class="text-[12px] text-text-sub mt-1 mb-3">8~20자, 영문·숫자·특수문자 포함</p>
 
       <!-- 비밀번호 확인 -->
       <label class="text-[13px] font-medium">비밀번호 확인</label>
