@@ -21,7 +21,7 @@ export const fetchNearbyBuildings = async (swLat, swLng, neLat, neLng, zoom) => 
   }
 };
 
-// 건물 상세 정보(토지 + 건축물 + 폴리곤) from 리스트
+// 리스트 기반 건물 상세 정보(토지 + 건축물 + 폴리곤)
 export const fetchBuildingDetail = async (buildingId) => {
   try {
     console.log(`백엔드 건물 상세 DB 검색 요청 중... (/api/buildings/${buildingId})`);
@@ -29,6 +29,20 @@ export const fetchBuildingDetail = async (buildingId) => {
     return response.data;
   } catch (error) {
     console.error(`건물 상세 정보 호출 실패 (ID: ${buildingId}):`, error);
+    throw error;
+  }
+};
+
+// 좌표 기반 건물 상세 정보
+export const fetchBuildingDetailByCoord = async (lat, lng) => {
+  try {
+    console.log(`(lat: ${lat}, lng: ${lng}) 좌표로 건물 정보 호출`);
+    const response = await api.get('/api/buildings/point', {
+      params: { lat, lng },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`좌표 기반 건물 정보 호출 실패 (lat: ${lat}, lng: ${lng}):`, error);
     throw error;
   }
 };

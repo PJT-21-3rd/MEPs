@@ -38,7 +38,7 @@ const parseMultiPolygon = (multiPolygon) => {
 };
 
 // 폴리곤 데이터 레이어 표시
-const drawBuildingPolygons = (data) => {
+const drawBuildingPolygons = (data, preventMove = false) => {
   const map = mapStore.mapInstance; // 현재 지도 객체
   if (!map || !data) return;
 
@@ -70,19 +70,19 @@ const drawBuildingPolygons = (data) => {
       fillColor: '#0071AC',
       fillOpacity: 0,
       strokeColor: '#0071AC',
-      strokeWeight: 2,
+      strokeWeight: 1.5,
       strokeStyle: 'solid', // 실선
     });
     currentPolygons.push(buildingPolygon);
   }
 
-  // 지도 중심 이동 (선택사항 - 클릭 시에만 이동하게 할 수도 있음)
-  if (data.center && data.center.coordinates) {
+  // 지도 중심 이동 - 리스트 클릭시만
+  if (!preventMove && data.center && data.center.coordinates) {
     const centerLatLng = new window.naver.maps.LatLng(
       data.center.coordinates[1], // lat
       data.center.coordinates[0], // lng
     );
-    map.panTo(centerLatLng, { duration: 300 });
+    map.morph(centerLatLng, 19, { duration: 300 });
   }
 };
 
@@ -153,7 +153,7 @@ watch(
   () => uiStore.currentBuildingDetail,
   (newData) => {
     if (newData) {
-      drawBuildingPolygons(newData);
+      drawBuildingPolygons(newData, uiStore.preventMapMove);
     } else {
       currentPolygons.forEach((polygon) => polygon.setMap(null));
       currentPolygons = [];
@@ -220,6 +220,7 @@ onMounted(() => {
       uiStore.openRoadViewModal(lat, lng);
       return;
     }
+    uiStore.openBuildingDetailByCoord(lat, lng);
   });
 });
 </script>

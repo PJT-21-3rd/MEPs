@@ -1,7 +1,7 @@
 // src/stores/uiStore.js
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { fetchBuildingDetail } from '@/api/building';
+import { fetchBuildingDetail, fetchBuildingDetailByCoord } from '@/api/building';
 
 export const useUiStore = defineStore('ui', () => {
   const searchQuery = ref(''); // 검색어
@@ -16,6 +16,7 @@ export const useUiStore = defineStore('ui', () => {
   const currentBuildings = ref([]); // 현재 화면의 건물 배열
   const currentBuildingDetail = ref(null); // 현재 건물 상세 데이터
   const isDetailLoading = ref(false);
+  const preventMapMove = ref(false);
   const isZoomRequired = ref(false);
 
   const toggleDetailPanel = () => {
@@ -24,15 +25,40 @@ export const useUiStore = defineStore('ui', () => {
 
   // 상세화면 여닫
   const openBuildingDetail = async (buildingId) => {
+    preventMapMove.value = false;
+
     selectedBuildingId.value = buildingId;
     isDetailOpen.value = true;
     isDetailLoading.value = true;
+    currentBuildingDetail.value = null;
 
     try {
       const data = await fetchBuildingDetail(buildingId);
       currentBuildingDetail.value = data;
     } catch (error) {
       currentBuildingDetail.value = null;
+    } finally {
+      isDetailLoading.value = false;
+    }
+  };
+  const openBuildingDetailByCoord = async (lat, lng) => {
+    preventMapMove.value = true;
+
+    isDetailOpen.value = true;
+    isDetailLoading.value = true;
+    currentBuildingDetail.value = null;
+
+    try {
+      const data = await fetchBuildingDetailByCoord(lat, lng);
+      if (data && data.buildingId) {
+        selectedBuildingId.value = data.buildingId;
+        currentBuildingDetail.value = data;
+      } else {
+        closeBuildingDetail(); // 길거리나 빈 땅
+      }
+    } catch (error) {
+      closeBuildingDetail();
+      console.log('클릭한 위치에 건물 정보가 없습니다.');
     } finally {
       isDetailLoading.value = false;
     }
@@ -99,8 +125,10 @@ export const useUiStore = defineStore('ui', () => {
     currentBuildings,
     currentBuildingDetail,
     isDetailLoading,
+    preventMapMove,
     isZoomRequired,
     openBuildingDetail,
+    openBuildingDetailByCoord,
     closeBuildingDetail,
     openReport,
     closeReport,
