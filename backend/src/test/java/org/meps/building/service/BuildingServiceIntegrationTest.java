@@ -1,13 +1,17 @@
 package org.meps.building.service;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.meps.building.dto.NearbyBuildingDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
 import org.meps.building.exception.InvalidBoundsException;
 import org.meps.config.RootConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +41,33 @@ class BuildingServiceIntegrationTest {
 
         assertThat(result.isZoomRequired()).isTrue();
         assertThat(result.getBuildings()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("건물 목록에 뷰포트 중심으로부터의 거리가 포함된다")
+    void buildings_contain_distance_from_viewport_center() {
+        NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
+                37.5250, 127.0550, 37.5450, 127.1000, 17);
+
+        assertThat(result.getBuildings()).isNotEmpty();
+        for (NearbyBuildingDto building : result.getBuildings()) {
+            assertThat(building.getDistanceM()).isNotNull();
+            assertThat(building.getDistanceM()).isGreaterThanOrEqualTo(0);
+        }
+    }
+
+    @Test
+    @DisplayName("건물 목록은 뷰포트 중심에서 가까운 순으로 정렬된다")
+    void buildings_are_sorted_by_distance_ascending() {
+        NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
+                37.5250, 127.0550, 37.5450, 127.1000, 17);
+
+        List<NearbyBuildingDto> buildings = result.getBuildings();
+        assertThat(buildings).isNotEmpty();
+        for (int i = 1; i < buildings.size(); i++) {
+            assertThat(buildings.get(i).getDistanceM())
+                    .isGreaterThanOrEqualTo(buildings.get(i - 1).getDistanceM());
+        }
     }
 
     @Test

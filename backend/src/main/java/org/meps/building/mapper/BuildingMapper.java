@@ -18,6 +18,8 @@ public interface BuildingMapper {
             @Param("swLng") double swLng,
             @Param("neLat") double neLat,
             @Param("neLng") double neLng,
+            @Param("centerLat") double centerLat,
+            @Param("centerLng") double centerLng,
             @Param("limit") int limit
     );
 

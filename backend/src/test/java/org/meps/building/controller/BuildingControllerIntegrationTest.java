@@ -1,6 +1,7 @@
 package org.meps.building.controller;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
@@ -46,6 +47,21 @@ class BuildingControllerIntegrationTest {
                         .param("neLat", "37.5450").param("neLng", "127.1000")
                         .param("zoom", "17"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("건물 목록 응답에 거리 필드가 포함된다")
+    void nearby_response_contains_distance_field() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"distanceM\""));
     }
 
     @Test
