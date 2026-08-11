@@ -42,22 +42,16 @@ public class InsuranceService {
             if (raw == null) {
                 continue;
             }
-            int start = 0;
-            while (true) {
-                int comma = raw.indexOf(',', start);
-                int end = (comma == -1) ? raw.length() : comma;
-                String code = raw.substring(start, end).trim();
-                if (!code.isEmpty()) {
-                    try {
-                        result.add(RiskFactor.from(code));
-                    } catch (IllegalArgumentException e) {
-                        throw new InvalidFactorException("유효하지 않은 진단 요소 코드: " + code);
-                    }
+            for (String piece : raw.split(",")) {
+                String code = piece.trim();
+                if (code.isEmpty()) {
+                    continue;
                 }
-                if (comma == -1) {
-                    break;
+                try {
+                    result.add(RiskFactor.from(code));
+                } catch (IllegalArgumentException e) {
+                    throw new InvalidFactorException("유효하지 않은 진단 요소 코드: " + code);
                 }
-                start = comma + 1;
             }
         }
         if (result.isEmpty()) {
