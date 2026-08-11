@@ -20,3 +20,15 @@ export const fetchNearbyBuildings = async (swLat, swLng, neLat, neLng, zoom) => 
     throw error;
   }
 };
+
+// 건물 상세 정보(토지 + 건축물 + 폴리곤) from 리스트
+export const fetchBuildingDetail = async (buildingId) => {
+  try {
+    console.log(`백엔드 건물 상세 DB 검색 요청 중... (/api/buildings/${buildingId})`);
+    const response = await api.get(`/api/buildings/${buildingId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`건물 상세 정보 호출 실패 (ID: ${buildingId}):`, error);
+    throw error;
+  }
+};

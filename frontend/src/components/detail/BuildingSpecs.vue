@@ -18,21 +18,21 @@
   </div>
 
   <!-- 본문 -->
-  <div class="px-5 pb-40 pt-2">
+  <div v-if="buildingData" class="px-5 pb-40 pt-2">
     <!-- 토지 -->
     <section ref="sectionLand" id="section-land" class="scroll-mt-14 py-3">
       <div class="mb-2 flex items-center gap-2">
         <LandPlot :size="17" class="text-text-sub" />
         <p class="text-[16px] text-text-main">토지 정보</p>
       </div>
-      <InfoRow label="면적" />
-      <InfoRow label="지목" />
-      <InfoRow label="용도지역" />
-      <InfoRow label="이용상황" />
-      <InfoRow label="도로접면" />
-      <InfoRow label="지형높이" />
-      <InfoRow label="지형향상" />
-      <InfoRow label="공시지가" />
+      <InfoRow label="면적" :value="formatArea(buildingData.platArea)" />
+      <InfoRow label="지목" :value="buildingData.land?.lndcgrCodeNm" />
+      <InfoRow label="용도지역" :value="buildingData.land?.prposAreaNm" />
+      <!-- <InfoRow label="이용상황" /> -->
+      <InfoRow label="도로접면" :value="buildingData.land?.roadSideCodeNm" />
+      <!-- <InfoRow label="지형높이" /> -->
+      <!-- <InfoRow label="지형향상" /> -->
+      <InfoRow label="공시지가" :value="formatPrice(buildingData.land?.pblntfPclnd)" />
     </section>
 
     <!-- 건물 -->
@@ -41,16 +41,22 @@
         <Building :size="17" class="text-text-sub" />
         <p class="text-[16px] text-text-main">건물 정보</p>
       </div>
-      <InfoRow label="건물이름" />
-      <InfoRow label="주용도" />
-      <InfoRow label="기타용도" />
-      <InfoRow label="주구조" />
-      <InfoRow label="지붕구조" />
-      <InfoRow label="높이" />
-      <InfoRow label="지상/지하" />
-      <InfoRow label="대지면적" />
-      <InfoRow label="연면적" />
-      <InfoRow label="사용승인일" />
+      <InfoRow label="건물이름" :value="buildingData.bldNm" />
+      <InfoRow label="주용도" :value="buildingData.mainPurps" />
+      <!-- <InfoRow label="기타용도" /> -->
+      <InfoRow label="주구조" :value="buildingData.detail?.strctCdNm" />
+      <!-- <InfoRow label="지붕구조" /> -->
+      <InfoRow label="높이" :value="`${buildingData.detail?.heit}m`" />
+      <InfoRow
+        label="지상/지하"
+        :value="formatFloor(buildingData.detail?.grndFlr, buildingData.detail?.ugrndFlr)"
+      />
+      <InfoRow label="대지면적" :value="formatArea(buildingData.platArea)" />
+      <InfoRow label="건축면적" :value="formatArea(buildingData.detail?.archArea)" />
+      <InfoRow label="연면적" :value="formatArea(buildingData.totArea)" />
+      <InfoRow label="호수" :value="`${buildingData.detail.hoCnt}호`" />
+      <InfoRow label="사용승인일" :value="formatDate(buildingData.detail?.useAprDay)" />
+      <InfoRow label="위반건축여부" :value="formatViolation(buildingData.detail?.violBdYn)" />
     </section>
 
     <!-- 층별현황 -->
@@ -62,21 +68,23 @@
       <div class="overflow-hidden rounded-xl border border-surface-gray">
         <div class="flex items-center bg-surface-base px-4 py-2 text-[12px] text-text-sub">
           <span class="w-14">층</span>
-          <span class="flex-1">용도</span>
-          <span class="w-20 text-right">면적</span>
+          <span class="flex-1">주용도</span>
+          <span class="w-20 text-right">기타용도</span>
         </div>
         <div
           v-for="(floor, idx) in buildingData.floors"
           :key="idx"
           class="flex items-center border-t border-surface-base px-4 py-2.5"
         >
-          <span class="w-14 text-[14px]"> {{ floor.flrGbNm }} {{ floor.flrNoNm }} </span>
-          <span class="flex-1 text-[14px] text-text-secondary/95">{{
-            floor.mainPurpsNm || '-'
-          }}</span>
-          <span class="w-20 text-right text-[14px] text-text-secondary/90">{{
-            floor.etcPurps || '-'
-          }}</span>
+          <span class="w-14 text-[14px]">
+            {{ formatFloorName(floor.flrGbNm, floor.flrNoNm) }}
+          </span>
+          <span class="flex-1 text-[14px] text-text-secondary/95">
+            {{ floor.mainPurpsNm || '-' }}
+          </span>
+          <span class="w-20 text-right text-[14px] text-text-secondary/90">
+            {{ floor.etcPurps || '-' }}
+          </span>
         </div>
       </div>
     </section>
@@ -86,6 +94,14 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Building, LandPlot, Layers } from '@lucide/vue';
+import {
+  formatArea,
+  formatPrice,
+  formatDate,
+  formatFloor,
+  formatFloorName,
+  formatViolation,
+} from '@/utils/formatters';
 import InfoRow from './InfoRow.vue';
 
 const props = defineProps({

@@ -1,6 +1,7 @@
 // src/stores/uiStore.js
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { fetchBuildingDetail } from '@/api/building';
 
 export const useUiStore = defineStore('ui', () => {
   const searchQuery = ref(''); // 검색어
@@ -13,6 +14,8 @@ export const useUiStore = defineStore('ui', () => {
   const loanModalConfig = ref(null); // 대출 모달 설정
   const hjdBriefingData = ref(null); // 행정동 브리핑 데이터
   const currentBuildings = ref([]); // 현재 화면의 건물 배열
+  const currentBuildingDetail = ref(null); // 현재 건물 상세 데이터
+  const isDetailLoading = ref(false);
   const isZoomRequired = ref(false);
 
   const toggleDetailPanel = () => {
@@ -20,14 +23,25 @@ export const useUiStore = defineStore('ui', () => {
   };
 
   // 상세화면 여닫
-  const openBuildingDetail = (buildingId) => {
+  const openBuildingDetail = async (buildingId) => {
     selectedBuildingId.value = buildingId;
     isDetailOpen.value = true;
+    isDetailLoading.value = true;
+
+    try {
+      const data = await fetchBuildingDetail(buildingId);
+      currentBuildingDetail.value = data;
+    } catch (error) {
+      currentBuildingDetail.value = null;
+    } finally {
+      isDetailLoading.value = false;
+    }
   };
   const closeBuildingDetail = () => {
     isDetailOpen.value = false;
     selectedBuildingId.value = null;
     isReportOpen.value = false;
+    currentBuildingDetail.value = null;
   };
 
   // 리포트화면 여닫
@@ -83,6 +97,8 @@ export const useUiStore = defineStore('ui', () => {
     hjdBriefingData,
     loanModalConfig,
     currentBuildings,
+    currentBuildingDetail,
+    isDetailLoading,
     isZoomRequired,
     openBuildingDetail,
     closeBuildingDetail,
