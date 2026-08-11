@@ -11,6 +11,7 @@ const LOAN_DETAIL_URLS = {
   '소상공인 저금리 대환대출(수탁보증)':
     'https://obiz.kbstar.com/quics?page=C016280&%EB%85%B8%EB%93%9C%EC%BD%94%EB%93%9C=00020&%EB%B8%8C%EB%9E%9C%EB%93%9C%EC%83%81%ED%92%88%EC%BD%94%EB%93%9C=LN25001435&cc=b035196%3Ab035393#C064396',
 };
+const INSURANCE_RIDERS_ENDPOINT = '/api/insurances';
 
 // BE 응답(loanType/loanName/coverageSummary/minRate/maxLimit)을
 // LoanModal.vue가 기대하는 필드(category/name/description/rateText)로 변환
@@ -34,4 +35,21 @@ function transformLoanResponse(raw) {
 export async function fetchLoanProducts() {
   const { data } = await http.get(LOAN_PRODUCTS_ENDPOINT);
   return transformLoanResponse(data);
+}
+
+/**
+ * 특정 팩터의 특약/상품 목록 직접 조회 (진단 등급과 무관하게 호출 가능)
+ * @param {string} factorCode - 'FLOOD' 등
+ * @returns {Promise<Array<{coverageType: string, name: string, description: string}>>}
+ * @throws
+ */
+export async function fetchInsuranceRidersByFactor(factorCode) {
+  const { data } = await http.get(INSURANCE_RIDERS_ENDPOINT, {
+    params: { factors: factorCode },
+  });
+  return (data.items ?? []).map((item) => ({
+    coverageType: item.coverageType,
+    name: item.name,
+    description: item.coverageSummary,
+  }));
 }
