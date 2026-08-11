@@ -41,7 +41,7 @@
         <Building :size="17" class="text-text-sub" />
         <p class="text-[16px] text-text-main">건물 정보</p>
       </div>
-      <InfoRow label="건물이름" :value="buildingData.bldNm" />
+      <InfoRow label="건물이름" :value="buildingData.bldNm || '-'" />
       <InfoRow label="주용도" :value="buildingData.mainPurps" />
       <!-- <InfoRow label="기타용도" /> -->
       <InfoRow label="주구조" :value="buildingData.detail?.strctCdNm" />
