@@ -14,6 +14,9 @@ import DiagnosticFactorList from './DiagnosticFactorList.vue';
 import { fetchReportData, fetchDetailedReportData } from '@/api/reportApi';
 import { X, ArrowLeft, ChevronRight, FileText, Zap } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore.js';
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
 
 const props = defineProps({
   buildingId: {
@@ -145,6 +148,12 @@ function handleClose() {
   emit('close');
   uiStore.closeReport();
 }
+const dummyItems = {
+  structure: { status: 'safe', summary: '구조 안정성 진단 결과입니다.' },
+  fire: { status: 'good', summary: '화재 안전성 진단 결과입니다.' },
+  sinkhole: { status: 'warning', summary: '지반 침하 이력 진단 결과입니다.' },
+  flood: { status: 'safe', summary: '침수 이력 진단 결과입니다.' },
+};
 
 // #29: 리포트 패널 스크롤이 바닥에 닿으면 공인중개사 카드를 지도 위에 노출
 // 지도 정확한 좌표를 모르는 상태라, 화면 우측 지도 영역쯤을 대략적인 fixed 좌표로 배치
@@ -176,7 +185,8 @@ const mockAgent = {
 <template>
   <div
     ref="scrollContainer"
-    class="w-full h-full bg-white flex flex-col overflow-y-auto"
+    class="w-full h-full bg-white flex flex-col"
+    :class="authStore.isLoggedIn ? 'overflow-y-auto' : 'overflow-hidden'"
     @scroll="handleScroll"
   >
     <div class="flex items-center gap-4 px-4 py-4.5 border-b border-surface-gray">
@@ -238,37 +248,60 @@ const mockAgent = {
         <AiBriefingCard :loading="false" :briefing="reportData.overallBriefing" />
       </div>
 
-      <!-- 기본 리포트일 때  -->
-      <DiagnosticFactorList
-        v-if="reportData.hasDetail"
-        :items="reportData.dangerItems"
-        mode="summary"
-      />
+      <!-- 로그인 -->
+      <template v-if="authStore.isLoggedIn">
+        <!-- 기본 리포트일 때  -->
+        <DiagnosticFactorList
+          v-if="reportData.hasDetail"
+          :items="reportData.dangerItems"
+          mode="summary"
+        />
 
-      <button
-        type="button"
-        class="w-full py-4 rounded-2xl bg-button-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2"
-        @click="openDetail"
-      >
-        <FileText class="w-4 h-4 shrink-0" />
-        <span>4대 근거 전체 상세 진단 리포트 보기</span>
-        <ChevronRight class="w-4 h-4 shrink-0" />
-      </button>
+        <button
+          type="button"
+          class="w-full py-4 rounded-2xl bg-button-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2"
+          @click="openDetail"
+        >
+          <FileText class="w-4 h-4 shrink-0" />
+          <span>4대 근거 전체 상세 진단 리포트 보기</span>
+          <ChevronRight class="w-4 h-4 shrink-0" />
+        </button>
 
-      <FloodInsuranceBanner
-        :flood-overlap-notice="floodOverlapNotice"
-        @open-insurance="(type) => $emit('open-insurance', type)"
-      />
+        <FloodInsuranceBanner
+          :flood-overlap-notice="floodOverlapNotice"
+          @open-insurance="(type) => $emit('open-insurance', type)"
+        />
 
-      <MandatoryInsuranceSection
-        :disaster-liability="reportData.disasterLiability"
-        :fire-liability="reportData.fireLiability"
-      />
+        <MandatoryInsuranceSection
+          :disaster-liability="reportData.disasterLiability"
+          :fire-liability="reportData.fireLiability"
+        />
 
-      <ReportBanners
-        @open-insurance="(type) => $emit('open-insurance', type)"
-        @open-loan="$emit('open-loan')"
-      />
+        <ReportBanners
+          @open-insurance="(type) => $emit('open-insurance', type)"
+          @open-loan="$emit('open-loan')"
+        />
+      </template>
+
+      <!-- 비로그인 -->
+
+      <div v-else class="relative">
+        <!-- 더미 상세 (블러) -->
+        <div class="blur-sm pointer-events-none select-none">
+          <DiagnosticFactorList :items="dummyItems" mode="summary" />
+        </div>
+
+        <!-- 로그인 유도 오버레이 -->
+        <div class="absolute inset-0 flex flex-col items-center justify-start pt-8 gap-3">
+          <p class="text-[14px] text-text-sub">로그인하고 상세 진단 확인하기</p>
+          <button
+            @click="authStore.openLoginModal()"
+            class="px-6 py-2.5 bg-primary text-white font-bold rounded-lg"
+          >
+            로그인
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- detail 뷰 -->
@@ -327,7 +360,7 @@ const mockAgent = {
       leave-to-class="opacity-0 translate-y-4"
     >
       <OfflineAgentCard
-        v-if="showAgentCard"
+        v-if="showAgentCard && authStore.isLoggedIn"
         class="fixed bottom-12 right-60 z-20"
         dong-name="역삼동"
         :agent="mockAgent"
