@@ -20,7 +20,11 @@
             :class="isFavorite ? 'fill-status-like text-status-like' : 'text-text-sub'"
           />
         </button>
-        <button class="rounded-full p-2 hover:bg-surface-base" aria-label="공유">
+        <button
+          @click="handleShare"
+          class="rounded-full p-2 hover:bg-surface-base"
+          aria-label="공유"
+        >
           <Share2 :size="19" class="text-text-sub" />
         </button>
       </div>
@@ -69,6 +73,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToastStore } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore.js';
 import { ChevronLeft, Heart, Share2 } from '@lucide/vue';
 import RoadViewImage from './RoadViewImage.vue';
@@ -79,6 +84,7 @@ import ReportCTAButton from './ReportCTAButton.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
+const toastStore = useToastStore();
 
 const isFavorite = ref(false);
 const toggleFavorite = () => {
@@ -106,6 +112,31 @@ const handleGenerateReport = () => {
 const handleBack = () => {
   uiStore.closeBuildingDetail();
   // URL 쿼리 파라미터 제거
+  const query = { ...router.currentRoute.value.query };
+  delete query.buildingId;
   router.push({ query: {} });
+};
+
+const handleShare = async () => {
+  const bldName = buildingDetail.value?.bldNm || buildingDetail.value?.jibunAddr || '건물';
+  const shareData = {
+    title: 'MEPS 상가 안전 스캐너',
+    text: `[MEPS] ${bldName}의 상세 정보와 안전 진단 리포트를 확인해보세요!`,
+    url: window.location.href,
+  };
+
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    toastStore.showToast('링크가 클립보드에 복사되었습니다.');
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toastStore.showToast('링크가 클립보드에 복사되었습니다.');
+      } catch (err) {
+        toastStore.showToast('공유하기를 지원하지 않는 브라우저입니다.');
+      }
+    }
+  }
 };
 </script>
