@@ -13,5 +13,6 @@ public interface UserMapper {
     /** 회원 등록 — userId가 생성된 값으로 채워진다 */
     int insertUser(UserDto user);
 
+    UserDto findByEmail(@Param("email") String email);
 
 }

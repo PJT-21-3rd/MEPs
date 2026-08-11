@@ -1,10 +1,14 @@
 package org.meps.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.user.dto.LoginRequestDto;
+import org.meps.user.dto.LoginResponseDto;
 import org.meps.user.dto.SignupRequestDto;
 import org.meps.user.dto.UserDto;
 import org.meps.user.exception.DuplicateEmailException;
+import org.meps.user.exception.LoginFailedException;
 import org.meps.user.exception.PasswordMismatchException;
+import org.meps.user.jwt.JwtProvider;
 import org.meps.user.mapper.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,7 @@ public class UserService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     @Transactional
     public void signup(SignupRequestDto request) {
@@ -32,5 +37,18 @@ public class UserService {
                 .build();
 
         userMapper.insertUser(user);
+    }
+
+    public LoginResponseDto login(LoginRequestDto request) {   // ← 메서드 추가
+        UserDto user = userMapper.findByEmail(request.getEmail());
+        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new LoginFailedException();
+        }
+
+        return LoginResponseDto.builder()
+                .accessToken(jwtProvider.createToken(user.getUserId()))
+                .tokenType("Bearer")
+                .expiresIn(jwtProvider.getExpiresInSeconds())
+                .build();
     }
 }

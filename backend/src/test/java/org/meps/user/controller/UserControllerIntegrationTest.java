@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -84,4 +85,58 @@ class UserControllerIntegrationTest {
                         .content("{\"email\":\"mismatch@test.com\",\"password\":\"Test1234!\",\"passwordConfirm\":\"Test5678!\"}"))
                 .andExpect(status().isBadRequest());
     }
+
+    // ---- 로그인 ----
+    @Test
+    @DisplayName("정상 요청은 200과 토큰을 반환한다")
+    void login_success() throws Exception {
+        String body = mockMvc.perform(post("/api/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@test.com\",\"password\":\"test1234!\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"accessToken\""));
+        assertTrue(body.contains("\"tokenType\":\"Bearer\""));
+        assertTrue(body.contains("\"expiresIn\""));
+    }
+
+    @Test
+    @DisplayName("비밀번호가 틀리면 401을 반환한다")
+    void login_wrongPassword() throws Exception {
+        mockMvc.perform(post("/api/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@test.com\",\"password\":\"Wrong5678!\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 계정은 401을 반환한다")
+    void login_noSuchAccount() throws Exception {
+        mockMvc.perform(post("/api/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"nobody@test.com\",\"password\":\"Test1234!\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("이메일이 누락되면 400을 반환한다")
+    void login_missingEmail() throws Exception {
+        mockMvc.perform(post("/api/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"test1234!\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("비밀번호가 누락되면 400을 반환한다")
+    void login_missingPassword() throws Exception {
+        mockMvc.perform(post("/api/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@test.com\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
 }
