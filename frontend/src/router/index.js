@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import MapView from '@/views/MapView.vue';
-
+import { useAuthStore } from '@/stores/authStore';
 const routes = [
   {
     path: '/',
@@ -36,14 +36,12 @@ const router = createRouter({
 });
 
 // 로그인 가드 (Protected Route)
-// router.beforeEach((to, from, next) => {
-//   const isAuthenticated = !!localStorage.getItem('accessToken')
-//   if (to.meta.requiresAuth && !isAuthenticated) {
-//     alert('로그인이 필요한 서비스입니다.')
-//     next({ name: 'Login' })
-//   } else {
-//     next()
-//   }
-// })
+router.beforeEach((to, from) => {
+  const authStore = useAuthStore();
+
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    return { name: 'Login' };
+  }
+});
 
 export default router;
