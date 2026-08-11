@@ -86,51 +86,6 @@ const drawBuildingPolygons = (data) => {
   }
 };
 
-// TODO: API 호출 함수 - 임시
-const fetchPolygonData = async (buildingId) => {
-  // TODO: 실제 API 호출 (const res = await fetch(`/api/buildings/${buildingId}`);)
-  console.log(`[API 요청] 건물 ID: ${buildingId}의 폴리곤 데이터 패칭...`);
-
-  return {
-    buildingId: buildingId,
-    center: { type: 'Point', coordinates: [127.0366742, 37.5006373] },
-    footprint: {
-      type: 'MultiPolygon',
-      coordinates: [
-        [
-          [
-            [127.0365, 37.5007],
-            [127.0368, 37.5007],
-            [127.0368, 37.5005],
-            [127.0365, 37.5005],
-            [127.0365, 37.5007],
-          ],
-        ],
-      ],
-    },
-    parcelGeom: {
-      type: 'MultiPolygon',
-      coordinates: [
-        [
-          [
-            [127.0364, 37.5008],
-            [127.0369, 37.5008],
-            [127.0369, 37.5004],
-            [127.0364, 37.5004],
-            [127.0364, 37.5008],
-          ],
-        ],
-      ],
-    },
-  };
-};
-
-const fetchPolygonByCoord = async (lat, lng) => {
-  // TODO: 실제 API 호출 (const res = await fetch(`/api/buildings/search?lat=${lat}&lng=${lng}`);)
-  console.log(`[API 요청] 좌표 검색: lat=${lat}, lng=${lng}`);
-  return await fetchPolygonData('1168010100102160000'); // 가짜 데이터 반환
-};
-
 // 행정동 브리핑 호출
 const updateHjdBriefing = async (lat, lng) => {
   try {
@@ -193,6 +148,21 @@ watch(
   },
 );
 
+// 폴리곤 그리기
+watch(
+  () => uiStore.currentBuildingDetail,
+  (newData) => {
+    if (newData) {
+      drawBuildingPolygons(newData);
+    } else {
+      currentPolygons.forEach((polygon) => polygon.setMap(null));
+      currentPolygons = [];
+    }
+  },
+);
+
+// todo: 마커 그리기
+
 // 지도 초기화, 이벤트 등록
 onMounted(() => {
   if (!window.naver || !window.naver.maps) {
@@ -250,27 +220,6 @@ onMounted(() => {
       uiStore.openRoadViewModal(lat, lng);
       return;
     }
-
-    const data = await fetchPolygonByCoord(lat, lng); // 해당 좌표의 건물 정보 가져오기
-
-    if (data && data.buildingId) {
-      uiStore.openBuildingDetail(data.buildingId);
-      drawBuildingPolygons(data);
-    }
   });
-
-  // 2. 리스트에서 선택시
-  watch(
-    () => uiStore.selectedBuildingId,
-    async (newId) => {
-      if (newId) {
-        const data = await fetchPolygonData(newId);
-        drawBuildingPolygons(data);
-      } else {
-        currentPolygons.forEach((polygon) => polygon.setMap(null));
-        currentPolygons = [];
-      }
-    },
-  );
 });
 </script>
