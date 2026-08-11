@@ -115,3 +115,61 @@ export const formatDistance = (distance) => {
   }
   return distance + 'm';
 };
+
+/**
+ * 면적 데이터를 포맷팅 (콤마 추가 및 단위 붙이기)
+ * @param {Number} area - 면적
+ * @returns {String} - 예: "1,234.5 ㎡"
+ */
+export const formatArea = (area) => {
+  if (area === undefined || area === null) return '-';
+  return `${area.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}m²`;
+};
+
+/**
+ * 금액/단가 데이터를 포맷팅 (공시지가 등)
+ * @param {Number} price - 금액
+ * @returns {String} - 예: "29,040,000 원/㎡"
+ */
+export const formatPrice = (price) => {
+  if (price === undefined || price === null) return '-';
+  return `${price.toLocaleString('ko-KR')} 원/m²`;
+};
+
+/**
+ * 층별 이름 표시 포맷팅 (정규식으로 공공데이터 오타 방어)
+ * @param {String} gbNm - 지상/지하 구분 (지상, 지하)
+ * @param {String} noNm - 층수 (지하1층, 지1층, 1, 옥탑 등)
+ * @returns {String} - 예: "B1층", "2층", "옥탑"
+ */
+export const formatFloorName = (gbNm, noNm) => {
+  if (!noNm) return '-';
+
+  const numberMatch = noNm.match(/\d+/);
+
+  if (numberMatch) {
+    // 숫자가 있는 경우 (예: "지1층" -> "1" 추출)
+    const floorNumber = numberMatch[0];
+    const prefix = gbNm === '지하' ? 'B' : ''; // 지하일 경우 B 붙이기
+
+    return `${prefix}${floorNumber}층`;
+  } else {
+    // 숫자가 아예 없는 예외 케이스 (예: "옥탑", "기계실", "대피소")
+    let cleanText = noNm.trim();
+    if (gbNm === '지하' && !cleanText.includes('지하')) {
+      return `지하 ${cleanText}`;
+    }
+    return cleanText;
+  }
+};
+
+/**
+ * 위반건축물 여부 포맷팅 ('Y'/'N' 변환)
+ * @param {String} yn - 'Y' 또는 'N'
+ * @returns {String} - 예: "위반 (위반건축물)", "해당 없음"
+ */
+export const formatViolation = (yn) => {
+  if (yn === 'Y') return '위반 (위반건축물)';
+  if (yn === 'N') return '해당없음';
+  return '-';
+};
