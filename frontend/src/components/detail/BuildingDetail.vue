@@ -126,6 +126,8 @@ const handleShare = async () => {
   };
 
   try {
+    // TODO: 모바일 환경 등 Web Share API를 지원하는 경우 (네이티브 공유창 띄우기)
+
     await navigator.clipboard.writeText(window.location.href);
     toastStore.showToast('링크가 클립보드에 복사되었습니다.');
   } catch (error) {
