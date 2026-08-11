@@ -3,6 +3,7 @@ package org.meps.building.service;
 import lombok.RequiredArgsConstructor;
 import org.meps.building.dto.BuildingDetailDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
+import org.meps.building.dto.SortType;
 import org.meps.building.exception.BuildingNotFoundException;
 import org.meps.building.exception.InvalidBoundsException;
 import org.meps.building.exception.InvalidBuildingIdException;
@@ -20,7 +21,7 @@ public class BuildingService {
     private static final Pattern BUILDING_ID_PATTERN = Pattern.compile("\\d{25}");
 
     public NearbyBuildingsResponseDto getNearbyBuildings(
-            double swLat, double swLng, double neLat, double neLng, int zoom) {
+            double swLat, double swLng, double neLat, double neLng, int zoom, SortType sortType) {
 
         validateBounds(swLat, swLng, neLat, neLng);
 
@@ -35,7 +36,7 @@ public class BuildingService {
 
         return NearbyBuildingsResponseDto.of(
                 buildingMapper.findBuildingsInBounds(
-                        swLat, swLng, neLat, neLng, centerLat, centerLng, MAX_RESULTS));
+                        swLat, swLng, neLat, neLng, centerLat, centerLng, sortType.name(), MAX_RESULTS));
     }
 
     public BuildingDetailDto getBuildingDetail(String buildingId) {

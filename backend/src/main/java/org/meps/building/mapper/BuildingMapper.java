@@ -20,6 +20,7 @@ public interface BuildingMapper {
             @Param("neLng") double neLng,
             @Param("centerLat") double centerLat,
             @Param("centerLng") double centerLng,
+            @Param("sortType") String sortType,
             @Param("limit") int limit
     );
 

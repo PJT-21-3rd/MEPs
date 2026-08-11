@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.meps.building.dto.BuildingDetailDto;
 import org.meps.building.dto.BuildingSearchResponseDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
+import org.meps.building.dto.SortType;
 import org.meps.building.service.BuildingSearchService;
 import org.meps.building.service.BuildingService;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +26,10 @@ public class BuildingController {
             @RequestParam double swLng,
             @RequestParam double neLat,
             @RequestParam double neLng,
-            @RequestParam int zoom) {
+            @RequestParam int zoom,
+            @RequestParam(name = "sort", defaultValue = "DISTANCE") SortType sortType) {
 
-        return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom);
+        return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom, sortType);
     }
 
     /**
