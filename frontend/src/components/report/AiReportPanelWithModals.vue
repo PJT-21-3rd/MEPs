@@ -5,11 +5,11 @@ import InsuranceModal from '@/components/finance/InsuranceModal.vue';
 import LoanModal from '@/components/finance/LoanModal.vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import {
-  getFloodInsuranceProducts,
+  // getFloodInsuranceProducts,
   getBusinessInsuranceRiders,
   getRequiredMandatoryInsurance,
 } from '@/utils/insuranceFilters';
-import { fetchLoanProducts } from '@/api/financeApi.js';
+import { fetchLoanProducts, fetchInsuranceRidersByFactor } from '@/api/financeApi.js';
 
 const props = defineProps({
   buildingId: {
@@ -42,9 +42,9 @@ function handleReportLoaded(data) {
   reportData.value = data;
 }
 
-const floodItems = computed(() =>
-  getFloodInsuranceProducts(reportData.value?.insuranceRidersByFactor),
-);
+// const floodItems = computed(() =>
+//   getFloodInsuranceProducts(reportData.value?.insuranceRidersByFactor),
+// );
 
 const businessItems = computed(() => {
   const mandatory = getRequiredMandatoryInsurance(
@@ -62,13 +62,20 @@ const BUSINESS_INSURANCE_APPLY_URL =
   'https://direct.kbinsure.co.kr/home/#/GL/BF/LT_CM0101M/?pid=5110983&code=5703&utm_source=google&utm_medium=google_pc&utm_term=%EC%82%AC%EC%97%85%EC%9E%A5%EC%A2%85%ED%95%A9%EB%B3%B4%ED%97%98&utm_campaign=sa_bizFire&utm_content=51109835703&gclid=CjwKCAjwyuDTBhB-EiwANCQhLJaL56UhXSYTyJVm7DtlfOsVeyk_QfKlFKqkZbX-ynbDASB-kJcJQxoCzzYQAvD_BwE';
 
 // 배너 클릭 시 필터링된 items로 config를 구성해 uiStore에 위임
-// applyUrl은 타입별로 달라서 config에 함께 실어보냄 (submit 시 이 값을 그대로 사용)
-function handleOpenInsurance(type) {
+async function handleOpenInsurance(type) {
   if (type === 'flood') {
+    // 진단 등급(CAUTION 여부)과 무관하게 항상 침수 관련 특약/상품을 직접 조회
+    let items = [];
+    try {
+      const riders = await fetchInsuranceRidersByFactor('FLOOD');
+      items = riders.filter((item) => item.coverageType === 'PRODUCT');
+    } catch (err) {
+      console.warn('[AiReportPanelWithModals] 풍수해보험 상품 조회 실패', err);
+    }
     uiStore.openInsuranceModal({
       highlight: '풍수해보험',
       subtitle: '침수 피해 복구비 보장',
-      items: floodItems.value,
+      items,
       ctaText: '사장님 맞춤 보험 상담 신청하기',
       applyUrl: FLOOD_INSURANCE_APPLY_URL,
     });
