@@ -12,6 +12,7 @@ public class NearbyBuildingDto {
     private String buildingId;
     private Double lat;
     private Double lng;
+    private Integer distanceM;
     private String jibunAddr;
     private String roadAddr;
     private String bldNm;

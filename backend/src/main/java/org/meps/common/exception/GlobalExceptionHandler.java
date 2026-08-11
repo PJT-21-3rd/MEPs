@@ -8,6 +8,7 @@ import org.meps.building.exception.InvalidKeywordException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
+import org.meps.insurance.exception.InvalidFactorException;
 import org.meps.user.exception.DuplicateEmailException;
 import org.meps.user.exception.PasswordMismatchException;
 import org.meps.sgg.exception.SggNotFoundException;
@@ -24,11 +25,12 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /** 필수 파라미터 누락/타입 오류, 좌표 범위 오류, keyword 공백 → 400 */
+    /** 필수 파라미터 누락/타입 오류, 좌표 범위 오류, keyword 공백, factors 오류 → 400 */
     @ExceptionHandler({
             InvalidBoundsException.class,
             InvalidBuildingIdException.class,
             InvalidKeywordException.class,
+            InvalidFactorException.class,
             MissingServletRequestParameterException.class,
             MethodArgumentTypeMismatchException.class
     })
