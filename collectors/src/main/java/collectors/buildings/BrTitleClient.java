@@ -12,7 +12,11 @@ import java.util.List;
  * https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo
  *
  * 담당 컬럼: road_addr, jibun_addr, main_purps, bld_nm,
- *           grnd_flr, ugrnd_flr, use_apr_day, ho_cnt, strct_cd_nm
+ *           grnd_flr, ugrnd_flr, use_apr_day, ho_cnt, strct_cd_nm,
+ *           tot_area, arch_area, heit
+ *
+ * 주의: platArea(대지면적)는 0으로 등재된 건물이 많아 사용하지 않는다.
+ *      대지면적은 LadfrlListClient(토지임야목록)의 lndpclAr을 쓴다.
  */
 public class BrTitleClient {
 
@@ -108,6 +112,15 @@ public class BrTitleClient {
     public static Integer ugrndFlr(JsonNode item)  { return intVal(item, "ugrndFlrCnt"); }
     public static Integer hoCnt(JsonNode item)     { return intVal(item, "hoCnt"); }
 
+    /** 연면적(㎡) — 모든 층 바닥면적 합 */
+    public static Double totArea(JsonNode item)    { return doubleVal(item, "totArea"); }
+
+    /** 건축면적(㎡) — 1층 바닥면적, 건폐율 산정 기준 */
+    public static Double archArea(JsonNode item)   { return doubleVal(item, "archArea"); }
+
+    /** 건물높이(m) — 대장 미기재가 많아 0으로 오는 경우가 잦다 */
+    public static Double heit(JsonNode item)       { return doubleVal(item, "heit"); }
+
     // ---- 공통 파싱 ----
 
     private static void checkResultCode(JsonNode root) {
@@ -152,6 +165,19 @@ public class BrTitleClient {
         if (s.isEmpty()) return null;
         try {
             return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** 소수점 값 (면적·높이) */
+    private static Double doubleVal(JsonNode item, String field) {
+        JsonNode v = item.get(field);
+        if (v == null || v.isNull()) return null;
+        String s = v.asText().trim();
+        if (s.isEmpty()) return null;
+        try {
+            return Double.parseDouble(s);
         } catch (NumberFormatException e) {
             return null;
         }
