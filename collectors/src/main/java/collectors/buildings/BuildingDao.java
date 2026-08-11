@@ -17,7 +17,8 @@ public class BuildingDao {
                     "  footprint, center," +
                     "  use_apr_day, ho_cnt, viol_bd_yn, strct_cd_nm," +
                     "  lndcgr_code_nm, prpos_area_nm, road_side_code_nm, pblntf_pclnd," +
-                    "  floor_info, parcel_geom" +
+                    "  floor_info, parcel_geom," +
+                    "  plat_area, tot_area, arch_area, heit" +
                     ") VALUES (" +
                     "  ?, ?," +
                     // hjd_cd — 건물 중심점을 포함하는 행정동 코드
@@ -32,7 +33,9 @@ public class BuildingDao {
                     "  ?, ?, ?, ?," +
                     "  ?," +
                     // parcel_geom — 지적도 없는 건물은 NULL
-                    "  CASE WHEN ? IS NULL THEN NULL ELSE ST_GeomFromGeoJSON(?) END" +
+                    "  CASE WHEN ? IS NULL THEN NULL ELSE ST_GeomFromGeoJSON(?) END," +
+                    // plat_area, tot_area, arch_area, heit
+                    "  ?, ?, ?, ?" +
                     ") ON DUPLICATE KEY UPDATE" +
                     "  bjd_cd = VALUES(bjd_cd)," +
                     "  hjd_cd = VALUES(hjd_cd)," +
@@ -54,7 +57,11 @@ public class BuildingDao {
                     "  road_side_code_nm = VALUES(road_side_code_nm)," +
                     "  pblntf_pclnd = VALUES(pblntf_pclnd)," +
                     "  floor_info = VALUES(floor_info)," +
-                    "  parcel_geom = VALUES(parcel_geom)";
+                    "  parcel_geom = VALUES(parcel_geom)," +
+                    "  plat_area = VALUES(plat_area)," +
+                    "  tot_area = VALUES(tot_area)," +
+                    "  arch_area = VALUES(arch_area)," +
+                    "  heit = VALUES(heit)";
 
     private static Connection conn;
     private static PreparedStatement pstmt;
@@ -72,9 +79,17 @@ public class BuildingDao {
         }
     }
 
+    /**
+     * 이미 적재된 건물관리번호 목록 조회 (재개용).
+     *
+     * 조건이 arch_area IS NOT NULL인 이유:
+     *   컬럼을 새로 추가하면 기존 행은 전부 NULL이므로, 그 건물들을 갱신 대상으로 잡기 위함.
+     *   컬럼을 또 추가할 때는 이 조건도 새 컬럼 기준으로 바꿔야 한다.
+     */
     public static Set<String> loadExistingKeys() {
         Set<String> keys = new HashSet<>();
-        try (PreparedStatement st = conn.prepareStatement("SELECT bd_mgt_sn FROM buildings");
+        try (PreparedStatement st = conn.prepareStatement(
+                "SELECT bd_mgt_sn FROM buildings WHERE arch_area IS NOT NULL");
              ResultSet rs = st.executeQuery()) {
             while (rs.next()) keys.add(rs.getString(1));
         } catch (SQLException e) {
@@ -89,7 +104,8 @@ public class BuildingDao {
                            String mainPurps, String bldNm, Integer grndFlr, Integer ugrndFlr,
                            String useAprDay, Integer hoCnt, String violBdYn, String strctCdNm,
                            String lndcgrCodeNm, String prposAreaNm, String roadSideCodeNm,
-                           Long pblntfPclnd, String floorInfo, String parcelGeoJson) {
+                           Long pblntfPclnd, String floorInfo, String parcelGeoJson,
+                           Double platArea, Double totArea, Double archArea, Double heit) {
 
         if (footprintGeoJson == null) {
             throw new IllegalArgumentException("footprint는 필수입니다 (bd_mgt_sn=" + bdMgtSn + ")");
@@ -126,6 +142,10 @@ public class BuildingDao {
             pstmt.setString(i++, floorInfo);
             pstmt.setString(i++, parcelGeoJson);          // CASE WHEN 판정용
             pstmt.setString(i++, parcelGeoJson);          // ST_GeomFromGeoJSON용
+            setDouble(pstmt, i++, platArea);
+            setDouble(pstmt, i++, totArea);
+            setDouble(pstmt, i++, archArea);
+            setDouble(pstmt, i++, heit);
 
             pstmt.addBatch();
             if (++pending >= BATCH_SIZE) flush();
@@ -186,6 +206,11 @@ public class BuildingDao {
     private static void setLong(PreparedStatement pstmt, int idx, Long v) throws SQLException {
         if (v == null) pstmt.setNull(idx, java.sql.Types.BIGINT);
         else pstmt.setLong(idx, v);
+    }
+
+    private static void setDouble(PreparedStatement pstmt, int idx, Double v) throws SQLException {
+        if (v == null) pstmt.setNull(idx, java.sql.Types.DECIMAL);
+        else pstmt.setDouble(idx, v);
     }
 
     private BuildingDao() {}

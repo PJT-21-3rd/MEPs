@@ -8,21 +8,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
-
 public class BuildingCollector {
 
-    private static final String BJD_FILTER = "11215";
+    /** 수집 대상 법정동코드 앞자리 — 5자리면 구, 10자리면 동 단위. null이면 전부 수집 */
+    private static final String BJD_FILTER = "11740";
 
-    private static final double MIN_LON = 127.056, MIN_LAT = 37.525;
-    private static final double MAX_LON = 127.112, MAX_LAT = 37.572;
+    /** 수집 영역 BBOX — BJD_FILTER가 구 밖 건물을 걸러내므로 넉넉해도 됨 */
+    private static final double MIN_LON = 127.115, MIN_LAT = 37.520;
+    private static final double MAX_LON = 127.185, MAX_LAT = 37.570;
 
-    private static final int GRID_COLS = 12;
-    private static final int GRID_ROWS = 12;
+    /** 격자 분할 수 — 타일당 약 500m가 적정 */
+    private static final int GRID_COLS = 14;
+    private static final int GRID_ROWS = 10;
 
-    private static final String JUSO_FILE = "/Users/home/Desktop/build_seoul.txt";
+    /** juso.go.kr 건물DB 파일 경로 */
+    private static final String JUSO_FILE = "C:/kb/build_seoul.txt";
 
-    private static final long API_DELAY = 100;
+    /** data.go.kr 호출 간격 (ms) — 짧으면 HTTP 429가 발생함 */
+    private static final long API_DELAY = 1000;
 
     public static void main(String[] args) throws InterruptedException {
         JusoBuildingIndex.load(JUSO_FILE);
@@ -31,8 +34,9 @@ public class BuildingCollector {
         Map<String, List<JsonNode>> floorCache = new HashMap<>();
         Map<String, JsonNode> landCache = new HashMap<>();
         Map<String, String> parcelCache = new HashMap<>();
+        Map<String, Double> areaCache = new HashMap<>();
 
-        int ok = 0, noTitle = 0, noJuso = 0, skipped = 0, otherBjd = 0, failedPnu = 0, notTarget = 0;
+        int ok = 0, noTitle = 0, noJuso = 0, skipped = 0, otherBjd = 0, failedPnu = 0;
         Set<String> processed = new HashSet<>();   // 타일 경계에 걸친 건물 중복 방지
 
         BuildingDao.open();
@@ -84,6 +88,7 @@ public class BuildingCollector {
                                 Thread.sleep(API_DELAY);
                                 landCache.put(pnu, LandCharClient.fetch(pnu));
                                 parcelCache.put(pnu, ParcelWfsClient.fetchGeometry(pnu));
+                                areaCache.put(pnu, LadfrlListClient.fetchArea(pnu));
                             } catch (ApiLimitException e) {
                                 throw e;   // 한도 초과는 즉시 전체 중단
                             } catch (RuntimeException e) {
@@ -93,6 +98,7 @@ public class BuildingCollector {
                                 floorCache.remove(pnu);
                                 landCache.remove(pnu);
                                 parcelCache.remove(pnu);
+                                areaCache.remove(pnu);
                                 failedPnu++;
                                 System.err.println("[필지 실패 - 건너뜀] pnu=" + pnu
                                         + " : " + e.getMessage());
@@ -117,12 +123,6 @@ public class BuildingCollector {
                                 floorCache.get(pnu), BrTitleClient.mgmBldrgstPk(title));
                         JsonNode land = landCache.get(pnu);
 
-                        // ---- 수집 대상 판정 ----
-                        if (!BuildingFilter.isTarget(floorInfo, BrTitleClient.mainPurps(title))) {
-                            notTarget++;
-                            continue;
-                        }
-
                         // ---- 적재 ----
                         BuildingDao.add(
                                 bdMgtSn,
@@ -143,7 +143,11 @@ public class BuildingCollector {
                                 LandCharClient.roadSideCodeNm(land),
                                 LandCharClient.pblntfPclnd(land),
                                 floorInfo,
-                                parcelCache.get(pnu)
+                                parcelCache.get(pnu),
+                                areaCache.get(pnu),               // plat_area — 토지임야목록 lndpclAr
+                                BrTitleClient.totArea(title),     // tot_area
+                                BrTitleClient.archArea(title),    // arch_area
+                                BrTitleClient.heit(title)         // heit
                         );
                         ok++;
                         if (ok % 50 == 0) {
@@ -164,7 +168,6 @@ public class BuildingCollector {
 
         System.out.println("---------------------------");
         System.out.println("적재 " + ok + "건 / 건너뜀 " + skipped
-                + "건 / 대상외(주거·설비 등) " + notTarget
                 + "건 / 표제부 미매칭 " + noTitle + "건 / juso 다리 없음 " + noJuso
                 + "건 / 타동 제외 " + otherBjd + "건 / 필지 실패 " + failedPnu + "건");
         System.out.println("API 호출 필지 수: " + titleCache.size());
