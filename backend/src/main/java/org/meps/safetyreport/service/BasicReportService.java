@@ -47,6 +47,7 @@ public class SafetyReportService {
     private final TotalScoreService totalScoreService;
     private final BasicBriefingService basicBriefingService;
     private final SafetyReportMapper safetyReportMapper;
+    private final DetailedReportService detailedReportService;
 
     /**
      * @param loggedIn 비로그인이면 factors 미노출(응답에서 필드 제거) — 프론트는 그 자리를
@@ -84,6 +85,8 @@ public class SafetyReportService {
         if (scoreChanged) {
             safetyReportMapper.upsertScores(buildingId, basicBriefingService.getModelName(),
                     totalScore, flood.getScore(), sink.getScore(), fire.getScore(), struct.getScore());
+            // 점수 변경(최초 조회 포함) 시 비동기로 상세 리포트 재생성.
+            detailedReportService.generateDetailedReportAsync(buildingId);
         }
 
         if (!scoreChanged && hasAllBriefs(row)) {

@@ -21,4 +21,9 @@ public class SafetyReportRowDto {
     private String sinkBrief;
     private String fireBrief;
     private String structBrief;
+    private String totalReport;
+    private String floodReport;
+    private String sinkReport;
+    private String fireReport;
+    private String structReport;
 }

@@ -1,23 +1,23 @@
 package org.meps.safetyreport.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.util.SafetyGrade;
 import org.meps.fire.dto.FireScoreResult;
 import org.meps.fire.service.FireScoreService;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
 import org.meps.flood.service.FloodScoreService;
-import org.meps.safetyreport.dto.BriefingInput;
-import org.meps.safetyreport.dto.DetailedReportResponseDto;
-import org.meps.safetyreport.dto.DetailedFactorDto;
-import org.meps.safetyreport.dto.DetailedFactorBaseDto;
-import org.meps.safetyreport.dto.BasicBriefingDto;
+import org.meps.safetyreport.dto.*;
+import org.meps.safetyreport.mapper.SafetyReportMapper;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.sinkhole.service.SinkholeScoreService;
 import org.meps.structure.dto.StructuralFactorDto;
 import org.meps.structure.dto.StructuralStabilityScoreResultDto;
 import org.meps.structure.service.StructuralStabilityScoreService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,11 +27,11 @@ import java.util.List;
  * AI 안심 진단 상세 리포트
  *
  * details는 각 점수 서비스가 판정에 실제 사용한 값만 출처와 함께 노출
- * aiReport는 아직 등급별 템플릿 문장(BriefingService 폴백)으로 채움
- * 스키마, details를 먼저 확정하고, LLM 3단락 해석(근거→리스크→솔루션)은 후속 작업에서 교체
+ * aiReport는 LLM 3단락 해석(근거→리스크→솔루션)으로 채움
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DetailedReportService {
 
     private static final String NO_INFO = BriefingInput.NO_FACTS;
@@ -41,41 +41,99 @@ public class DetailedReportService {
     private final StructuralStabilityScoreService structuralStabilityScoreService;
     private final FloodScoreService floodScoreService;
     private final TotalScoreService totalScoreService;
-    private final BasicBriefingService basicBriefingService;
+    private final DetailedBriefingService detailedBriefingService;
+    private final SafetyReportMapper safetyReportMapper;
 
+    /**
+     * 점수는 DB와 비교하지 않는다 — 그 판정은 기본 리포트 조회 시점(BasicReportService)에서만
+     * 이루어지고, 점수가 바뀌었을 때만 여기까지 (비동기로) 트리거된다. 여기서는 캐시 행에
+     * report 5개 컬럼이 이미 채워져 있는지만 보고, 없으면 생성해서 채운다
+     */
     public DetailedReportResponseDto getDetailedReport(String buildingId) {
         FireScoreResult fire = fireScoreService.getFireScore(buildingId); // 미존재 건물이면 여기서 404
         SinkholeScoreResult sink = sinkholeScoreService.getSinkholeScore(buildingId);
         StructuralStabilityScoreResultDto struct = structuralStabilityScoreService.getStructuralStabilityScore(buildingId);
         FloodScoreResultDto flood = floodScoreService.getFloodScore(buildingId);
 
-        int totalScore = totalScoreService.calculateTotalScore(
-                struct.getScore(), fire.getScore(), sink.getScore(), flood.getScore());
+        SafetyReportRowDto row = safetyReportMapper.findByBdMgtSn(buildingId);
 
-        BriefingInput input = BriefingInput.builder()
-                .totalGrade(SafetyGrade.fromScore(totalScore))
-                .structGrade(struct.getGrade())
-                .structFacts(BasicReportService.buildStructFacts(struct))
-                .fireGrade(fire.getGrade())
-                .fireFacts(BasicReportService.buildFireFacts(fire))
-                .sinkGrade(sink.getGrade())
-                .sinkFacts(BasicReportService.buildSinkFacts(sink))
-                .floodGrade(flood.getGrade())
-                .floodFacts(BasicReportService.buildFloodFacts(flood))
-                .build();
-        BasicBriefingDto placeholder = basicBriefingService.fallback(input);
+        String totalReport;
+        String structReport;
+        String fireReport;
+        String sinkReport;
+        String floodReport;
+
+        if (row != null && hasAllReports(row)) {
+            totalReport = row.getTotalReport();
+            structReport = row.getStructReport();
+            fireReport = row.getFireReport();
+            sinkReport = row.getSinkReport();
+            floodReport = row.getFloodReport();
+        } else {
+            int totalScore = totalScoreService.calculateTotalScore(
+                    struct.getScore(), fire.getScore(), sink.getScore(), flood.getScore());
+
+            BriefingInput input = BriefingInput.builder()
+                    .totalGrade(SafetyGrade.fromScore(totalScore))
+                    .structGrade(struct.getGrade())
+                    .structFacts(BasicReportService.buildStructFacts(struct))
+                    .fireGrade(fire.getGrade())
+                    .fireFacts(BasicReportService.buildFireFacts(fire))
+                    .sinkGrade(sink.getGrade())
+                    .sinkFacts(BasicReportService.buildSinkFacts(sink))
+                    .floodGrade(flood.getGrade())
+                    .floodFacts(BasicReportService.buildFloodFacts(flood))
+                    .build();
+
+            DetailedBriefingDto briefing;
+            long startMillis = System.currentTimeMillis();
+            try {
+                briefing = detailedBriefingService.generate(input);
+                log.info("AI 상세 리포트 생성 완료. buildingId={}, 소요={}ms",
+                        buildingId, System.currentTimeMillis() - startMillis);
+                totalReport = briefing.getTotalHeadline() + "\n\n" + briefing.getTotalSummary();
+                safetyReportMapper.updateReports(buildingId, totalReport,
+                        briefing.getFloodReport(), briefing.getSinkReport(),
+                        briefing.getFireReport(), briefing.getStructReport());
+            } catch (LlmCallFailedException e) {
+                log.warn("AI 상세 리포트 생성 실패(소요={}ms), 템플릿 폴백 응답. buildingId={}",
+                        System.currentTimeMillis() - startMillis, buildingId, e);
+                briefing = detailedBriefingService.fallback(input);
+                totalReport = briefing.getTotalHeadline() + "\n\n" + briefing.getTotalSummary();
+            }
+            structReport = briefing.getStructReport();
+            fireReport = briefing.getFireReport();
+            sinkReport = briefing.getSinkReport();
+            floodReport = briefing.getFloodReport();
+        }
 
         // factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 (명세)
         List<DetailedFactorDto> factors = new ArrayList<>();
-        factors.add(buildFactor("STRUCTURE", struct.getGrade(), placeholder.getStructBrief(), buildStructDetails(struct)));
-        factors.add(buildFactor("FIRE", fire.getGrade(), placeholder.getFireBrief(), buildFireDetails(fire)));
-        factors.add(buildFactor("SINKHOLE", sink.getGrade(), placeholder.getSinkBrief(), buildSinkDetails(sink)));
-        factors.add(buildFactor("FLOOD", flood.getGrade(), placeholder.getFloodBrief(), buildFloodDetails(flood)));
+        factors.add(buildFactor("STRUCTURE", struct.getGrade(), structReport, buildStructDetails(struct)));
+        factors.add(buildFactor("FIRE", fire.getGrade(), fireReport, buildFireDetails(fire)));
+        factors.add(buildFactor("SINKHOLE", sink.getGrade(), sinkReport, buildSinkDetails(sink)));
+        factors.add(buildFactor("FLOOD", flood.getGrade(), floodReport, buildFloodDetails(flood)));
 
         return DetailedReportResponseDto.builder()
-                .overallAiReport(placeholder.getTotalBrief())
+                .overallAiReport(totalReport)
                 .factors(factors)
                 .build();
+    }
+
+    /**
+     * BasicReportService가 점수 변경을 감지했을 때만 호출
+     */
+    @Async("detailedReportExecutor")
+    public void generateDetailedReportAsync(String buildingId) {
+        getDetailedReport(buildingId);
+    }
+
+    private boolean hasAllReports(SafetyReportRowDto row) {
+        return row.getTotalReport() != null
+                && row.getStructReport() != null
+                && row.getFireReport() != null
+                && row.getSinkReport() != null
+                && row.getFloodReport() != null;
     }
 
     private DetailedFactorDto buildFactor(String code, SafetyGrade grade, String aiReport, List<DetailedFactorBaseDto> details) {

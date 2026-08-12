@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.meps.safetyreport.mapper.SafetyReportMapper">
 
-    <!-- 기본 리포트 캐시 행 조회 (상세 리포트용 *_report 컬럼은 제외) -->
+    <!-- 캐시 행 조회. 기본/상세 리포트가 캐시 판정 로직을 공유하므로 조회 쿼리를 하나로 유지 -->
     <select id="findByBdMgtSn" resultType="org.meps.safetyreport.dto.SafetyReportRowDto">
         SELECT bd_mgt_sn,
                ai_model_nm,
@@ -17,7 +17,12 @@
                flood_brief,
                sink_brief,
                fire_brief,
-               struct_brief
+               struct_brief,
+               total_report,
+               flood_report,
+               sink_report,
+               fire_report,
+               struct_report
         FROM building_safety_report
         WHERE bd_mgt_sn = #{bdMgtSn}
     </select>
@@ -55,6 +60,16 @@
             sink_brief   = #{briefs.sinkBrief},
             fire_brief   = #{briefs.fireBrief},
             struct_brief = #{briefs.structBrief}
+        WHERE bd_mgt_sn = #{bdMgtSn}
+    </update>
+
+    <update id="updateReports">
+        UPDATE building_safety_report
+        SET total_report  = #{totalReport},
+            flood_report  = #{floodReport},
+            sink_report   = #{sinkReport},
+            fire_report   = #{fireReport},
+            struct_report = #{structReport}
         WHERE bd_mgt_sn = #{bdMgtSn}
     </update>
 

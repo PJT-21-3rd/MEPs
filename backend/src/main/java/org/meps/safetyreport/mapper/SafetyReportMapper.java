@@ -31,4 +31,14 @@ public interface SafetyReportMapper {
             @Param("aiModelNm") String aiModelNm,
             @Param("briefs") BasicBriefingDto briefs
     );
+
+    /** ai_model_nm은 건드리지 않는다 — 그 값은 점수 upsert 시점(기본 리포트 조회)에만 기록된다 */
+    void updateReports(
+            @Param("bdMgtSn") String bdMgtSn,
+            @Param("totalReport") String totalReport,
+            @Param("floodReport") String floodReport,
+            @Param("sinkReport") String sinkReport,
+            @Param("fireReport") String fireReport,
+            @Param("structReport") String structReport
+    );
 }
