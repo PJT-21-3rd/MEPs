@@ -3,12 +3,14 @@ package org.meps.report.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
 import org.meps.config.ServletConfig;
 import org.meps.report.dto.SafetyReportRowDto;
 import org.meps.report.mapper.SafetyReportMapper;
+import org.meps.user.jwt.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -41,6 +43,9 @@ class SafetyReportControllerIntegrationTest {
 
     @Autowired
     private SafetyReportMapper safetyReportMapper;
+
+    @Autowired
+    private JwtProvider jwtProvider;
 
     private MockMvc mockMvc;
 
@@ -83,8 +88,60 @@ class SafetyReportControllerIntegrationTest {
         assertThat(second).isEqualTo(first);
     }
 
+    @Test
+    @DisplayName("비로그인 기본 리포트는 점수·종합 브리핑만 주고 factors는 응답에서 제외한다")
+    void basicReport_guest_hasNoFactors() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/basic", BUILDING_ID))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        JsonNode root = new ObjectMapper().readTree(body);
+
+        assertThat(root.get("safetyScore").asInt()).isBetween(70, 100);
+        assertThat(root.get("overallBriefing").asText()).isNotBlank();
+        assertThat(root.has("factors")).isFalse();
+    }
+
+    @Test
+    @DisplayName("무효 토큰의 기본 리포트는 비로그인과 동일하게 factors를 제외한다")
+    void basicReport_invalidToken_hasNoFactors() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/basic", BUILDING_ID)
+                        .header("Authorization", "Bearer not-a-jwt"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(new ObjectMapper().readTree(body).has("factors")).isFalse();
+    }
+
+    @Test
+    @DisplayName("비로그인 상세 리포트는 401을 반환한다")
+    void detailedReport_guest_unauthorized() throws Exception {
+        mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/detailed", BUILDING_ID))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("무효 토큰의 상세 리포트는 401을 반환한다")
+    void detailedReport_invalidToken_unauthorized() throws Exception {
+        mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/detailed", BUILDING_ID)
+                        .header("Authorization", "Bearer not-a-jwt"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("로그인 상세 리포트는 4개 factors를 반환한다")
+    void detailedReport_loggedIn_returnsFactors() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/detailed", BUILDING_ID)
+                        .header("Authorization", "Bearer " + jwtProvider.createToken(1)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(new ObjectMapper().readTree(body).get("factors").size()).isEqualTo(4);
+    }
+
+    /** 로그인 상태 호출 — factors까지 포함한 전체 응답 검증용 */
     private String callGetBasicReport() throws Exception {
-        return mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/basic", BUILDING_ID))
+        return mockMvc.perform(get("/api/buildings/{buildingId}/safety-report/basic", BUILDING_ID)
+                        .header("Authorization", "Bearer " + jwtProvider.createToken(1)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     }

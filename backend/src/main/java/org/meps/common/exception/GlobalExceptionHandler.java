@@ -6,6 +6,7 @@ import org.meps.building.exception.BuildingNotFoundException;
 import org.meps.building.exception.InvalidBoundsException;
 import org.meps.building.exception.InvalidBuildingIdException;
 import org.meps.building.exception.InvalidKeywordException;
+import org.meps.common.auth.LoginRequiredException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
@@ -105,6 +106,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> handleDuplicateEmail(DuplicateEmailException e) {
         log.warn("가입 충돌: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    /** 인증 필수 API에 비로그인(토큰 부재·무효) 접근 → 401 */
+    @ExceptionHandler(LoginRequiredException.class)
+    public ResponseEntity<Void> handleLoginRequired(LoginRequiredException e) {
+        log.warn("비로그인 접근 차단: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     /** 로그인 실패 → 401 */

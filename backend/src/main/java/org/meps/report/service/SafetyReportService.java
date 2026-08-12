@@ -48,7 +48,11 @@ public class SafetyReportService {
     private final BriefingService briefingService;
     private final SafetyReportMapper safetyReportMapper;
 
-    public BasicReportResponseDto getBasicReport(String buildingId) {
+    /**
+     * @param loggedIn 비로그인이면 factors 미노출(응답에서 필드 제거) — 프론트는 그 자리를
+     *                 blur 플레이스홀더 + 로그인 유도로 렌더. 점수·브리핑 생성/캐시는 동일하게 수행
+     */
+    public BasicReportResponseDto getBasicReport(String buildingId, boolean loggedIn) {
         FireScoreResult fire = fireScoreService.getFireScore(buildingId); // 미존재 건물이면 여기서 404
         SinkholeScoreResult sink = sinkholeScoreService.getSinkholeScore(buildingId);
         StructuralStabilityScoreResultDto struct = structuralStabilityScoreService.getStructuralStabilityScore(buildingId);
@@ -83,7 +87,7 @@ public class SafetyReportService {
         }
 
         if (!scoreChanged && hasAllBriefs(row)) {
-            return buildResponse(totalScore, input, SafetyBriefingDto.builder()
+            return buildResponse(totalScore, loggedIn, input, SafetyBriefingDto.builder()
                     .totalBrief(row.getTotalBrief())
                     .structBrief(row.getStructBrief())
                     .fireBrief(row.getFireBrief())
@@ -104,7 +108,7 @@ public class SafetyReportService {
                     System.currentTimeMillis() - startMillis, buildingId, e);
             briefs = briefingService.fallback(input);
         }
-        return buildResponse(totalScore, input, briefs);
+        return buildResponse(totalScore, loggedIn, input, briefs);
     }
 
     private boolean hasAllBriefs(SafetyReportRowDto row) {
@@ -115,13 +119,16 @@ public class SafetyReportService {
                 && row.getFloodBrief() != null;
     }
 
-    /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 */
-    private BasicReportResponseDto buildResponse(int totalScore, BriefingInput input, SafetyBriefingDto briefs) {
-        List<FactorBriefingDto> factors = new ArrayList<>();
-        factors.add(factor("STRUCTURE", input.getStructGrade(), briefs.getStructBrief()));
-        factors.add(factor("FIRE", input.getFireGrade(), briefs.getFireBrief()));
-        factors.add(factor("SINKHOLE", input.getSinkGrade(), briefs.getSinkBrief()));
-        factors.add(factor("FLOOD", input.getFloodGrade(), briefs.getFloodBrief()));
+    /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수. 비로그인은 factors null(직렬화 제외) */
+    private BasicReportResponseDto buildResponse(int totalScore, boolean loggedIn, BriefingInput input, SafetyBriefingDto briefs) {
+        List<FactorBriefingDto> factors = null;
+        if (loggedIn) {
+            factors = new ArrayList<>();
+            factors.add(factor("STRUCTURE", input.getStructGrade(), briefs.getStructBrief()));
+            factors.add(factor("FIRE", input.getFireGrade(), briefs.getFireBrief()));
+            factors.add(factor("SINKHOLE", input.getSinkGrade(), briefs.getSinkBrief()));
+            factors.add(factor("FLOOD", input.getFloodGrade(), briefs.getFloodBrief()));
+        }
 
         return BasicReportResponseDto.builder()
                 .safetyScore(totalScore)

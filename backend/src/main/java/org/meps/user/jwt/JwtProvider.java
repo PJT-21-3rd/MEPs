@@ -2,6 +2,7 @@ package org.meps.user.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,20 @@ public class JwtProvider {
                 .setExpiration(expiry)
                 .signWith(key)
                 .compact();
+    }
+
+    /** 토큰에서 userId 추출. 서명 불일치·만료·형식 오류 등 유효하지 않으면 null */
+    public Integer getUserId(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return Integer.valueOf(claims.getSubject());
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /** 만료 시간(초) — 응답의 expiresIn용 */
