@@ -1,5 +1,6 @@
 package org.meps.report.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -17,5 +18,6 @@ public class BasicReportResponseDto {
     private int safetyScore; // 종합 AI 안심 스코어(70~100) — 종합만 점수 노출, 팩터는 등급만
     private String overallStatus; // CAUTION | GOOD | SAFE
     private String overallBriefing;
+    @JsonInclude(JsonInclude.Include.NON_NULL) // 비로그인은 null → 응답에서 필드 자체를 제거
     private List<FactorBriefingDto> factors;
 }
