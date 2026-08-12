@@ -13,7 +13,8 @@ public class WebConfig
     protected Class<?>[] getRootConfigClasses() {
 
         return new Class[]{
-                RootConfig.class
+                RootConfig.class,
+                AsyncConfig.class
         };
     }
 

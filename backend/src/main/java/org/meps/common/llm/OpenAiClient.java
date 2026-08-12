@@ -92,13 +92,9 @@ public class OpenAiClient {
     }
 
     /**
-     * maxTokens를 직접 지정하는 오버로드. 기본 브리핑(5문장, ~40~80자)보다 응답이 훨씬 긴 상세
-     * 리포트(항목별 3문단)처럼 MAX_TOKENS(600)로는 응답이 중간에 잘리는 호출에서 사용한다
-     * (실측: JSON이 문장 중간에서 끊겨 파싱 실패).
-     *
-     * gpt-5 계열은 reasoning 토큰이 같은 예산을 나눠 쓰므로, 여기 넘긴 값이 기존 실측 안전값
-     * (MAX_COMPLETION_TOKENS=8000)보다 작아도 그 아래로는 절대 깎지 않는다 — 호출부가 legacy
-     * 모델 기준으로 계산한 값을 무심코 넘겨도 gpt-5의 튜닝된 하한이 깨지지 않게 방어한다
+     * maxTokens를 직접 지정하는 오버로드
+     * 기본 브리핑(5문장, ~40~80자)보다 응답이 훨씬 긴 상세 리포트(항목별 3문단)처럼
+     * MAX_TOKENS(600)로는 응답이 중간에 잘리는 호출에서 사용한다
      */
     public String completeJson(String systemPrompt, String userPrompt, int maxTokens) {
         HttpHeaders headers = new HttpHeaders();
