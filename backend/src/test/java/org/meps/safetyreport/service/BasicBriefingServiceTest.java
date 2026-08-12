@@ -148,7 +148,8 @@ class BasicBriefingServiceTest {
 
     @Test
     void 프롬프트는_5개_팩터_라인에_등급_라벨과_사실을_담는다() {
-        String prompt = serviceWith(VALID_JSON).buildUserPrompt(input());
+        //String prompt = serviceWith(VALID_JSON).buildUserPrompt(input());
+        String prompt = BriefingFactFormatter.buildUserPrompt(input());
 
         assertThat(prompt).startsWith("[종합] 등급: 양호");
         // 정보 없음 팩터는 등급 없이 — 모델이 "구조 안전"을 단정할 재료를 주지 않는다

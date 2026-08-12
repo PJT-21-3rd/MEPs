@@ -2,21 +2,33 @@ package org.meps.safetyreport.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.meps.common.llm.LlmCallFailedException;
 import org.meps.fire.dto.FireScoreInput;
 import org.meps.fire.dto.FireScoreResult;
+import org.meps.fire.service.FireScoreService;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
+import org.meps.flood.service.FloodScoreService;
+import org.meps.safetyreport.dto.BasicBriefingDto;
+import org.meps.safetyreport.dto.BriefingInput;
+import org.meps.safetyreport.dto.DetailedBriefingDto;
 import org.meps.safetyreport.dto.DetailedFactorBaseDto;
+import org.meps.safetyreport.dto.DetailedFactorDto;
+import org.meps.safetyreport.dto.DetailedReportResponseDto;
+import org.meps.safetyreport.dto.SafetyReportRowDto;
+import org.meps.safetyreport.mapper.SafetyReportMapper;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
+import org.meps.sinkhole.service.SinkholeScoreService;
 import org.meps.structure.dto.StructuralFactorDto;
 import org.meps.structure.dto.StructuralStabilityScoreResultDto;
+import org.meps.structure.service.StructuralStabilityScoreService;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** 상세 리포트 details 조립부 단위 테스트 — 프론트에 노출되는 label/value/source 형식을 고정하는 회귀 가드 */
+/** 상세 리포트 details 조립부 단위 테스트 */
 class DetailedReportServiceTest {
 
     @Test
@@ -158,5 +170,225 @@ class DetailedReportServiceTest {
 
     private static StructuralFactorDto buildFactorOf(String factor, String detail) {
         return StructuralFactorDto.builder().factor(factor).detail(detail).deduction(0).build();
+    }
+
+
+    /** getDetailedReport 테스트 */
+    private static final String BUILDING_ID = "1121510500100120006000001";
+
+    private static final DetailedBriefingDto CANNED_BRIEFING = DetailedBriefingDto.builder()
+            .totalHeadline("종합 헤드라인")
+            .totalSummary("종합 요약")
+            .structReport("구조 해석")
+            .fireReport("화재 해석")
+            .sinkReport("지반침하 해석")
+            .floodReport("침수 해석")
+            .build();
+
+    @Test
+    @DisplayName("캐시 행에 report 5개 컬럼이 모두 있으면 LLM을 호출하지 않고 캐시된 값을 그대로 반환한다")
+    void getDetailedReport_usesCachedReports_whenAllReportColumnsPresent() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        mapper.row = SafetyReportRowDto.builder()
+                .totalReport("캐시된 종합 리포트")
+                .structReport("캐시된 구조 리포트")
+                .fireReport("캐시된 화재 리포트")
+                .sinkReport("캐시된 지반침하 리포트")
+                .floodReport("캐시된 침수 리포트")
+                .build();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+
+        DetailedReportResponseDto response = service.getDetailedReport(BUILDING_ID);
+
+        assertThat(response.getOverallAiReport()).isEqualTo("캐시된 종합 리포트");
+        assertThat(factorByCode(response, "STRUCTURE").getAiReport()).isEqualTo("캐시된 구조 리포트");
+        assertThat(factorByCode(response, "FIRE").getAiReport()).isEqualTo("캐시된 화재 리포트");
+        assertThat(factorByCode(response, "SINKHOLE").getAiReport()).isEqualTo("캐시된 지반침하 리포트");
+        assertThat(factorByCode(response, "FLOOD").getAiReport()).isEqualTo("캐시된 침수 리포트");
+        assertThat(mapper.updateReportsCallCount).isZero();
+    }
+
+    @Test
+    @DisplayName("캐시 행이 아예 없으면 LLM으로 새로 생성하고 결과를 updateReports로 저장한다")
+    void getDetailedReport_generatesAndSaves_whenNoCachedRowExists() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        mapper.row = null;
+        DetailedReportService service = serviceWith(generatingBriefingService(CANNED_BRIEFING), mapper);
+
+        DetailedReportResponseDto response = service.getDetailedReport(BUILDING_ID);
+
+        assertThat(response.getOverallAiReport()).isEqualTo("종합 헤드라인\n\n종합 요약");
+        assertThat(factorByCode(response, "STRUCTURE").getAiReport()).isEqualTo("구조 해석");
+        assertThat(factorByCode(response, "FIRE").getAiReport()).isEqualTo("화재 해석");
+        assertThat(factorByCode(response, "SINKHOLE").getAiReport()).isEqualTo("지반침하 해석");
+        assertThat(factorByCode(response, "FLOOD").getAiReport()).isEqualTo("침수 해석");
+
+        assertThat(mapper.updateReportsCallCount).isEqualTo(1);
+        assertThat(mapper.savedTotalReport).isEqualTo("종합 헤드라인\n\n종합 요약");
+        assertThat(mapper.savedStructReport).isEqualTo("구조 해석");
+        assertThat(mapper.savedFireReport).isEqualTo("화재 해석");
+        assertThat(mapper.savedSinkReport).isEqualTo("지반침하 해석");
+        assertThat(mapper.savedFloodReport).isEqualTo("침수 해석");
+    }
+
+    @Test
+    @DisplayName("점수 행은 있지만 report 컬럼 일부가 비어 있으면 다시 생성해서 저장한다")
+    void getDetailedReport_regenerates_whenRowExistsButReportsPartiallyMissing() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        mapper.row = SafetyReportRowDto.builder()
+                .totalReport("캐시된 종합 리포트")
+                .structReport(null) // 구조만 비어 있음 — hasAllReports가 false를 반환해야 한다
+                .fireReport("캐시된 화재 리포트")
+                .sinkReport("캐시된 지반침하 리포트")
+                .floodReport("캐시된 침수 리포트")
+                .build();
+        DetailedReportService service = serviceWith(generatingBriefingService(CANNED_BRIEFING), mapper);
+
+        service.getDetailedReport(BUILDING_ID);
+
+        assertThat(mapper.updateReportsCallCount).isEqualTo(1);
+        assertThat(mapper.savedStructReport).isEqualTo("구조 해석");
+    }
+
+    @Test
+    @DisplayName("LLM 호출이 실패하면 폴백 응답을 반환하고 DB에는 저장하지 않는다")
+    void getDetailedReport_fallsBackWithoutSaving_whenLlmGenerationFails() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        mapper.row = null;
+        DetailedReportService service = serviceWith(failingBriefingService(), mapper);
+
+        DetailedReportResponseDto response = service.getDetailedReport(BUILDING_ID);
+
+        // 폴백 텍스트는 등급 기반 고정 템플릿 — 스텁 점수(구조92/화재97/지반침하100/침수100)는 모두 안전 등급
+        assertThat(response.getOverallAiReport())
+                .isEqualTo("주요 진단 항목에서 특이 이력이 확인되지 않은 건물이에요.\n\n종합 등급은 안전이에요."
+                        + " 4개 항목의 세부 근거와 해석은 아래 항목별 상세 진단에서 확인해 보세요.");
+        assertThat(factorByCode(response, "STRUCTURE").getAiReport())
+                .isEqualTo("구조 항목은 세부 근거에서 특이 이력이 확인되지 않아 안전 등급으로 판정됐어요. "
+                        + "현재까지 확인된 위험 요인은 없어요. "
+                        + "별도 조치 없이 위 상세 근거 항목을 참고만 하셔도 좋아요.");
+        assertThat(mapper.updateReportsCallCount).isZero();
+    }
+
+    private static DetailedFactorDto factorByCode(DetailedReportResponseDto response, String code) {
+        return response.getFactors().stream()
+                .filter(f -> f.getCode().equals(code))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static DetailedReportService serviceWith(DetailedBriefingService detailedBriefingService, FakeSafetyReportMapper mapper) {
+        return new DetailedReportService(
+                fireScoreServiceStub(FireScoreResult.of(97, FireScoreInput.builder().build(), null)),
+                sinkholeScoreServiceStub(SinkholeScoreResult.of(100, List.of())),
+                structuralStabilityScoreServiceStub(
+                        StructuralStabilityScoreResultDto.of(92, List.of(buildFactorOf("STRUCTURE_TYPE", "철근콘크리트구조")))),
+                floodScoreServiceStub(FloodScoreResultDto.of(100, List.of())),
+                new TotalScoreService(),
+                detailedBriefingService,
+                mapper);
+    }
+
+    private static FireScoreService fireScoreServiceStub(FireScoreResult result) {
+        return new FireScoreService(null) {
+            @Override
+            public FireScoreResult getFireScore(String buildingId) {
+                return result;
+            }
+        };
+    }
+
+    private static SinkholeScoreService sinkholeScoreServiceStub(SinkholeScoreResult result) {
+        return new SinkholeScoreService(null) {
+            @Override
+            public SinkholeScoreResult getSinkholeScore(String buildingId) {
+                return result;
+            }
+        };
+    }
+
+    private static StructuralStabilityScoreService structuralStabilityScoreServiceStub(StructuralStabilityScoreResultDto result) {
+        return new StructuralStabilityScoreService(null) {
+            @Override
+            public StructuralStabilityScoreResultDto getStructuralStabilityScore(String buildingId) {
+                return result;
+            }
+        };
+    }
+
+    private static FloodScoreService floodScoreServiceStub(FloodScoreResultDto result) {
+        return new FloodScoreService(null) {
+            @Override
+            public FloodScoreResultDto getFloodScore(String buildingId) {
+                return result;
+            }
+        };
+    }
+
+    /** generate()가 호출되면 테스트가 실패하도록 만드는 스텁 — 캐시 hit 경로에서 LLM 미호출을 검증 */
+    private static DetailedBriefingService generateShouldNotBeCalledBriefingService() {
+        return new DetailedBriefingService(null, null, null) {
+            @Override
+            public DetailedBriefingDto generate(BriefingInput input) {
+                throw new AssertionError("캐시 hit 상황에서는 generate()가 호출되면 안 된다");
+            }
+        };
+    }
+
+    private static DetailedBriefingService generatingBriefingService(DetailedBriefingDto generated) {
+        return new DetailedBriefingService(null, null, null) {
+            @Override
+            public DetailedBriefingDto generate(BriefingInput input) {
+                return generated;
+            }
+        };
+    }
+
+    /** fallback()은 오버라이드하지 않는다 — 실제 등급별 템플릿 로직 자체도 함께 검증하기 위해 */
+    private static DetailedBriefingService failingBriefingService() {
+        return new DetailedBriefingService(null, null, null) {
+            @Override
+            public DetailedBriefingDto generate(BriefingInput input) {
+                throw new LlmCallFailedException("LLM 호출 실패(테스트용)");
+            }
+        };
+    }
+
+    /** SafetyReportMapper 인메모리 대역 — DetailedReportService는 findByBdMgtSn/updateReports만 사용한다 */
+    private static class FakeSafetyReportMapper implements SafetyReportMapper {
+        private SafetyReportRowDto row;
+        private int updateReportsCallCount;
+        private String savedTotalReport;
+        private String savedFloodReport;
+        private String savedSinkReport;
+        private String savedFireReport;
+        private String savedStructReport;
+
+        @Override
+        public SafetyReportRowDto findByBdMgtSn(String bdMgtSn) {
+            return row;
+        }
+
+        @Override
+        public void upsertScores(String bdMgtSn, String aiModelNm, int totalScore, int floodScore,
+                                  int sinkScore, int fireScore, int structScore) {
+            throw new UnsupportedOperationException("DetailedReportService는 upsertScores를 호출하지 않는다");
+        }
+
+        @Override
+        public void updateBriefs(String bdMgtSn, String aiModelNm, BasicBriefingDto briefs) {
+            throw new UnsupportedOperationException("DetailedReportService는 updateBriefs를 호출하지 않는다");
+        }
+
+        @Override
+        public void updateReports(String bdMgtSn, String totalReport, String floodReport,
+                                   String sinkReport, String fireReport, String structReport) {
+            updateReportsCallCount++;
+            savedTotalReport = totalReport;
+            savedFloodReport = floodReport;
+            savedSinkReport = sinkReport;
+            savedFireReport = fireReport;
+            savedStructReport = structReport;
+        }
     }
 }
