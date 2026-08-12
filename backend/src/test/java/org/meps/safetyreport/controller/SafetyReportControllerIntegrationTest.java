@@ -1,4 +1,4 @@
-package org.meps.report.controller;
+package org.meps.safetyreport.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
 import org.meps.config.ServletConfig;
-import org.meps.report.dto.SafetyReportRowDto;
-import org.meps.report.mapper.SafetyReportMapper;
+import org.meps.safetyreport.dto.SafetyReportRowDto;
+import org.meps.safetyreport.mapper.SafetyReportMapper;
 import org.meps.user.jwt.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;

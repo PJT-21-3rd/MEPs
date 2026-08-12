@@ -1,4 +1,4 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,12 +9,12 @@ import org.meps.fire.service.FireScoreService;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
 import org.meps.flood.service.FloodScoreService;
-import org.meps.report.dto.BasicReportResponseDto;
-import org.meps.report.dto.BriefingInput;
-import org.meps.report.dto.FactorBriefingDto;
-import org.meps.report.dto.SafetyBriefingDto;
-import org.meps.report.dto.SafetyReportRowDto;
-import org.meps.report.mapper.SafetyReportMapper;
+import org.meps.safetyreport.dto.BasicReportResponseDto;
+import org.meps.safetyreport.dto.BriefingInput;
+import org.meps.safetyreport.dto.BasicFactorDto;
+import org.meps.safetyreport.dto.BasicBriefingDto;
+import org.meps.safetyreport.dto.SafetyReportRowDto;
+import org.meps.safetyreport.mapper.SafetyReportMapper;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.sinkhole.service.SinkholeScoreService;
@@ -36,7 +36,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SafetyReportService {
+public class BasicReportService {
 
     private static final String NO_FACTS = BriefingInput.NO_FACTS;
 
@@ -45,8 +45,9 @@ public class SafetyReportService {
     private final StructuralStabilityScoreService structuralStabilityScoreService;
     private final FloodScoreService floodScoreService;
     private final TotalScoreService totalScoreService;
-    private final BriefingService briefingService;
+    private final BasicBriefingService basicBriefingService;
     private final SafetyReportMapper safetyReportMapper;
+    private final DetailedReportService detailedReportService;
 
     /**
      * @param loggedIn 비로그인이면 factors 미노출(응답에서 필드 제거) — 프론트는 그 자리를
@@ -82,12 +83,14 @@ public class SafetyReportService {
                 || row.getStructScore() != struct.getScore();
 
         if (scoreChanged) {
-            safetyReportMapper.upsertScores(buildingId, briefingService.getModelName(),
+            safetyReportMapper.upsertScores(buildingId, basicBriefingService.getModelName(),
                     totalScore, flood.getScore(), sink.getScore(), fire.getScore(), struct.getScore());
+            // 점수 변경(최초 조회 포함) 시 비동기로 상세 리포트 재생성.
+            detailedReportService.generateDetailedReportAsync(buildingId);
         }
 
         if (!scoreChanged && hasAllBriefs(row)) {
-            return buildResponse(totalScore, loggedIn, input, SafetyBriefingDto.builder()
+            return buildResponse(totalScore, loggedIn, input, BasicBriefingDto.builder()
                     .totalBrief(row.getTotalBrief())
                     .structBrief(row.getStructBrief())
                     .fireBrief(row.getFireBrief())
@@ -96,17 +99,17 @@ public class SafetyReportService {
                     .build());
         }
 
-        SafetyBriefingDto briefs;
+        BasicBriefingDto briefs;
         long startMillis = System.currentTimeMillis();
         try {
-            briefs = briefingService.generate(input);
+            briefs = basicBriefingService.generate(input);
             log.info("AI 브리핑 생성 완료. buildingId={}, model={}, 소요={}ms",
-                    buildingId, briefingService.getModelName(), System.currentTimeMillis() - startMillis);
-            safetyReportMapper.updateBriefs(buildingId, briefingService.getModelName(), briefs);
+                    buildingId, basicBriefingService.getModelName(), System.currentTimeMillis() - startMillis);
+            safetyReportMapper.updateBriefs(buildingId, basicBriefingService.getModelName(), briefs);
         } catch (LlmCallFailedException e) {
             log.warn("AI 브리핑 생성 실패(소요={}ms), 템플릿 폴백 응답. buildingId={}",
                     System.currentTimeMillis() - startMillis, buildingId, e);
-            briefs = briefingService.fallback(input);
+            briefs = basicBriefingService.fallback(input);
         }
         return buildResponse(totalScore, loggedIn, input, briefs);
     }
@@ -119,9 +122,9 @@ public class SafetyReportService {
                 && row.getFloodBrief() != null;
     }
 
-    /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수. 비로그인은 factors null(직렬화 제외) */
-    private BasicReportResponseDto buildResponse(int totalScore, boolean loggedIn, BriefingInput input, SafetyBriefingDto briefs) {
-        List<FactorBriefingDto> factors = null;
+    /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 */
+    private BasicReportResponseDto buildResponse(int totalScore, boolean loggedIn, BriefingInput input, BasicBriefingDto briefs) {
+        List<BasicFactorDto> factors = new ArrayList<>();
         if (loggedIn) {
             factors = new ArrayList<>();
             factors.add(factor("STRUCTURE", input.getStructGrade(), briefs.getStructBrief()));
@@ -138,8 +141,8 @@ public class SafetyReportService {
                 .build();
     }
 
-    private FactorBriefingDto factor(String code, SafetyGrade grade, String briefing) {
-        return FactorBriefingDto.builder()
+    private BasicFactorDto factor(String code, SafetyGrade grade, String briefing) {
+        return BasicFactorDto.builder()
                 .code(code)
                 .status(grade.name())
                 .briefing(briefing)

@@ -1,9 +1,9 @@
-package org.meps.report.mapper;
+package org.meps.safetyreport.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.meps.report.dto.SafetyBriefingDto;
-import org.meps.report.dto.SafetyReportRowDto;
+import org.meps.safetyreport.dto.BasicBriefingDto;
+import org.meps.safetyreport.dto.SafetyReportRowDto;
 
 @Mapper
 public interface SafetyReportMapper {
@@ -29,6 +29,16 @@ public interface SafetyReportMapper {
     void updateBriefs(
             @Param("bdMgtSn") String bdMgtSn,
             @Param("aiModelNm") String aiModelNm,
-            @Param("briefs") SafetyBriefingDto briefs
+            @Param("briefs") BasicBriefingDto briefs
+    );
+
+    /** ai_model_nm은 건드리지 않는다 — 그 값은 점수 upsert 시점(기본 리포트 조회)에만 기록된다 */
+    void updateReports(
+            @Param("bdMgtSn") String bdMgtSn,
+            @Param("totalReport") String totalReport,
+            @Param("floodReport") String floodReport,
+            @Param("sinkReport") String sinkReport,
+            @Param("fireReport") String fireReport,
+            @Param("structReport") String structReport
     );
 }

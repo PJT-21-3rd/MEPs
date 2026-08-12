@@ -1,4 +1,4 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import org.springframework.stereotype.Service;
 

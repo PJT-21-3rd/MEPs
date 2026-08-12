@@ -1,12 +1,12 @@
-package org.meps.report.controller;
+package org.meps.safetyreport.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.common.auth.LoginRequiredException;
 import org.meps.common.auth.LoginUser;
-import org.meps.report.dto.BasicReportResponseDto;
-import org.meps.report.dto.DetailedReportResponseDto;
-import org.meps.report.service.DetailedReportService;
-import org.meps.report.service.SafetyReportService;
+import org.meps.safetyreport.dto.BasicReportResponseDto;
+import org.meps.safetyreport.dto.DetailedReportResponseDto;
+import org.meps.safetyreport.service.DetailedReportService;
+import org.meps.safetyreport.service.BasicReportService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SafetyReportController {
 
-    private final SafetyReportService safetyReportService;
+    private final BasicReportService basicReportService;
     private final DetailedReportService detailedReportService;
 
     /**
@@ -25,9 +25,8 @@ public class SafetyReportController {
      * 비로그인도 허용하되 factors(항목별 등급·브리핑)는 로그인 사용자에게만 노출
      */
     @GetMapping("/{buildingId}/safety-report/basic")
-    public BasicReportResponseDto getBasicReport(@PathVariable String buildingId,
-                                                 @LoginUser Integer userId) {
-        return safetyReportService.getBasicReport(buildingId, userId != null);
+    public BasicReportResponseDto getBasicReport(@PathVariable String buildingId, @LoginUser Integer userId) {
+        return basicReportService.getBasicReport(buildingId,  userId != null);
     }
 
     /**
@@ -35,7 +34,7 @@ public class SafetyReportController {
      */
     @GetMapping("/{buildingId}/safety-report/detailed")
     public DetailedReportResponseDto getDetailedReport(@PathVariable String buildingId,
-                                                       @LoginUser Integer userId) {
+                                                       @LoginUser Integer userId){
         if (userId == null) {
             throw new LoginRequiredException("상세 리포트는 로그인 필수. buildingId=" + buildingId);
         }

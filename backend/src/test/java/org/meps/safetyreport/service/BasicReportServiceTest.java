@@ -1,4 +1,4 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import org.junit.jupiter.api.Test;
 import org.meps.fire.dto.FireScoreInput;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** 사실 텍스트 조립부 단위 테스트 — LLM 프롬프트에 들어가는 문자열 형식을 고정하는 회귀 가드 */
-class SafetyReportServiceTest {
+class BasicReportServiceTest {
 
     @Test
     void 화재_사실은_전_축을_슬래시로_나열한다() {
@@ -27,7 +27,7 @@ class SafetyReportServiceTest {
                 .dongFireAvgCnt(4.2)
                 .build(), 1);
 
-        String facts = SafetyReportService.buildFireFacts(fire);
+        String facts = BasicReportService.buildFireFacts(fire);
 
         assertThat(facts).isEqualTo(
                 "주구조: 철근콘크리트구조 / 도로접면: 소로한면(폭 8~12m 도로 접함)"
@@ -39,7 +39,7 @@ class SafetyReportServiceTest {
     void 화재_결측_축은_정보_없음으로_표기한다() {
         FireScoreResult fire = FireScoreResult.of(100, FireScoreInput.builder().build(), null);
 
-        String facts = SafetyReportService.buildFireFacts(fire);
+        String facts = BasicReportService.buildFireFacts(fire);
 
         assertThat(facts).isEqualTo(
                 "주구조: 정보 없음 / 도로접면: 정보 없음 / 최근접 소방서: 정보 없음"
@@ -50,7 +50,7 @@ class SafetyReportServiceTest {
     void 지반침하_사고_없음은_이력_없음으로_표기한다() {
         SinkholeScoreResult sink = SinkholeScoreResult.of(100, List.of());
 
-        assertThat(SafetyReportService.buildSinkFacts(sink))
+        assertThat(BasicReportService.buildSinkFacts(sink))
                 .isEqualTo("반경 500m 내 지반침하 사고 이력: 없음");
     }
 
@@ -61,7 +61,7 @@ class SafetyReportServiceTest {
                 SinkholeIncidentDto.builder().sagoDate("20230401").distanceM(120.6).build(),
                 SinkholeIncidentDto.builder().sagoDate("20191115").distanceM(410.0).build()));
 
-        assertThat(SafetyReportService.buildSinkFacts(sink))
+        assertThat(BasicReportService.buildSinkFacts(sink))
                 .isEqualTo("반경 500m 내 지반침하 사고 이력: 2건 / 최근 사고: 2023년 4월, 거리 121m");
     }
 
@@ -76,7 +76,7 @@ class SafetyReportServiceTest {
                         factorOf("UNDERGROUND_FLOOR", "지하 1층")))
                 .build();
 
-        String facts = SafetyReportService.buildStructFacts(struct);
+        String facts = BasicReportService.buildStructFacts(struct);
 
         assertThat(facts).isEqualTo(
                 "사용승인일: 1970-01-01 / 주구조: 벽돌구조"
@@ -94,7 +94,7 @@ class SafetyReportServiceTest {
                         factorOf("UNDERGROUND_FLOOR", "정보 없음")))
                 .build();
 
-        String facts = SafetyReportService.buildStructFacts(struct);
+        String facts = BasicReportService.buildStructFacts(struct);
 
         assertThat(facts).isEqualTo(
                 "사용승인일: 2020-01-01 / 주구조: 철근콘크리트구조"
@@ -109,7 +109,7 @@ class SafetyReportServiceTest {
     void 침수_이력_없음은_없음으로_표기한다() {
         FloodScoreResultDto flood = FloodScoreResultDto.of(100, List.of());
 
-        assertThat(SafetyReportService.buildFloodFacts(flood))
+        assertThat(BasicReportService.buildFloodFacts(flood))
                 .isEqualTo("최근 침수 이력: 없음");
     }
 
@@ -120,7 +120,7 @@ class SafetyReportServiceTest {
                 FloodIncidentDto.builder().year("2022").grade(5).sggCd("11380").cause("호우").build(),
                 FloodIncidentDto.builder().year("2020").grade(3).sggCd("11380").cause("호우").build()));
 
-        assertThat(SafetyReportService.buildFloodFacts(flood))
+        assertThat(BasicReportService.buildFloodFacts(flood))
                 .isEqualTo("최근 침수 이력: 2건 / 최근 침수: 2022년(5등급, 호우)");
     }
 }

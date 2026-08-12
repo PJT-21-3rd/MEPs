@@ -1,4 +1,4 @@
-package org.meps.report.dto;
+package org.meps.safetyreport.dto;
 
 import lombok.*;
 
@@ -21,4 +21,9 @@ public class SafetyReportRowDto {
     private String sinkBrief;
     private String fireBrief;
     private String structBrief;
+    private String totalReport;
+    private String floodReport;
+    private String sinkReport;
+    private String fireReport;
+    private String structReport;
 }

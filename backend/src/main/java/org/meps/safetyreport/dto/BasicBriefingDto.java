@@ -1,4 +1,4 @@
-package org.meps.report.dto;
+package org.meps.safetyreport.dto;
 
 import lombok.*;
 
@@ -8,7 +8,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class SafetyBriefingDto {
+public class BasicBriefingDto {
     private String totalBrief;
     private String structBrief;
     private String fireBrief;

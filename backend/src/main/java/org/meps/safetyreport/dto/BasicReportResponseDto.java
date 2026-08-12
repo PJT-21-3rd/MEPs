@@ -1,7 +1,8 @@
-package org.meps.report.dto;
+package org.meps.safetyreport.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
+import org.meps.safetyreport.dto.BasicFactorDto;
 
 import java.util.List;
 
@@ -19,5 +20,5 @@ public class BasicReportResponseDto {
     private String overallStatus; // CAUTION | GOOD | SAFE
     private String overallBriefing;
     @JsonInclude(JsonInclude.Include.NON_NULL) // 비로그인은 null → 응답에서 필드 자체를 제거
-    private List<FactorBriefingDto> factors;
+    private List<BasicFactorDto> factors;
 }

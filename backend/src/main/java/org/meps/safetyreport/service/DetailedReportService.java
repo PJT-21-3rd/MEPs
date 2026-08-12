@@ -1,23 +1,23 @@
-package org.meps.report.service;
+package org.meps.safetyreport.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.util.SafetyGrade;
 import org.meps.fire.dto.FireScoreResult;
 import org.meps.fire.service.FireScoreService;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
 import org.meps.flood.service.FloodScoreService;
-import org.meps.report.dto.BriefingInput;
-import org.meps.report.dto.DetailedReportResponseDto;
-import org.meps.report.dto.FactorReportDto;
-import org.meps.report.dto.ReportDetailDto;
-import org.meps.report.dto.SafetyBriefingDto;
+import org.meps.safetyreport.dto.*;
+import org.meps.safetyreport.mapper.SafetyReportMapper;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.sinkhole.service.SinkholeScoreService;
 import org.meps.structure.dto.StructuralFactorDto;
 import org.meps.structure.dto.StructuralStabilityScoreResultDto;
 import org.meps.structure.service.StructuralStabilityScoreService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,11 +27,11 @@ import java.util.List;
  * AI 안심 진단 상세 리포트
  *
  * details는 각 점수 서비스가 판정에 실제 사용한 값만 출처와 함께 노출
- * aiReport는 아직 등급별 템플릿 문장(BriefingService 폴백)으로 채움
- * 스키마, details를 먼저 확정하고, LLM 3단락 해석(근거→리스크→솔루션)은 후속 작업에서 교체
+ * aiReport는 LLM 3단락 해석(근거→리스크→솔루션)으로 채움
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DetailedReportService {
 
     private static final String NO_INFO = BriefingInput.NO_FACTS;
@@ -41,45 +41,103 @@ public class DetailedReportService {
     private final StructuralStabilityScoreService structuralStabilityScoreService;
     private final FloodScoreService floodScoreService;
     private final TotalScoreService totalScoreService;
-    private final BriefingService briefingService;
+    private final DetailedBriefingService detailedBriefingService;
+    private final SafetyReportMapper safetyReportMapper;
 
+    /**
+     * 점수는 DB와 비교하지 않는다 — 그 판정은 기본 리포트 조회 시점(BasicReportService)에서만
+     * 이루어지고, 점수가 바뀌었을 때만 여기까지 (비동기로) 트리거된다. 여기서는 캐시 행에
+     * report 5개 컬럼이 이미 채워져 있는지만 보고, 없으면 생성해서 채운다
+     */
     public DetailedReportResponseDto getDetailedReport(String buildingId) {
         FireScoreResult fire = fireScoreService.getFireScore(buildingId); // 미존재 건물이면 여기서 404
         SinkholeScoreResult sink = sinkholeScoreService.getSinkholeScore(buildingId);
         StructuralStabilityScoreResultDto struct = structuralStabilityScoreService.getStructuralStabilityScore(buildingId);
         FloodScoreResultDto flood = floodScoreService.getFloodScore(buildingId);
 
-        int totalScore = totalScoreService.calculateTotalScore(
-                struct.getScore(), fire.getScore(), sink.getScore(), flood.getScore());
+        SafetyReportRowDto row = safetyReportMapper.findByBdMgtSn(buildingId);
 
-        BriefingInput input = BriefingInput.builder()
-                .totalGrade(SafetyGrade.fromScore(totalScore))
-                .structGrade(struct.getGrade())
-                .structFacts(SafetyReportService.buildStructFacts(struct))
-                .fireGrade(fire.getGrade())
-                .fireFacts(SafetyReportService.buildFireFacts(fire))
-                .sinkGrade(sink.getGrade())
-                .sinkFacts(SafetyReportService.buildSinkFacts(sink))
-                .floodGrade(flood.getGrade())
-                .floodFacts(SafetyReportService.buildFloodFacts(flood))
-                .build();
-        SafetyBriefingDto placeholder = briefingService.fallback(input);
+        String totalReport;
+        String structReport;
+        String fireReport;
+        String sinkReport;
+        String floodReport;
+
+        if (row != null && hasAllReports(row)) {
+            totalReport = row.getTotalReport();
+            structReport = row.getStructReport();
+            fireReport = row.getFireReport();
+            sinkReport = row.getSinkReport();
+            floodReport = row.getFloodReport();
+        } else {
+            int totalScore = totalScoreService.calculateTotalScore(
+                    struct.getScore(), fire.getScore(), sink.getScore(), flood.getScore());
+
+            BriefingInput input = BriefingInput.builder()
+                    .totalGrade(SafetyGrade.fromScore(totalScore))
+                    .structGrade(struct.getGrade())
+                    .structFacts(BasicReportService.buildStructFacts(struct))
+                    .fireGrade(fire.getGrade())
+                    .fireFacts(BasicReportService.buildFireFacts(fire))
+                    .sinkGrade(sink.getGrade())
+                    .sinkFacts(BasicReportService.buildSinkFacts(sink))
+                    .floodGrade(flood.getGrade())
+                    .floodFacts(BasicReportService.buildFloodFacts(flood))
+                    .build();
+
+            DetailedBriefingDto briefing;
+            long startMillis = System.currentTimeMillis();
+            try {
+                briefing = detailedBriefingService.generate(input);
+                log.info("AI 상세 리포트 생성 완료. buildingId={}, 소요={}ms",
+                        buildingId, System.currentTimeMillis() - startMillis);
+                totalReport = briefing.getTotalHeadline() + "\n\n" + briefing.getTotalSummary();
+                safetyReportMapper.updateReports(buildingId, totalReport,
+                        briefing.getFloodReport(), briefing.getSinkReport(),
+                        briefing.getFireReport(), briefing.getStructReport());
+            } catch (LlmCallFailedException e) {
+                log.warn("AI 상세 리포트 생성 실패(소요={}ms), 템플릿 폴백 응답. buildingId={}",
+                        System.currentTimeMillis() - startMillis, buildingId, e);
+                briefing = detailedBriefingService.fallback(input);
+                totalReport = briefing.getTotalHeadline() + "\n\n" + briefing.getTotalSummary();
+            }
+            structReport = briefing.getStructReport();
+            fireReport = briefing.getFireReport();
+            sinkReport = briefing.getSinkReport();
+            floodReport = briefing.getFloodReport();
+        }
 
         // factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 (명세)
-        List<FactorReportDto> factors = new ArrayList<>();
-        factors.add(buildFactor("STRUCTURE", struct.getGrade(), placeholder.getStructBrief(), buildStructDetails(struct)));
-        factors.add(buildFactor("FIRE", fire.getGrade(), placeholder.getFireBrief(), buildFireDetails(fire)));
-        factors.add(buildFactor("SINKHOLE", sink.getGrade(), placeholder.getSinkBrief(), buildSinkDetails(sink)));
-        factors.add(buildFactor("FLOOD", flood.getGrade(), placeholder.getFloodBrief(), buildFloodDetails(flood)));
+        List<DetailedFactorDto> factors = new ArrayList<>();
+        factors.add(buildFactor("STRUCTURE", struct.getGrade(), structReport, buildStructDetails(struct)));
+        factors.add(buildFactor("FIRE", fire.getGrade(), fireReport, buildFireDetails(fire)));
+        factors.add(buildFactor("SINKHOLE", sink.getGrade(), sinkReport, buildSinkDetails(sink)));
+        factors.add(buildFactor("FLOOD", flood.getGrade(), floodReport, buildFloodDetails(flood)));
 
         return DetailedReportResponseDto.builder()
-                .overallAiReport(placeholder.getTotalBrief())
+                .overallAiReport(totalReport)
                 .factors(factors)
                 .build();
     }
 
-    private FactorReportDto buildFactor(String code, SafetyGrade grade, String aiReport, List<ReportDetailDto> details) {
-        return FactorReportDto.builder()
+    /**
+     * BasicReportService가 점수 변경을 감지했을 때만 호출
+     */
+    @Async("detailedReportExecutor")
+    public void generateDetailedReportAsync(String buildingId) {
+        getDetailedReport(buildingId);
+    }
+
+    private boolean hasAllReports(SafetyReportRowDto row) {
+        return row.getTotalReport() != null
+                && row.getStructReport() != null
+                && row.getFireReport() != null
+                && row.getSinkReport() != null
+                && row.getFloodReport() != null;
+    }
+
+    private DetailedFactorDto buildFactor(String code, SafetyGrade grade, String aiReport, List<DetailedFactorBaseDto> details) {
+        return DetailedFactorDto.builder()
                 .code(code)
                 .status(grade.name())
                 .aiReport(aiReport)
@@ -88,8 +146,8 @@ public class DetailedReportService {
     }
 
     /** 구조 details */
-    static List<ReportDetailDto> buildStructDetails(StructuralStabilityScoreResultDto struct) {
-        List<ReportDetailDto> details = new ArrayList<>();
+    static List<DetailedFactorBaseDto> buildStructDetails(StructuralStabilityScoreResultDto struct) {
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         details.add(buildDetail("주구조", findFactorDetail(struct, "STRUCTURE_TYPE"), "건축물대장 표제부"));
         details.add(buildDetail("사용승인일", findFactorDetail(struct, "USE_APR_DAY"), "건축물대장 표제부"));
         details.add(buildDetail("위반건축물 여부", violationValue(findFactorDetail(struct, "VIOLATION")), "건축물대장 표제부"));
@@ -98,8 +156,8 @@ public class DetailedReportService {
     }
 
     /** 화재 details */
-    static List<ReportDetailDto> buildFireDetails(FireScoreResult fire) {
-        List<ReportDetailDto> details = new ArrayList<>();
+    static List<DetailedFactorBaseDto> buildFireDetails(FireScoreResult fire) {
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         details.add(buildDetail("도로접면", roadSideValue(fire.getRoadSideCodeNm()), "토지특성정보"));
         details.add(buildDetail("주구조", orNoInfo(fire.getStrctCdNm()), "건축물대장 표제부"));
         details.add(buildDetail("행정동 화재 건수(3년 평균)", fireCountValue(fire), "소방청 화재통계"));
@@ -111,7 +169,7 @@ public class DetailedReportService {
      * 지반침하 details — 산식의 거리 가중 구간과 1:1 대응하는 3행 고정.
      * 사고 없는 구간도 "없음"으로 내보내 조회 범위(0~500m)를 명시한다
      */
-    static List<ReportDetailDto> buildSinkDetails(SinkholeScoreResult sink) {
+    static List<DetailedFactorBaseDto> buildSinkDetails(SinkholeScoreResult sink) {
         String[] labels = {"0m~100m 사고 이력", "100m~300m 사고 이력", "300m~500m 사고 이력"};
         int[] counts = new int[labels.length];
         String[] latestSagoDates = new String[labels.length];
@@ -124,13 +182,13 @@ public class DetailedReportService {
             }
         }
 
-        List<ReportDetailDto> details = new ArrayList<>();
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         for (int i = 0; i < labels.length; i++) {
             String value;
             if (counts[i] == 0) {
                 value = "없음";
             } else {
-                value = counts[i] + "건(최근 " + SafetyReportService.formatSagoDate(latestSagoDates[i]) + ")";
+                value = counts[i] + "건(최근 " + BasicReportService.formatSagoDate(latestSagoDates[i]) + ")";
             }
             details.add(buildDetail(labels[i], value, "지반침하 사고이력"));
         }
@@ -138,8 +196,8 @@ public class DetailedReportService {
     }
 
     /** 침수 details */
-    static List<ReportDetailDto> buildFloodDetails(FloodScoreResultDto flood) {
-        List<ReportDetailDto> details = new ArrayList<>();
+    static List<DetailedFactorBaseDto> buildFloodDetails(FloodScoreResultDto flood) {
+        List<DetailedFactorBaseDto> details = new ArrayList<>();
         if (!flood.isFloodHistory()) {
             details.add(buildDetail("지번 침수 이력", "이력 없음", "행정안전부 침수흔적도"));
             details.add(buildDetail("최고 침수심 등급", "해당 없음", "행정안전부 침수흔적도"));
@@ -172,8 +230,8 @@ public class DetailedReportService {
         return 2; // 매핑 배치가 500m로 컷하므로 그 외 = 300~500m
     }
 
-    private static ReportDetailDto buildDetail(String label, String value, String source) {
-        return ReportDetailDto.builder().label(label).value(value).source(source).build();
+    private static DetailedFactorBaseDto buildDetail(String label, String value, String source) {
+        return DetailedFactorBaseDto.builder().label(label).value(value).source(source).build();
     }
 
     private static String findFactorDetail(StructuralStabilityScoreResultDto struct, String factorCode) {
