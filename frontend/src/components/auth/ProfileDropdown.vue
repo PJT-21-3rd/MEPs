@@ -1,11 +1,10 @@
 <script setup>
-import { ref } from 'vue';
 import { Mail, LogOut, Trash2 } from '@lucide/vue';
+import { useAuthStore } from '@/stores/authStore';
 
 const emit = defineEmits(['logout', 'delete-account']);
 
-// 임시 - 나중에 실제 로그인한 계정 정보로 교체
-const userEmail = ref('user@example.com');
+const authStore = useAuthStore();
 </script>
 
 <template>
@@ -16,7 +15,7 @@ const userEmail = ref('user@example.com');
       <div class="w-8 h-8 rounded-full bg-surface-blue flex items-center justify-center shrink-0">
         <Mail :size="16" class="text-primary" />
       </div>
-      <span class="text-[14px] font-medium truncate">{{ userEmail }}</span>
+      <span class="text-[14px] font-medium truncate">{{ authStore.email }}</span>
     </div>
 
     <!-- 로그아웃 -->

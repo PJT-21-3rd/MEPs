@@ -40,7 +40,7 @@ router.beforeEach((to, from) => {
   const authStore = useAuthStore();
 
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    return { name: 'Login' };
+    return { name: 'Login', query: { redirect: to.fullPath } };
   }
 });
 

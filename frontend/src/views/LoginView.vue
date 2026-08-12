@@ -1,12 +1,17 @@
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import LoginForm from '@/components/auth/LoginForm.vue';
 import mepsLogo from '@/assets/images/MEPS_LOGO.png';
 
 const router = useRouter();
+const route = useRoute();
 
 function handleSignup() {
   router.push('/signup'); // 회원가입 페이지로
+}
+function handleSuccess() {
+  const redirect = route.query.redirect || '/';
+  router.push(redirect);
 }
 function goHome() {
   router.push('/');
@@ -44,7 +49,7 @@ function goHome() {
       </p>
 
       <!-- 로그인 폼 (공통) -->
-      <LoginForm @signup="handleSignup" />
+      <LoginForm @signup="handleSignup" @success="handleSuccess" />
     </div>
   </div>
 </template>
