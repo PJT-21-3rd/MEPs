@@ -12,11 +12,11 @@ function handleAction(toast) {
 </script>
 
 <template>
-  <div class="fixed top-10 left-1/2 z-[100] flex flex-col gap-2">
+  <div class="fixed top-22 left-1/2 z-[100] flex flex-col gap-2">
     <div
       v-for="toast in toastStore.toasts"
       :key="toast.id"
-      class="flex items-start gap-3 px-4 py-3 bg-white text-text-main text-[14px] rounded-xl shadow-lg border border-surface-gray max-w-[360px]"
+      class="flex items-center gap-3 px-4 py-3 bg-white text-text-main text-[14px] rounded-xl shadow-lg border border-surface-gray max-w-[360px]"
     >
       <span class="flex-1">{{ toast.message }}</span>
 
