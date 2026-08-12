@@ -12,6 +12,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useToastStore } from '@/stores/toastStore';
 import { fetchReverseGeocoding } from '@/api/map';
 import { fetchHjdBriefing } from '@/api/aiBrief';
 import { fetchNearbyBuildings } from '@/api/building';
@@ -21,6 +22,7 @@ const router = useRouter();
 const mapContainer = ref(null);
 const mapStore = useMapStore();
 const uiStore = useUiStore();
+const toastStore = useToastStore();
 
 let timeOut = null; // 재검색 타이머
 let currentPolygons = []; // 폴리곤 객체
@@ -218,6 +220,8 @@ onMounted(() => {
     center: new window.naver.maps.LatLng(initialLat, initialLng),
     zoom: initialZoom,
     zoomControl: false,
+    minZoom: 10,
+    maxZoom: 20,
   };
 
   const map = new window.naver.maps.Map(mapContainer.value, mapOptions);
@@ -266,6 +270,22 @@ onMounted(() => {
       uiStore.openRoadViewModal(lat, lng);
       return;
     }
+
+    // 클릭 제한 (추후 구별 혹은 동별 폴리곤 지원되면 변경)
+    const currentZoom = map.getZoom();
+    if (currentZoom < 15) {
+      toastStore.showToast('건물을 선택하려면 지도를 더 확대해주세요.', {
+        action: {
+          label: '확대하기',
+          onClick: () => {
+            const targetLatLng = new window.naver.maps.LatLng(lat, lng);
+            map.morph(targetLatLng, 17, { duration: 300 });
+          },
+        },
+      });
+      return;
+    }
+
     const clickedBuildingId = await uiStore.openBuildingDetailByCoord(lat, lng);
     if (clickedBuildingId) {
       router.push({ query: { ...route.query, buildingId: clickedBuildingId } });
