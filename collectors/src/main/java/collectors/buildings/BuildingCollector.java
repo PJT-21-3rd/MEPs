@@ -10,19 +10,19 @@ import java.util.Set;
 
 public class BuildingCollector {
 
-    /** 수집 대상 법정동코드 앞자리 — 5자리면 구, 10자리면 동 단위. null이면 전부 수집 */
-    private static final String BJD_FILTER = "11740";
+    /** 수집 대상 법정동코드 앞자리 — 구로구 구 단위 (11530) */
+    private static final String BJD_FILTER = "11530";
 
-    /** 수집 영역 BBOX — BJD_FILTER가 구 밖 건물을 걸러내므로 넉넉해도 됨 */
-    private static final double MIN_LON = 127.115, MIN_LAT = 37.520;
-    private static final double MAX_LON = 127.185, MAX_LAT = 37.570;
+    /** 수집 영역 BBOX — 구로구 전체 경계 포함 */
+    private static final double MIN_LON = 126.810, MIN_LAT = 37.470;
+    private static final double MAX_LON = 126.910, MAX_LAT = 37.515;
 
-    /** 격자 분할 수 — 타일당 약 500m가 적정 */
-    private static final int GRID_COLS = 14;
+    /** 격자 분할 수 — 타일당 약 500m 기준 (가로 ~8.8km / 세로 ~5.0km) */
+    private static final int GRID_COLS = 18;
     private static final int GRID_ROWS = 10;
 
     /** juso.go.kr 건물DB 파일 경로 */
-    private static final String JUSO_FILE = "C:/kb/build_seoul.txt";
+    private static final String JUSO_FILE = "/Users/home/Desktop/build_seoul.txt";
 
     /** data.go.kr 호출 간격 (ms) — 짧으면 HTTP 429가 발생함 */
     private static final long API_DELAY = 1000;
@@ -124,7 +124,7 @@ public class BuildingCollector {
                         JsonNode land = landCache.get(pnu);
 
                         // ---- 적재 ----
-                        BuildingDao.add(
+                        boolean added = BuildingDao.add(
                                 bdMgtSn,
                                 pnu,
                                 BuildingWfsClient.geometry(b),
@@ -149,6 +149,8 @@ public class BuildingCollector {
                                 BrTitleClient.archArea(title),    // arch_area
                                 BrTitleClient.heit(title)         // heit
                         );
+                        if (!added) continue;
+
                         ok++;
                         if (ok % 50 == 0) {
                             System.out.println("... 적재 " + ok + "건 진행 중 (필지 "
@@ -169,7 +171,9 @@ public class BuildingCollector {
         System.out.println("---------------------------");
         System.out.println("적재 " + ok + "건 / 건너뜀 " + skipped
                 + "건 / 표제부 미매칭 " + noTitle + "건 / juso 다리 없음 " + noJuso
-                + "건 / 타동 제외 " + otherBjd + "건 / 필지 실패 " + failedPnu + "건");
+                + "건 / 타동 제외 " + otherBjd + "건 / 필지 실패 " + failedPnu
+                + "건 / bjd_cd 없음 " + BuildingDao.getSkippedNoBjd()
+                + "건 / hjd_cd 없음 " + BuildingDao.getSkippedNoHjd() + "건");
         System.out.println("API 호출 필지 수: " + titleCache.size());
     }
 }

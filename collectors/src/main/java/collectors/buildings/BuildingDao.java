@@ -68,6 +68,13 @@ public class BuildingDao {
     private static int pending = 0;
     private static int totalInserted = 0;
 
+    /** 법정동/행정동 코드 누락으로 건너뛴 건수 */
+    private static int skippedNoBjd = 0;
+    private static int skippedNoHjd = 0;
+
+    public static int getSkippedNoBjd() { return skippedNoBjd; }
+    public static int getSkippedNoHjd() { return skippedNoHjd; }
+
     public static void open() {
         try {
             conn = DriverManager.getConnection(
@@ -99,13 +106,29 @@ public class BuildingDao {
         return keys;
     }
 
-    public static void add(String bdMgtSn, String pnu, String footprintGeoJson,
-                           String roadAddr, String jibunAddr,
-                           String mainPurps, String bldNm, Integer grndFlr, Integer ugrndFlr,
-                           String useAprDay, Integer hoCnt, String violBdYn, String strctCdNm,
-                           String lndcgrCodeNm, String prposAreaNm, String roadSideCodeNm,
-                           Long pblntfPclnd, String floorInfo, String parcelGeoJson,
-                           Double platArea, Double totArea, Double archArea, Double heit) {
+    /** 중심점이 포함되는 행정동 코드 조회 — 없으면 null */
+    private static String findHjdCd(String centerGeoJson) {
+        try (PreparedStatement st = conn.prepareStatement(
+                "SELECT hjd_cd FROM hjd_boundary" +
+                        " WHERE ST_Contains(geom, ST_GeomFromGeoJSON(?)) LIMIT 1")) {
+            st.setString(1, centerGeoJson);
+            try (ResultSet rs = st.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("hjd_cd 조회 실패 (center=" + centerGeoJson + "): "
+                    + e.getMessage(), e);
+        }
+    }
+
+    /** @return 배치에 추가되면 true, 필수 코드 누락으로 건너뛰면 false */
+    public static boolean add(String bdMgtSn, String pnu, String footprintGeoJson,
+                              String roadAddr, String jibunAddr,
+                              String mainPurps, String bldNm, Integer grndFlr, Integer ugrndFlr,
+                              String useAprDay, Integer hoCnt, String violBdYn, String strctCdNm,
+                              String lndcgrCodeNm, String prposAreaNm, String roadSideCodeNm,
+                              Long pblntfPclnd, String floorInfo, String parcelGeoJson,
+                              Double platArea, Double totArea, Double archArea, Double heit) {
 
         if (footprintGeoJson == null) {
             throw new IllegalArgumentException("footprint는 필수입니다 (bd_mgt_sn=" + bdMgtSn + ")");
@@ -115,6 +138,20 @@ public class BuildingDao {
         String centerGeoJson = GeoUtil.centerOf(footprintGeoJson);
         if (centerGeoJson == null) {
             throw new IllegalArgumentException("중심점 계산 실패 (bd_mgt_sn=" + bdMgtSn + ")");
+        }
+
+        // bjd_cd는 pnu 앞 10자리 — pnu가 짧거나 없으면 적재 불가
+        if (pnu == null || pnu.length() < 10) {
+            skippedNoBjd++;
+            System.out.println("[bjd_cd 없음 - 건너뜀] " + bdMgtSn + " (pnu=" + pnu + ")");
+            return false;
+        }
+
+        // hjd_cd는 NOT NULL — 중심점이 어느 행정동 경계에도 안 들어가면 적재 불가
+        if (findHjdCd(centerGeoJson) == null) {
+            skippedNoHjd++;
+            System.out.println("[hjd_cd 없음 - 건너뜀] " + bdMgtSn + " (center=" + centerGeoJson + ")");
+            return false;
         }
 
         try {
@@ -149,6 +186,7 @@ public class BuildingDao {
 
             pstmt.addBatch();
             if (++pending >= BATCH_SIZE) flush();
+            return true;
 
         } catch (SQLException e) {
             throw new RuntimeException("배치 추가 실패 (bd_mgt_sn=" + bdMgtSn + "): "
