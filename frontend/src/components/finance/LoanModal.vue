@@ -59,23 +59,21 @@ defineEmits(['close', 'view-detail', 'find-branch', 'open-app']);
                 </span>
                 <span class="text-right text-[20px] font-regular text-primary shrink-0">
                   {{ product.rateText }}
+                  <span class="block text-[13px] font-regular text-text-sub">
+                    최대 {{ Math.round((product.maxLimit / 100000000) * 10) / 10 }}억원
+                  </span>
                 </span>
               </div>
-              <p class="text-[16px] font-regular text-text-main">{{ product.name }}</p>
+              <p class="text-[16px] font-regular text-text-main -mt-6">{{ product.name }}</p>
               <p class="text-[14px] text-text-modal">{{ product.description }}</p>
+
               <button
                 type="button"
-                class="flex items-center gap-0.5 text-[14px] font-medium text-primary"
+                class="flex items-center gap-0.5 text-[14px] font-medium text-primary transition-transform duration-100 active:scale-95"
                 @click="$emit('view-detail', product)"
               >
-                <button
-                  type="button"
-                  class="flex items-center gap-0.5 text-[14px] font-medium text-primary transition-transform duration-100 active:scale-95"
-                  @click="$emit('view-detail', product)"
-                >
-                  상세 보기
-                  <ChevronRight class="w-3.5 h-3.5" />
-                </button>
+                상세 보기
+                <ChevronRight class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

@@ -8,8 +8,9 @@
 
 <script setup>
 import { RouterView } from 'vue-router';
-import ToastContainer from './components/common/ToastContainer.vue';
 import { useAuthStore } from '@/stores/authStore';
+import ToastContainer from '@/components/common/ToastContainer.vue';
 import LoginModal from '@/components/auth/LoginModal.vue';
+
 const authStore = useAuthStore();
 </script>

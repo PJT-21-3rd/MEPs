@@ -5,10 +5,11 @@ import InsuranceModal from '@/components/finance/InsuranceModal.vue';
 import LoanModal from '@/components/finance/LoanModal.vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import {
-  getFloodInsuranceProducts,
+  // getFloodInsuranceProducts,
   getBusinessInsuranceRiders,
   getRequiredMandatoryInsurance,
 } from '@/utils/insuranceFilters';
+import { fetchLoanProducts, fetchInsuranceRidersByFactor } from '@/api/financeApi.js';
 
 const props = defineProps({
   buildingId: {
@@ -41,9 +42,9 @@ function handleReportLoaded(data) {
   reportData.value = data;
 }
 
-const floodItems = computed(() =>
-  getFloodInsuranceProducts(reportData.value?.insuranceRidersByFactor),
-);
+// const floodItems = computed(() =>
+//   getFloodInsuranceProducts(reportData.value?.insuranceRidersByFactor),
+// );
 
 const businessItems = computed(() => {
   const mandatory = getRequiredMandatoryInsurance(
@@ -61,13 +62,20 @@ const BUSINESS_INSURANCE_APPLY_URL =
   'https://direct.kbinsure.co.kr/home/#/GL/BF/LT_CM0101M/?pid=5110983&code=5703&utm_source=google&utm_medium=google_pc&utm_term=%EC%82%AC%EC%97%85%EC%9E%A5%EC%A2%85%ED%95%A9%EB%B3%B4%ED%97%98&utm_campaign=sa_bizFire&utm_content=51109835703&gclid=CjwKCAjwyuDTBhB-EiwANCQhLJaL56UhXSYTyJVm7DtlfOsVeyk_QfKlFKqkZbX-ynbDASB-kJcJQxoCzzYQAvD_BwE';
 
 // 배너 클릭 시 필터링된 items로 config를 구성해 uiStore에 위임
-// applyUrl은 타입별로 달라서 config에 함께 실어보냄 (submit 시 이 값을 그대로 사용)
-function handleOpenInsurance(type) {
+async function handleOpenInsurance(type) {
   if (type === 'flood') {
+    // 진단 등급(CAUTION 여부)과 무관하게 항상 침수 관련 특약/상품을 직접 조회
+    let items = [];
+    try {
+      const riders = await fetchInsuranceRidersByFactor('FLOOD');
+      items = riders.filter((item) => item.coverageType === 'PRODUCT');
+    } catch (err) {
+      console.warn('[AiReportPanelWithModals] 풍수해보험 상품 조회 실패', err);
+    }
     uiStore.openInsuranceModal({
       highlight: '풍수해보험',
       subtitle: '침수 피해 복구비 보장',
-      items: floodItems.value,
+      items,
       ctaText: '사장님 맞춤 보험 상담 신청하기',
       applyUrl: FLOOD_INSURANCE_APPLY_URL,
     });
@@ -82,44 +90,20 @@ function handleOpenInsurance(type) {
   }
 }
 
-// 대출 상품 4종 — 진단 결과와 무관하게 고정 노출 (BE 확정 전 임시값)
-// TODO: 4개 상품명·금리 BE 확정되면 constants 파일로 분리
-// detailUrl: 각 상품 '상세보기' 클릭 시 이동할 상세 페이지 URL
-const LOAN_PRODUCTS = [
-  {
-    category: '창업 자금',
-    name: 'KB사장님+ 마이너스통장',
-    rateText: '연 최저 3.8%~',
-    description: '우량 상권 입점 예정 소상공인을 위한 창업 자금 대출입니다.',
-    detailUrl: 'https://zloan.kbstar.com/quics?page=C110940',
-  },
-  {
-    category: '신용대출',
-    name: 'KB소상공인 신용대출',
-    rateText: '연 최저 4.2%~',
-    description: '소상공인 신용등급에 따라 우대금리를 제공하는 대출 상품입니다.',
-    detailUrl: 'https://zloan.kbstar.com/quics?page=C106666',
-  },
-  {
-    category: '보증서 대출',
-    name: 'KB소상공인 보증서대출(온택트)',
-    rateText: '연 최저 3.5%~',
-    description: '신용보증재단 보증서 기반 비대면 대출 상품입니다.',
-    detailUrl: 'http://zloan.kbstar.com/quics?page=C109681',
-  },
-  {
-    category: '셀러론',
-    name: 'KB셀러론',
-    rateText: '연 최저 5.0%~',
-    description: '온라인 셀러를 위한 매출 기반 신속 대출 상품입니다.',
-    detailUrl: 'https://zloan.kbstar.com/quics?page=C108424',
-  },
-];
+// 대출 배너 클릭 시 API로 실제 상품 4종 조회 후 uiStore에 위임
+async function handleOpenLoan() {
+  try {
+    const products = await fetchLoanProducts();
+    uiStore.openLoanModal({ products });
+  } catch (err) {
+    console.warn('[AiReportPanelWithModals] 대출 상품 조회 실패', err);
+  }
+}
 
 // 대출 배너 클릭 시 uiStore에 위임 (등급과 무관하게 항상 동일한 상품 4종)
-function handleOpenLoan() {
-  uiStore.openLoanModal({ products: LOAN_PRODUCTS });
-}
+// function handleOpenLoan() {
+//   uiStore.openLoanModal({ products: LOAN_PRODUCTS });
+// }
 
 // 외부 링크를 새 탭으로 여는 공통 헬퍼
 function openExternalLink(url) {
