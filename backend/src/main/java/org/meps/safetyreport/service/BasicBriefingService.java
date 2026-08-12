@@ -67,7 +67,7 @@ public class BasicBriefingService {
 
     /** 5문장 생성. 호출·파싱·검증 어느 단계든 실패하면 LlmCallFailedException */
     public BasicBriefingDto generate(BriefingInput input) {
-        String content = openAiClient.completeJson(SYSTEM_PROMPT, buildUserPrompt(input));
+        String content = openAiClient.completeJson(SYSTEM_PROMPT, BriefingFactFormatter.buildUserPrompt(input));
 
         JsonNode root;
         try {
@@ -153,16 +153,16 @@ public class BasicBriefingService {
                 .build();
     }
 
-    /** 룰 엔진 결과를 사실 나열로 조립 */
-    String buildUserPrompt(BriefingInput input) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[종합] 등급: ").append(input.getTotalGrade().getLabel()).append('\n');
-        sb.append(factorLine("구조", input.getStructGrade(), input.getStructFacts())).append('\n');
-        sb.append(factorLine("화재", input.getFireGrade(), input.getFireFacts())).append('\n');
-        sb.append(factorLine("지반침하", input.getSinkGrade(), input.getSinkFacts())).append('\n');
-        sb.append(factorLine("침수", input.getFloodGrade(), input.getFloodFacts()));
-        return sb.toString();
-    }
+//    /** 룰 엔진 결과를 사실 나열로 조립 */
+//    String buildUserPrompt(BriefingInput input) {
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("[종합] 등급: ").append(input.getTotalGrade().getLabel()).append('\n');
+//        sb.append(factorLine("구조", input.getStructGrade(), input.getStructFacts())).append('\n');
+//        sb.append(factorLine("화재", input.getFireGrade(), input.getFireFacts())).append('\n');
+//        sb.append(factorLine("지반침하", input.getSinkGrade(), input.getSinkFacts())).append('\n');
+//        sb.append(factorLine("침수", input.getFloodGrade(), input.getFloodFacts()));
+//        return sb.toString();
+//    }
 
     /**
      * 정보 없음 팩터는 등급 없이 보낸다 — "등급: 안전 / 정보 없음"으로 주면 모델이

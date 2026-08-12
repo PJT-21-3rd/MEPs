@@ -90,4 +90,52 @@ public class OpenAiClient {
             throw new LlmCallFailedException("OpenAI 호출 실패", e);
         }
     }
+
+    /**
+     * maxTokens를 직접 지정하는 오버로드. 기본 브리핑(5문장, ~40~80자)보다 응답이 훨씬 긴 상세
+     * 리포트(항목별 3문단)처럼 MAX_TOKENS(600)로는 응답이 중간에 잘리는 호출에서 사용한다
+     * (실측: JSON이 문장 중간에서 끊겨 파싱 실패).
+     *
+     * gpt-5 계열은 reasoning 토큰이 같은 예산을 나눠 쓰므로, 여기 넘긴 값이 기존 실측 안전값
+     * (MAX_COMPLETION_TOKENS=8000)보다 작아도 그 아래로는 절대 깎지 않는다 — 호출부가 legacy
+     * 모델 기준으로 계산한 값을 무심코 넘겨도 gpt-5의 튜닝된 하한이 깨지지 않게 방어한다
+     */
+    public String completeJson(String systemPrompt, String userPrompt, int maxTokens) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model);
+        body.put("response_format", Map.of("type", "json_object"));
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", systemPrompt),
+                Map.of("role", "user", "content", userPrompt)
+        ));
+        if (model.startsWith("gpt-5")) {
+            // GPT-5 계열: temperature 지정 불가(기본값 고정), max_tokens 대신 max_completion_tokens.
+            // medium은 45초 읽기 타임아웃도 초과(실측). 규칙을 압축한 뒤로는 minimal로도 준수돼
+            // 생성 지연 최소화 — 품질 저하가 보이면 low로 올릴 것
+            body.put("max_completion_tokens", Math.max(maxTokens, MAX_COMPLETION_TOKENS));
+            body.put("reasoning_effort", "minimal");
+        } else {
+            body.put("temperature", TEMPERATURE);
+            body.put("max_tokens", maxTokens);
+        }
+
+        try {
+            ResponseEntity<String> response = llmRestTemplate.postForEntity(
+                    CHAT_COMPLETIONS_URL, new HttpEntity<>(body, headers), String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+            String content = root.path("choices").path(0).path("message").path("content").asText();
+            if (content == null || content.isBlank()) {
+                throw new LlmCallFailedException("OpenAI 응답에 content가 없음");
+            }
+            return content;
+        } catch (LlmCallFailedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new LlmCallFailedException("OpenAI 호출 실패", e);
+        }
+    }
 }
