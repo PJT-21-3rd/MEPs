@@ -30,4 +30,44 @@
         WHERE email = #{email}
     </select>
 
+    <!-- 찜 존재 여부 확인 -->
+    <select id="existsSavedBuilding" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM saved
+        WHERE user_id = #{userId}
+          AND bd_mgt_sn = #{buildingId}
+    </select>
+
+    <!-- 찜 등록 -->
+    <insert id="insertSavedBuilding">
+        INSERT INTO saved (user_id, bd_mgt_sn)
+        VALUES (#{userId}, #{buildingId})
+    </insert>
+
+    <!-- 찜 해제 -->
+    <delete id="deleteSavedBuilding">
+        DELETE FROM saved
+        WHERE user_id = #{userId}
+          AND bd_mgt_sn = #{buildingId}
+    </delete>
+
+    <!-- 건물 찜 개수 조회 -->
+    <select id="findSavedCount" resultType="int">
+        SELECT saved_cnt
+        FROM buildings
+        WHERE bd_mgt_sn = #{buildingId}
+    </select>
+
+    <!-- 건물 찜 개수 증가 -->
+    <update id="incrementSavedCount">
+        UPDATE buildings SET saved_cnt = saved_cnt + 1
+        WHERE bd_mgt_sn = #{buildingId}
+    </update>
+
+    <!-- 건물 찜 개수 감소 -->
+    <update id="decrementSavedCount">
+        UPDATE buildings SET saved_cnt = GREATEST(saved_cnt - 1, 0)
+        WHERE bd_mgt_sn = #{buildingId}
+    </update>
+
 </mapper>

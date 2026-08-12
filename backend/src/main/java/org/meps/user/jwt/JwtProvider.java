@@ -32,6 +32,17 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    /** 토큰에서 userId 추출 */
+    public Integer getUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return Integer.parseInt(claims.getSubject());
+    }
+
     /** 액세스 토큰 발급 */
     public String createToken(Integer userId) {
         Date now = new Date();
