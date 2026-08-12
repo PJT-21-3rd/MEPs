@@ -1,5 +1,8 @@
 package org.meps.config;
 
+import lombok.RequiredArgsConstructor;
+import org.meps.common.auth.LoginUserArgumentResolver;
+import org.meps.user.jwt.JwtProvider;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
@@ -7,10 +10,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 
 @Configuration
@@ -30,7 +36,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
         }
 )
 
+@RequiredArgsConstructor
 public class ServletConfig implements WebMvcConfigurer {
+
+    // 루트 컨텍스트(RootConfig 스캔)의 빈 — 자식 서블릿 컨텍스트에서 부모 빈 주입
+    private final JwtProvider jwtProvider;
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(new LoginUserArgumentResolver(jwtProvider));
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
