@@ -1,5 +1,11 @@
 <script setup>
 import { ref } from 'vue';
+import { login } from '@/api/auth';
+import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'vue-router';
+
+const authStore = useAuthStore();
+const router = useRouter();
 
 const email = ref('');
 const password = ref('');
@@ -7,14 +13,25 @@ const errorMessage = ref('');
 
 const emit = defineEmits(['signup']);
 
-function handleLogin() {
+async function handleLogin() {
   errorMessage.value = '';
   if (!email.value || !password.value) {
     errorMessage.value = '아이디와 비밀번호를 입력해주세요';
     return;
   }
-  console.log('로그인 시도:', email.value, password.value);
-  // TODO: 백엔드 API 호출
+  try {
+    const data = await login({ email: email.value, password: password.value });
+    authStore.setToken(data.accessToken);
+    router.push('/'); //홈으로. #12에서 변경 예정
+  } catch (error) {
+    if (error.response?.status === 401) {
+      errorMessage.value = '아이디 또는 비밀번호가 올바르지 않습니다';
+    } else if (error.response?.status === 400) {
+      errorMessage.value = '아이디와 비밀번호를 입력해주세요';
+    } else {
+      errorMessage.value = '로그인에 실패했습니다';
+    }
+  }
 }
 
 function goSignup() {
