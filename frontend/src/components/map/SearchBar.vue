@@ -151,7 +151,7 @@ onMounted(() => {
       @focus="isDropdownOpen = true"
       placeholder="주소, 지역 또는 건물명 검색"
       class="w-full h-14 rounded-2xl border-0 bg-surface-gray pl-12 pr-11 text-[16px] placeholder:text-text-sub focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
-      :class="{ 'bg-white': uiStore.isDetailOpen || isDropdownOpen }"
+      :class="{ 'bg-white shadow-md': uiStore.isDetailOpen || isDropdownOpen }"
     />
     <button
       v-if="uiStore.searchQuery"
