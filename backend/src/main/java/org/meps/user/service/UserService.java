@@ -8,6 +8,7 @@ import org.meps.user.dto.SignupRequestDto;
 import org.meps.user.dto.UserDto;
 import org.meps.user.exception.AlreadySavedException;
 import org.meps.user.exception.DuplicateEmailException;
+import org.meps.user.exception.InvalidTokenException;
 import org.meps.user.exception.LoginFailedException;
 import org.meps.user.exception.PasswordMismatchException;
 import org.meps.user.jwt.JwtProvider;
@@ -58,7 +59,7 @@ public class UserService {
     /** 찜하기 등록 */
     @Transactional
     public void saveBuilding(String accessToken, String buildingId) {
-        Integer userId = jwtProvider.getUserId(accessToken);
+        Integer userId = getUserIdOrThrow(accessToken);
 
         if (userMapper.existsSavedBuilding(userId, buildingId)) {
             throw new AlreadySavedException(buildingId);
@@ -76,11 +77,20 @@ public class UserService {
     /** 찜하기 해제 */
     @Transactional
     public void unsaveBuilding(String accessToken, String buildingId) {
-        Integer userId = jwtProvider.getUserId(accessToken);
+        Integer userId = getUserIdOrThrow(accessToken);
 
         if (userMapper.existsSavedBuilding(userId, buildingId)) {   // ← 조건 추가
             userMapper.deleteSavedBuilding(userId, buildingId);
             userMapper.decrementSavedCount(buildingId);
         }
+    }
+
+    /** getUserId는 비로그인 리포트 조회를 위해 무효 토큰이면 null을 반환하므로, 인증 필수 API에서는 여기서 401로 변환한다 */
+    private Integer getUserIdOrThrow(String accessToken) {
+        Integer userId = jwtProvider.getUserId(accessToken);
+        if (userId == null) {
+            throw new InvalidTokenException();
+        }
+        return userId;
     }
 }

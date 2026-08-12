@@ -42,7 +42,7 @@
                 use_apr_day IS NULL, use_apr_day DESC, distanceM
             </when>
             <when test="sortType == 'POPULAR'">
-                (SELECT COUNT(*) FROM favorite f WHERE f.bd_mgt_sn = buildings.bd_mgt_sn) DESC, distanceM
+                saved_cnt DESC, distanceM
             </when>
             <otherwise>distanceM</otherwise>
         </choose>
