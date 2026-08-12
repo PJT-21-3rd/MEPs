@@ -36,7 +36,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SafetyReportService {
+public class BasicReportService {
 
     private static final String NO_FACTS = BriefingInput.NO_FACTS;
 

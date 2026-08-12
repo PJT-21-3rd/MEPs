@@ -1,4 +1,4 @@
-package org.meps.report.dto;
+package org.meps.safetyreport.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
