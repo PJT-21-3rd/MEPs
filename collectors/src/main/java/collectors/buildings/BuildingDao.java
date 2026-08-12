@@ -17,7 +17,8 @@ public class BuildingDao {
                     "  footprint, center," +
                     "  use_apr_day, ho_cnt, viol_bd_yn, strct_cd_nm," +
                     "  lndcgr_code_nm, prpos_area_nm, road_side_code_nm, pblntf_pclnd," +
-                    "  floor_info, parcel_geom" +
+                    "  floor_info, parcel_geom," +
+                    "  plat_area, tot_area, arch_area, heit" +
                     ") VALUES (" +
                     "  ?, ?," +
                     // hjd_cd — 건물 중심점을 포함하는 행정동 코드
@@ -32,7 +33,9 @@ public class BuildingDao {
                     "  ?, ?, ?, ?," +
                     "  ?," +
                     // parcel_geom — 지적도 없는 건물은 NULL
-                    "  CASE WHEN ? IS NULL THEN NULL ELSE ST_GeomFromGeoJSON(?) END" +
+                    "  CASE WHEN ? IS NULL THEN NULL ELSE ST_GeomFromGeoJSON(?) END," +
+                    // plat_area, tot_area, arch_area, heit
+                    "  ?, ?, ?, ?" +
                     ") ON DUPLICATE KEY UPDATE" +
                     "  bjd_cd = VALUES(bjd_cd)," +
                     "  hjd_cd = VALUES(hjd_cd)," +
@@ -54,12 +57,23 @@ public class BuildingDao {
                     "  road_side_code_nm = VALUES(road_side_code_nm)," +
                     "  pblntf_pclnd = VALUES(pblntf_pclnd)," +
                     "  floor_info = VALUES(floor_info)," +
-                    "  parcel_geom = VALUES(parcel_geom)";
+                    "  parcel_geom = VALUES(parcel_geom)," +
+                    "  plat_area = VALUES(plat_area)," +
+                    "  tot_area = VALUES(tot_area)," +
+                    "  arch_area = VALUES(arch_area)," +
+                    "  heit = VALUES(heit)";
 
     private static Connection conn;
     private static PreparedStatement pstmt;
     private static int pending = 0;
     private static int totalInserted = 0;
+
+    /** 법정동/행정동 코드 누락으로 건너뛴 건수 */
+    private static int skippedNoBjd = 0;
+    private static int skippedNoHjd = 0;
+
+    public static int getSkippedNoBjd() { return skippedNoBjd; }
+    public static int getSkippedNoHjd() { return skippedNoHjd; }
 
     public static void open() {
         try {
@@ -72,9 +86,17 @@ public class BuildingDao {
         }
     }
 
+    /**
+     * 이미 적재된 건물관리번호 목록 조회 (재개용).
+     *
+     * 조건이 arch_area IS NOT NULL인 이유:
+     *   컬럼을 새로 추가하면 기존 행은 전부 NULL이므로, 그 건물들을 갱신 대상으로 잡기 위함.
+     *   컬럼을 또 추가할 때는 이 조건도 새 컬럼 기준으로 바꿔야 한다.
+     */
     public static Set<String> loadExistingKeys() {
         Set<String> keys = new HashSet<>();
-        try (PreparedStatement st = conn.prepareStatement("SELECT bd_mgt_sn FROM buildings");
+        try (PreparedStatement st = conn.prepareStatement(
+                "SELECT bd_mgt_sn FROM buildings WHERE arch_area IS NOT NULL");
              ResultSet rs = st.executeQuery()) {
             while (rs.next()) keys.add(rs.getString(1));
         } catch (SQLException e) {
@@ -84,12 +106,29 @@ public class BuildingDao {
         return keys;
     }
 
-    public static void add(String bdMgtSn, String pnu, String footprintGeoJson,
-                           String roadAddr, String jibunAddr,
-                           String mainPurps, String bldNm, Integer grndFlr, Integer ugrndFlr,
-                           String useAprDay, Integer hoCnt, String violBdYn, String strctCdNm,
-                           String lndcgrCodeNm, String prposAreaNm, String roadSideCodeNm,
-                           Long pblntfPclnd, String floorInfo, String parcelGeoJson) {
+    /** 중심점이 포함되는 행정동 코드 조회 — 없으면 null */
+    private static String findHjdCd(String centerGeoJson) {
+        try (PreparedStatement st = conn.prepareStatement(
+                "SELECT hjd_cd FROM hjd_boundary" +
+                        " WHERE ST_Contains(geom, ST_GeomFromGeoJSON(?)) LIMIT 1")) {
+            st.setString(1, centerGeoJson);
+            try (ResultSet rs = st.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("hjd_cd 조회 실패 (center=" + centerGeoJson + "): "
+                    + e.getMessage(), e);
+        }
+    }
+
+    /** @return 배치에 추가되면 true, 필수 코드 누락으로 건너뛰면 false */
+    public static boolean add(String bdMgtSn, String pnu, String footprintGeoJson,
+                              String roadAddr, String jibunAddr,
+                              String mainPurps, String bldNm, Integer grndFlr, Integer ugrndFlr,
+                              String useAprDay, Integer hoCnt, String violBdYn, String strctCdNm,
+                              String lndcgrCodeNm, String prposAreaNm, String roadSideCodeNm,
+                              Long pblntfPclnd, String floorInfo, String parcelGeoJson,
+                              Double platArea, Double totArea, Double archArea, Double heit) {
 
         if (footprintGeoJson == null) {
             throw new IllegalArgumentException("footprint는 필수입니다 (bd_mgt_sn=" + bdMgtSn + ")");
@@ -99,6 +138,20 @@ public class BuildingDao {
         String centerGeoJson = GeoUtil.centerOf(footprintGeoJson);
         if (centerGeoJson == null) {
             throw new IllegalArgumentException("중심점 계산 실패 (bd_mgt_sn=" + bdMgtSn + ")");
+        }
+
+        // bjd_cd는 pnu 앞 10자리 — pnu가 짧거나 없으면 적재 불가
+        if (pnu == null || pnu.length() < 10) {
+            skippedNoBjd++;
+            System.out.println("[bjd_cd 없음 - 건너뜀] " + bdMgtSn + " (pnu=" + pnu + ")");
+            return false;
+        }
+
+        // hjd_cd는 NOT NULL — 중심점이 어느 행정동 경계에도 안 들어가면 적재 불가
+        if (findHjdCd(centerGeoJson) == null) {
+            skippedNoHjd++;
+            System.out.println("[hjd_cd 없음 - 건너뜀] " + bdMgtSn + " (center=" + centerGeoJson + ")");
+            return false;
         }
 
         try {
@@ -126,9 +179,14 @@ public class BuildingDao {
             pstmt.setString(i++, floorInfo);
             pstmt.setString(i++, parcelGeoJson);          // CASE WHEN 판정용
             pstmt.setString(i++, parcelGeoJson);          // ST_GeomFromGeoJSON용
+            setDouble(pstmt, i++, platArea);
+            setDouble(pstmt, i++, totArea);
+            setDouble(pstmt, i++, archArea);
+            setDouble(pstmt, i++, heit);
 
             pstmt.addBatch();
             if (++pending >= BATCH_SIZE) flush();
+            return true;
 
         } catch (SQLException e) {
             throw new RuntimeException("배치 추가 실패 (bd_mgt_sn=" + bdMgtSn + "): "
@@ -186,6 +244,11 @@ public class BuildingDao {
     private static void setLong(PreparedStatement pstmt, int idx, Long v) throws SQLException {
         if (v == null) pstmt.setNull(idx, java.sql.Types.BIGINT);
         else pstmt.setLong(idx, v);
+    }
+
+    private static void setDouble(PreparedStatement pstmt, int idx, Double v) throws SQLException {
+        if (v == null) pstmt.setNull(idx, java.sql.Types.DECIMAL);
+        else pstmt.setDouble(idx, v);
     }
 
     private BuildingDao() {}

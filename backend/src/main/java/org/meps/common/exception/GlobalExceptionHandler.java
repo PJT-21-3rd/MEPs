@@ -1,20 +1,22 @@
 package org.meps.common.exception;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.meps.building.exception.BuildingNotFoundException;
 import org.meps.building.exception.InvalidBoundsException;
 import org.meps.building.exception.InvalidBuildingIdException;
 import org.meps.building.exception.InvalidKeywordException;
+import org.meps.common.auth.LoginRequiredException;
 import org.meps.common.geocoding.GeocodingException;
 import org.meps.hjd.exception.AiBriefingNotAvailableException;
 import org.meps.hjd.exception.HjdNotFoundException;
 import org.meps.insurance.exception.InvalidFactorException;
-import org.meps.user.exception.DuplicateEmailException;
-import org.meps.user.exception.PasswordMismatchException;
+import org.meps.user.exception.*;
 import org.meps.sgg.exception.SggNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -103,6 +105,38 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<Void> handleDuplicateEmail(DuplicateEmailException e) {
         log.warn("가입 충돌: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    /** 인증 필수 API에 비로그인(토큰 부재·무효) 접근 → 401 */
+    @ExceptionHandler(LoginRequiredException.class)
+    public ResponseEntity<Void> handleLoginRequired(LoginRequiredException e) {
+        log.warn("비로그인 접근 차단: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    /** 로그인 실패 → 401 */
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<Void> handleLoginFailed(LoginFailedException e) {
+        log.warn("로그인 실패: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    /** 토큰 없음/형식 오류/만료/위조 → 401 */
+    @ExceptionHandler({
+            InvalidTokenException.class,
+            JwtException.class,
+            MissingRequestHeaderException.class
+    })
+    public ResponseEntity<Void> handleUnauthorized(Exception e) {
+        log.warn("인증 실패: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    /** 이미 찜한 건물 → 409 */
+    @ExceptionHandler(AlreadySavedException.class)
+    public ResponseEntity<Void> handleAlreadySaved(AlreadySavedException e) {
+        log.warn("찜 충돌: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 }

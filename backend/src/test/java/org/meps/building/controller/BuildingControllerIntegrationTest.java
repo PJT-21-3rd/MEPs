@@ -65,6 +65,39 @@ class BuildingControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("sort 파라미터로 찜많은순을 지정해도 200을 반환한다")
+    void nearby_with_popular_sort_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "POPULAR"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("sort 파라미터로 최신순을 지정해도 200을 반환한다")
+    void nearby_with_latest_sort_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "LATEST"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("정의되지 않은 sort 값은 400을 반환한다")
+    void nearby_with_invalid_sort_returns_bad_request() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "WRONG"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void 줌이_부족해도_200을_반환한다() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
                         .param("swLat", "37.5250").param("swLng", "127.0550")
