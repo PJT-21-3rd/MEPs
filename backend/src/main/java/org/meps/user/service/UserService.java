@@ -17,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -74,5 +76,17 @@ public class UserService {
             userMapper.deleteSavedBuilding(userId, buildingId);
             userMapper.decrementSavedCount(buildingId);
         }
+    }
+
+    /** 회원 탈퇴 — 찜 개수 정리 후 회원 삭제 (saved는 CASCADE) */
+    @Transactional
+    public void withdraw(Integer userId) {
+        // 회원 삭제 전에 찜 목록을 확보해야 한다 — CASCADE로 함께 사라지기 때문
+        List<String> savedBuildingIds = userMapper.findSavedBuildingIds(userId);
+        for (String buildingId : savedBuildingIds) {
+            userMapper.decrementSavedCount(buildingId);
+        }
+
+        userMapper.deleteUser(userId);
     }
 }
