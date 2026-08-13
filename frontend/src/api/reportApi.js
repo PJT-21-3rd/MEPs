@@ -11,8 +11,8 @@ const INSURANCE_RIDERS_ENDPOINT = '/api/insurances';
 
 function transformReportResponse(raw) {
   const dangerItems = {};
-  // 비로그인 응답엔 factors 필드 자체가 없음
-  const hasDetail = Array.isArray(raw.factors);
+  // 비로그인 응답엔 factors 필드 자체가 없음 (방어코드 추가)
+  const hasDetail = Array.isArray(raw.factors) && raw.factors.length > 0;
 
   if (hasDetail) {
     raw.factors.forEach((factor) => {

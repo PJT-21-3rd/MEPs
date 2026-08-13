@@ -15,6 +15,7 @@ import { fetchReportData, fetchDetailedReportData } from '@/api/reportApi';
 import { X, ArrowLeft, ChevronRight, FileText, Zap } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import { useAuthStore } from '@/stores/authStore';
+// import ReportLoadingAnimation from './ReportLoadingAnimation.vue';
 
 const authStore = useAuthStore();
 
@@ -97,12 +98,23 @@ async function loadReport() {
 
   isLoading.value = true;
   currentView.value = 'summary';
+
+  // const MIN_LOADING_MS = 3600; // ReportLoadingSteps 5단계(800ms × 4) 완주 시간 확보
+  // const startedAt = Date.now();
+
   try {
     reportData.value = await fetchReportData(props.buildingId);
     emit('report-loaded', reportData.value);
-    isLoading.value = false;
+
+    // const elapsed = Date.now() - startedAt;
+    // const remaining = MIN_LOADING_MS - elapsed;
+    // if (remaining > 0) {
+    //   await new Promise((resolve) => setTimeout(resolve, remaining));
+    // }
   } catch (err) {
     console.error('[AiReportPanel] 리포트 조회 실패:', err);
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -240,6 +252,7 @@ const mockAgent = {
     <div v-if="isLoading" class="flex-1 flex items-center justify-center text-sm text-text-sub">
       리포트를 불러오는 중이에요...
     </div>
+    <!-- <ReportLoadingAnimation v-if="isLoading" /> -->
 
     <!-- summary 뷰 -->
     <div v-else-if="currentView === 'summary'" class="flex-1 flex flex-col gap-5 px-5 py-2">
