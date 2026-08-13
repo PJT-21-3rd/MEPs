@@ -7,7 +7,18 @@ export const fetchHjdBriefing = async (hjdCode) => {
     const response = await api.get(`/api/hjd/${hjdCode}/briefing`);
     return response.data;
   } catch (error) {
-    console.error(`hjd Briefing API Error (hjdCode: ${hjdCode}):`, error);
+    console.error(`동 단위 브리핑 API Error (hjdCode: ${hjdCode}):`, error);
+    throw error;
+  }
+};
+
+// 구 단위 (SGG) 브리핑
+export const fetchSggBriefing = async (sggCode) => {
+  try {
+    const response = await api.get(`/api/sgg/${sggCode}/briefing`);
+    return response.data;
+  } catch (error) {
+    console.error('구 단위 브리핑 API 호출 실패:', error);
     throw error;
   }
 };

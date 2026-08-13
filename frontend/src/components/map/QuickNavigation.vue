@@ -68,9 +68,9 @@ const emit = defineEmits(['move']);
 
 const regionsData = ref({ 서울특별시: {} });
 
-const currentSido = computed(() => uiStore.hjdBriefingData?.sidoName || '서울특별시');
-const currentGu = computed(() => uiStore.hjdBriefingData?.sggName || '광진구');
-const currentDong = computed(() => uiStore.hjdBriefingData?.hjdName || '화양동');
+const currentSido = computed(() => uiStore.currentBriefing?.sidoName || '서울특별시');
+const currentGu = computed(() => uiStore.currentBriefing?.sggName || '광진구');
+const currentDong = computed(() => uiStore.currentBriefing?.hjdName || '화양동');
 
 const pSido = ref('');
 const pGu = ref('');
