@@ -71,7 +71,7 @@ const handleMyPageClick = () => {
     toastStore.showToast('마이페이지는 로그인 후 이용할 수 있어요.', {
       action: {
         label: '로그인',
-        onClick: () => authStore.openLoginModal(),
+        onClick: () => router.push({ name: 'Login', query: { redirect: '/mypage' } }),
       },
     });
 
