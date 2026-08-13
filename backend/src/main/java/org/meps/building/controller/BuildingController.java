@@ -27,7 +27,7 @@ public class BuildingController {
             @RequestParam double neLat,
             @RequestParam double neLng,
             @RequestParam int zoom,
-            @RequestParam(name = "sort", defaultValue = "DISTANCE") SortType sortType) {
+            @RequestParam(name = "sort", defaultValue = "POPULAR") SortType sortType) {
 
         return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom, sortType);
     }
