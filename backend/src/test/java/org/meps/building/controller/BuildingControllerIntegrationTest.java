@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -50,8 +51,8 @@ class BuildingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("건물 목록 응답에 거리 필드가 포함된다")
-    void nearby_response_contains_distance_field() throws Exception {
+    @DisplayName("건물 목록 응답에 거리·연면적 필드가 포함되지 않는다")
+    void nearby_response_does_not_contain_distance_and_area_fields() throws Exception {
         String body = mockMvc.perform(get("/api/buildings/nearby")
                         .param("swLat", "37.5250").param("swLng", "127.0550")
                         .param("neLat", "37.5450").param("neLng", "127.1000")
@@ -61,7 +62,23 @@ class BuildingControllerIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertTrue(body.contains("\"distanceM\""));
+        assertFalse(body.contains("\"distanceM\""));
+        assertFalse(body.contains("\"totArea\""));
+    }
+
+    @Test
+    @DisplayName("건물 목록 응답에 건축면적 필드가 포함된다")
+    void nearby_response_contains_arch_area_field() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"archArea\""));
     }
 
     @Test
@@ -87,6 +104,17 @@ class BuildingControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("sort 파라미터로 면적순을 지정해도 200을 반환한다")
+    void nearby_with_area_sort_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "AREA"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("정의되지 않은 sort 값은 400을 반환한다")
     void nearby_with_invalid_sort_returns_bad_request() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
@@ -98,11 +126,12 @@ class BuildingControllerIntegrationTest {
     }
 
     @Test
-    void 줌이_부족해도_200을_반환한다() throws Exception {
+    @DisplayName("줌이 부족해도 200을 반환한다")
+    void insufficient_zoom_still_returns_ok() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
                         .param("swLat", "37.5250").param("swLng", "127.0550")
                         .param("neLat", "37.5450").param("neLng", "127.1000")
-                        .param("zoom", "9"))
+                        .param("zoom", "13"))
                 .andExpect(status().isOk());
     }
 

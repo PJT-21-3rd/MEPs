@@ -12,7 +12,6 @@ public class NearbyBuildingDto {
     private String buildingId;
     private Double lat;
     private Double lng;
-    private Integer distanceM;
     private String jibunAddr;
     private String roadAddr;
     private String bldNm;
@@ -20,4 +19,5 @@ public class NearbyBuildingDto {
     private Integer grndFlr;
     private Integer ugrndFlr;
     private String useAprDay;
+    private Double archArea; // 건축면적(m2) - 면적순 정렬 기준
 }
