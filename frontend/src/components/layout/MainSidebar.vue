@@ -16,7 +16,7 @@
         </template>
       </div>
 
-      <div v-if="uiStore.hjdBriefingData" class="relative flex-1 overflow-y-auto">
+      <div v-if="uiStore.currentBriefing" class="relative flex-1 overflow-y-auto">
         <div ref="sentinelRef" class="h-px" />
         <!-- 스티키 헤더 -->
         <div class="sticky top-0 z-20 px-6">
@@ -36,14 +36,20 @@
                 <Sparkles :size="12" /> AI 브리핑
               </span>
               <p class="text-[18px] tracking-tight text-text-main">
-                {{ uiStore.hjdBriefingData.hjdName }}
+                {{
+                  uiStore.briefingLevel === 'gu'
+                    ? uiStore.currentBriefing.sggName
+                    : uiStore.currentBriefing.hjdName
+                }}
               </p>
-              <p class="text-[14px] text-text-sub">{{ uiStore.hjdBriefingData.sggName }}</p>
+              <p v-if="uiStore.briefingLevel === 'dong'" class="text-[14px] text-text-sub">
+                {{ uiStore.currentBriefing.sggName }}
+              </p>
             </div>
           </div>
         </div>
         <!-- 상권 요약 카드 -->
-        <CommercialAiBriefing v-if="uiStore.hjdBriefingData" :summary="uiStore.hjdBriefingData" />
+        <CommercialAiBriefing :summary="uiStore.currentBriefing" />
 
         <!-- 매물 리스트 -->
         <BuildingList />
@@ -53,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onUnmounted, watch } from 'vue';
 import { Sparkles } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import SearchBar from '../map/SearchBar.vue';
@@ -68,22 +74,23 @@ const sentinelRef = ref(null);
 const briefingStuck = ref(false);
 let observer = null;
 
-onMounted(() => {
-  observer = new IntersectionObserver(
-    ([entry]) => {
-      briefingStuck.value = !entry.isIntersecting;
-    },
-    { threshold: 1.0 },
-  );
+watch(sentinelRef, (newEl) => {
+  if (newEl) {
+    if (observer) observer.disconnect();
 
-  if (sentinelRef.value) {
-    observer.observe(sentinelRef.value);
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        briefingStuck.value = !entry.isIntersecting;
+      },
+      { threshold: 0 },
+    );
+    observer.observe(newEl);
   }
 });
 
 onUnmounted(() => {
-  if (observer && sentinelRef.value) {
-    observer.unobserve(sentinelRef.value);
+  if (observer) {
+    observer.disconnect();
   }
 });
 </script>

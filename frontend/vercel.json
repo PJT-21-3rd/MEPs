@@ -11,6 +11,10 @@
     {
       "source": "/maps-api/:path*",
       "destination": "https://maps.apigw.ntruss.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

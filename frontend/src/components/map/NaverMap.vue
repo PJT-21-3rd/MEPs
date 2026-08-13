@@ -13,8 +13,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useToastStore } from '@/stores/toastStore';
-import { fetchReverseGeocoding } from '@/api/map';
-import { fetchHjdBriefing } from '@/api/aiBrief';
+import { fetchHjdBriefing, fetchSggBriefing } from '@/api/aiBrief';
 import { fetchNearbyBuildings } from '@/api/building';
 import BuildingMarker from '@/components/map/BuildingMarker.vue';
 
@@ -135,16 +134,40 @@ const drawMarkers = (buildings) => {
 };
 
 // 행정동 브리핑 호출
-const updateHjdBriefing = async (lat, lng) => {
+const updateHjdBriefing = async (lat, lng, zoom) => {
   try {
-    const hjdCode = await fetchReverseGeocoding(lat, lng);
-    if (!hjdCode) return;
+    window.naver.maps.Service.reverseGeocode(
+      {
+        coords: new window.naver.maps.LatLng(lat, lng),
+        orders: 'admcode', // 행정동 기준
+      },
+      async (status, response) => {
+        if (status === window.naver.maps.Service.Status.OK) {
+          const item = response.v2.results[0];
+          if (!item) return;
+          // const sggName = item.region.area2.name;
+          // const hjdName = item.region.area3.name;
+          const originalCode = item.code.id;
 
-    const briefingData = await fetchHjdBriefing(hjdCode);
-    if (briefingData) {
-      uiStore.setHjdBriefingData(briefingData);
-      console.log(`#${briefingData.hjdName} AI 브리핑 데이터 업데이트 완료`);
-    }
+          const hjdCode8Digits = originalCode.substring(0, 8);
+          const sggCode = originalCode.substring(0, 5);
+
+          if (zoom < 15) {
+            const briefingData = await fetchSggBriefing(sggCode);
+            if (briefingData) {
+              uiStore.setBriefingData(briefingData, 'gu');
+              console.log(`[구 단위] ${briefingData.sggName} 브리핑 업데이트`);
+            }
+          } else {
+            const briefingData = await fetchHjdBriefing(hjdCode8Digits);
+            if (briefingData) {
+              uiStore.setBriefingData(briefingData, 'dong');
+              console.log(`[동 단위] ${briefingData.hjdName} 브리핑 업데이트`);
+            }
+          }
+        }
+      },
+    );
   } catch (error) {
     console.error('브리핑 업데이트 실패');
   }
@@ -322,7 +345,8 @@ onMounted(() => {
       mapStore.setMapMoved(true); // 800ms이후 맵움직임 true
 
       const currentCenter = map.getCenter();
-      updateHjdBriefing(currentCenter.lat(), currentCenter.lng());
+      const currentZoom = map.getZoom();
+      updateHjdBriefing(currentCenter.lat(), currentCenter.lng(), currentZoom);
       // updateNearbyBuildings();
       syncMapStateToUrl();
     }, 800);

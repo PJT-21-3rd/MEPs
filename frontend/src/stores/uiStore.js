@@ -12,7 +12,8 @@ export const useUiStore = defineStore('ui', () => {
   const roadViewCoords = ref({ lat: null, lng: null });
   const insuranceModalConfig = ref(null); // 보험 모달 설정
   const loanModalConfig = ref(null); // 대출 모달 설정
-  const hjdBriefingData = ref(null); // 행정동 브리핑 데이터
+  const currentBriefing = ref(null); // 브리핑 데이터
+  const briefingLevel = ref('dong');
   const currentSort = ref('POPULAR'); // 정렬
   const currentBuildings = ref([]); // 현재 화면의 건물 배열
   const currentBuildingDetail = ref(null); // 현재 건물 상세 데이터
@@ -111,8 +112,9 @@ export const useUiStore = defineStore('ui', () => {
     currentSort.value = sortType;
   };
 
-  const setHjdBriefingData = (data) => {
-    hjdBriefingData.value = data;
+  const setBriefingData = (data, level) => {
+    currentBriefing.value = data;
+    briefingLevel.value = level;
   };
 
   const setBuildingsData = (data) => {
@@ -128,7 +130,8 @@ export const useUiStore = defineStore('ui', () => {
     selectedBuildingId,
     roadViewCoords,
     insuranceModalConfig,
-    hjdBriefingData,
+    currentBriefing,
+    briefingLevel,
     loanModalConfig,
     currentSort,
     currentBuildings,
@@ -149,7 +152,7 @@ export const useUiStore = defineStore('ui', () => {
     openLoanModal,
     closeLoanModal,
     setSort,
-    setHjdBriefingData,
+    setBriefingData,
     setBuildingsData,
   };
 });
