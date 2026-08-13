@@ -2,7 +2,7 @@
 import api from '@/api/index';
 
 // 현재 지도 영역 내 건물리스트 조회
-export const fetchNearbyBuildings = async (swLat, swLng, neLat, neLng, zoom) => {
+export const fetchNearbyBuildings = async (swLat, swLng, neLat, neLng, zoom, sort) => {
   try {
     console.log(`백엔드 건물리스트 DB 검색 요청 중... (/api/buildings/nearby)`);
     const response = await api.get('/api/buildings/nearby', {
@@ -12,6 +12,7 @@ export const fetchNearbyBuildings = async (swLat, swLng, neLat, neLng, zoom) => 
         neLat,
         neLng,
         zoom,
+        sort,
       },
     });
     return response.data;

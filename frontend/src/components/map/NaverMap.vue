@@ -118,9 +118,16 @@ const updateNearbyBuildings = async () => {
   const currentZoom = map.getZoom();
 
   try {
-    const data = await fetchNearbyBuildings(sw.lat(), sw.lng(), ne.lat(), ne.lng(), currentZoom);
-
+    const data = await fetchNearbyBuildings(
+      sw.lat(),
+      sw.lng(),
+      ne.lat(),
+      ne.lng(),
+      currentZoom,
+      uiStore.currentSort,
+    );
     uiStore.setBuildingsData(data);
+
     console.log(data);
 
     if (!data.zoomRequired && data.buildings) {
@@ -195,6 +202,13 @@ watch(
       const center = mapStore.mapInstance.getCenter();
       updateHjdBriefing(center.lat(), center.lng());
     }
+  },
+);
+
+watch(
+  () => uiStore.currentSort,
+  () => {
+    updateNearbyBuildings();
   },
 );
 
