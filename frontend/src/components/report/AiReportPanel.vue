@@ -146,6 +146,15 @@ watch(
     loadReport();
   },
 );
+watch(
+  () => authStore.isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) {
+      detailReportData.value = null;
+      loadReport();
+    }
+  },
+);
 
 function openDetail() {
   currentView.value = 'detail';
