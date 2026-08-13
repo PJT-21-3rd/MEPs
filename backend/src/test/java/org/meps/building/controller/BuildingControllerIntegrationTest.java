@@ -67,6 +67,21 @@ class BuildingControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("건물 목록 응답에 건축면적 필드가 포함된다")
+    void nearby_response_contains_arch_area_field() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"archArea\""));
+    }
+
+    @Test
     @DisplayName("sort 파라미터로 찜많은순을 지정해도 200을 반환한다")
     void nearby_with_popular_sort_returns_ok() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")

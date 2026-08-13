@@ -99,14 +99,26 @@ class BuildingServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("면적순 정렬도 최대 20개를 정상 반환한다")
-    void area_sort_returns_buildings_normally() {
+    @DisplayName("면적순 정렬은 건축면적 내림차순이고 null은 맨 뒤로 간다")
+    void area_sort_orders_by_arch_area_desc_with_nulls_last() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
                 37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.AREA);
 
-        assertThat(result.isZoomRequired()).isFalse();
-        assertThat(result.getBuildings()).isNotEmpty();
-        assertThat(result.getBuildings()).hasSizeLessThanOrEqualTo(20);
+        List<NearbyBuildingDto> buildings = result.getBuildings();
+        assertThat(buildings).isNotEmpty();
+        assertThat(buildings).hasSizeLessThanOrEqualTo(20);
+        for (int i = 1; i < buildings.size(); i++) {
+            Double prev = buildings.get(i - 1).getArchArea();
+            Double curr = buildings.get(i).getArchArea();
+            // 건축면적 null이 나온 뒤에는 non-null이 다시 나오면 안 된다
+            if (prev == null) {
+                assertThat(curr).isNull();
+                continue;
+            }
+            if (curr != null) {
+                assertThat(curr).isLessThanOrEqualTo(prev);
+            }
+        }
     }
 
     @Test
