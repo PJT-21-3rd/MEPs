@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.meps.common.util.SafetyGrade;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
+import org.meps.flood.exception.InvalidFloodGradeException;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -141,7 +142,7 @@ class FloodScoreServiceTest {
     @Test
     void 정의되지_않은_등급이면_예외를_던진다() {
         assertThatThrownBy(() -> floodScoreService.calculateScore(List.of(incident("2026", 9)), BASE_DATE))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InvalidFloodGradeException.class)
                 .hasMessageContaining("9");
     }
 }

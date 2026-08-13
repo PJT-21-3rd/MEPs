@@ -1,8 +1,10 @@
 package org.meps.user.exception;
 
-public class InvalidTokenException extends RuntimeException {
+import org.meps.common.exception.BusinessException;
+import org.meps.common.exception.ErrorCode;
 
+public class InvalidTokenException extends BusinessException {
     public InvalidTokenException() {
-        super("유효하지 않은 토큰입니다.");
+        super(ErrorCode.INVALID_TOKEN);
     }
 }

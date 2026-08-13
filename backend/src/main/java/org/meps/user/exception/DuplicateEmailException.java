@@ -1,8 +1,10 @@
 package org.meps.user.exception;
 
-/** 이미 가입된 이메일 → 409 */
-public class DuplicateEmailException extends RuntimeException {
+import org.meps.common.exception.BusinessException;
+import org.meps.common.exception.ErrorCode;
+
+public class DuplicateEmailException extends BusinessException {
     public DuplicateEmailException(String email) {
-        super("이미 가입된 이메일입니다: " + email);
+        super(ErrorCode.DUPLICATE_EMAIL, "이미 가입된 이메일입니다: " + email);
     }
 }
