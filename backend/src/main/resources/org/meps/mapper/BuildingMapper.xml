@@ -7,17 +7,16 @@
     <!--
       BBox에 속한 빌딩 목록 조회 (sortType 기준 정렬 후 상위 #{limit}개)
       - jibun_addr 등은 mapUnderscoreToCamelCase 전역 설정으로 자동 매핑
-      - 별칭 5개: buildingId/mainPurpsNm(컬럼명-필드명 불일치), lat/lng/distanceM(함수 결과라 별칭 필수)
-      - ST_Distance_Sphere 안 POINT() 함수는 경도-우선, WKT 경로는 위도-우선
-      - 정렬 분기는 ${} 주입 대신 choose로 고정 (SQL 인젝션 차단), 동률 시 2차 정렬은 항상 거리순
+      - WKT 경로(ST_GeomFromText)는 위도-우선
+      - 정렬 분기는 ${} 주입 대신 choose로 고정 (SQL 인젝션 차단),
+        동률 시 2차 정렬은 bd_mgt_sn 오름차순 (같은 요청에 항상 같은 결과 보장)
+      - tot_area/use_apr_day DESC는 MySQL에서 NULL이 맨 뒤로 감
     -->
     <select id="findBuildingsInBounds"
             resultType="org.meps.building.dto.NearbyBuildingDto">
         SELECT bd_mgt_sn            AS buildingId,
                ST_Latitude(center)  AS lat,
                ST_Longitude(center) AS lng,
-               ROUND(ST_Distance_Sphere(center,
-                       ST_SRID(POINT(#{centerLng}, #{centerLat}), 4326))) AS distanceM,
                jibun_addr,
                road_addr,
                bld_nm,
@@ -39,12 +38,12 @@
         ORDER BY
         <choose>
             <when test="sortType == 'LATEST'">
-                use_apr_day IS NULL, use_apr_day DESC, distanceM
+                use_apr_day IS NULL, use_apr_day DESC, bd_mgt_sn
             </when>
-            <when test="sortType == 'POPULAR'">
-                saved_cnt DESC, distanceM
+            <when test="sortType == 'AREA'">
+                tot_area IS NULL, tot_area DESC, bd_mgt_sn
             </when>
-            <otherwise>distanceM</otherwise>
+            <otherwise>saved_cnt DESC, bd_mgt_sn</otherwise>
         </choose>
         LIMIT #{limit}
     </select>
