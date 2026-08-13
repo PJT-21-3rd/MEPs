@@ -33,7 +33,7 @@ function handleSignup() {
         안전 진단 점수 및 근거 설명은 로그인 후 확인하실 수 있습니다.
       </p>
       <!-- 로그인 폼 (공통) -->
-      <LoginForm @signup="handleSignup" />
+      <LoginForm @signup="handleSignup" @success="emit('close')" />
     </div>
   </div>
 </template>
