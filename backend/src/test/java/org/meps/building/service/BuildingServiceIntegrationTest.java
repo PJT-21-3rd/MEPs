@@ -25,10 +25,11 @@ class BuildingServiceIntegrationTest {
     private BuildingService buildingService;
 
     @Test
-    void 줌10_이상이면_건물목록을_최대20개_반환한다() {
+    @DisplayName("줌 14 이상이면 건물 목록을 최대 20개 반환한다")
+    void returns_up_to_20_buildings_when_zoom_is_at_least_14() {
         // 광진구 자양동·구의동 일대 (데이터 존재 영역)
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 10, SortType.POPULAR);
+                37.5250, 127.0550, 37.5450, 127.1000, 14, SortType.POPULAR);
 
         assertThat(result.isZoomRequired()).isFalse();
         assertThat(result.getBuildings()).isNotEmpty();
@@ -36,9 +37,10 @@ class BuildingServiceIntegrationTest {
     }
 
     @Test
-    void 줌이_부족하면_빈배열과_zoomRequired_true를_반환한다() {
+    @DisplayName("줌이 부족하면 빈 배열과 zoomRequired true를 반환한다")
+    void returns_empty_list_with_zoom_required_when_zoom_is_insufficient() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 9, SortType.POPULAR);
+                37.5250, 127.0550, 37.5450, 127.1000, 13, SortType.POPULAR);
 
         assertThat(result.isZoomRequired()).isTrue();
         assertThat(result.getBuildings()).isEmpty();

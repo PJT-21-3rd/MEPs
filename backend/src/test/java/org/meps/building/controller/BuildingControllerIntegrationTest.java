@@ -111,11 +111,12 @@ class BuildingControllerIntegrationTest {
     }
 
     @Test
-    void 줌이_부족해도_200을_반환한다() throws Exception {
+    @DisplayName("줌이 부족해도 200을 반환한다")
+    void insufficient_zoom_still_returns_ok() throws Exception {
         mockMvc.perform(get("/api/buildings/nearby")
                         .param("swLat", "37.5250").param("swLng", "127.0550")
                         .param("neLat", "37.5450").param("neLng", "127.1000")
-                        .param("zoom", "9"))
+                        .param("zoom", "13"))
                 .andExpect(status().isOk());
     }
 
