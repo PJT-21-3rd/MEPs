@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, createVNode, render } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -16,6 +16,7 @@ import { useToastStore } from '@/stores/toastStore';
 import { fetchReverseGeocoding } from '@/api/map';
 import { fetchHjdBriefing } from '@/api/aiBrief';
 import { fetchNearbyBuildings } from '@/api/building';
+import BuildingMarker from '@/components/map/BuildingMarker.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -26,6 +27,7 @@ const toastStore = useToastStore();
 
 let timeOut = null; // 재검색 타이머
 let currentPolygons = []; // 폴리곤 객체
+let currentMarkers = []; // 마커 객체
 let streetLayer = null; // 거리뷰 선 객체
 
 // geoJSON 좌표 파싱
@@ -91,6 +93,47 @@ const drawBuildingPolygons = (data, preventMove = false) => {
   }
 };
 
+// 마커 표시
+const drawMarkers = (buildings) => {
+  const map = mapStore.mapInstance;
+  if (!map) return;
+
+  // 초기화
+  currentMarkers.forEach((marker) => marker.setMap(null));
+  currentMarkers = [];
+
+  buildings.forEach((building) => {
+    const purposeText = building.mainPurpsNm || '상가';
+    const areaText = building.archArea ? `${Math.round(building.archArea)}m²` : '-';
+    // const isSelected = uiStore.selectedBuildingId === building.buildingId; // 현재 선택된 건물인가
+    const container = document.createElement('div');
+    const vnode = createVNode(BuildingMarker, {
+      purpose: purposeText,
+      area: areaText,
+      // isSelected: isSelected
+    });
+
+    render(vnode, container);
+
+    const marker = new window.naver.maps.Marker({
+      position: new window.naver.maps.LatLng(building.lat, building.lng),
+      map: map,
+      title: building.bldNm || building.jibunAddr,
+      icon: {
+        content: container.firstElementChild,
+        anchor: new window.naver.maps.Point(0, 42),
+      },
+      zIndex: uiStore.selectedBuildingId === building.buildingId ? 100 : 10,
+    });
+
+    window.naver.maps.Event.addListener(marker, 'click', () => {
+      uiStore.openBuildingDetail(building.buildingId);
+      router.push({ query: { ...route.query, buildingId: building.buildingId } });
+    });
+    currentMarkers.push(marker);
+  });
+};
+
 // 행정동 브리핑 호출
 const updateHjdBriefing = async (lat, lng) => {
   try {
@@ -127,16 +170,7 @@ const updateNearbyBuildings = async () => {
       uiStore.currentSort,
     );
     uiStore.setBuildingsData(data);
-
     console.log(data);
-
-    if (!data.zoomRequired && data.buildings) {
-      // drawMarkers(data.buildings);
-    } else {
-      currentMarkers.forEach((m) => m.setMap(null));
-      currentMarkers = [];
-      console.log('줌 아웃 상태: 마커를 표시하려면 지도를 확대해 주세요.');
-    }
   } catch (error) {
     console.error('주변 건물 데이터를 불러오는 데 실패했습니다.', error);
   }
@@ -205,6 +239,7 @@ watch(
   },
 );
 
+// 정렬 순서 변경 -> 건물데이터 업뎃
 watch(
   () => uiStore.currentSort,
   () => {
@@ -212,7 +247,29 @@ watch(
   },
 );
 
-// todo: 마커 그리기
+// 재검색시 마커
+watch(
+  () => uiStore.currentBuildings,
+  (newBuildings) => {
+    if (!uiStore.isZoomRequired && newBuildings && newBuildings.length > 0) {
+      drawMarkers(newBuildings);
+    } else {
+      currentMarkers.forEach((m) => m.setMap(null));
+      currentMarkers = [];
+    }
+  },
+  { deep: true },
+);
+
+// 선택된 건물 변경시 (추후)
+// watch(
+//   () => uiStore.selectedBuildingId,
+//   () => {
+//     if (uiStore.currentBuildings && uiStore.currentBuildings.length > 0) {
+//       drawMarkers(uiStore.currentBuildings);
+//     }
+//   },
+// );
 
 // 지도 초기화, 이벤트 등록
 onMounted(() => {
