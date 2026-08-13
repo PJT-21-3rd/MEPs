@@ -70,4 +70,17 @@
         WHERE bd_mgt_sn = #{buildingId}
     </update>
 
+    <!-- 회원이 찜한 건물 목록 -->
+    <select id="findSavedBuildingIds" resultType="string">
+        SELECT bd_mgt_sn
+        FROM saved
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 회원 삭제 -->
+    <delete id="deleteUser">
+        DELETE FROM users
+        WHERE user_id = #{userId}
+    </delete>
+
 </mapper>

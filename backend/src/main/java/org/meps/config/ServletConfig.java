@@ -50,6 +50,7 @@ public class ServletConfig implements WebMvcConfigurer {
         registry.addInterceptor(new AuthInterceptor(jwtProvider))
                 .addPathPatterns(
                         "/api/member/**",
+                        "/api/users/me",
                         "/api/buildings/*/safety-report/detailed",
                         "/api/loans",
                         "/api/insurances"
