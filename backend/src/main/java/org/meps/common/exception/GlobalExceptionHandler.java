@@ -2,18 +2,6 @@ package org.meps.common.exception;
 
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
-import org.meps.building.exception.BuildingNotFoundException;
-import org.meps.building.exception.InvalidBoundsException;
-import org.meps.building.exception.InvalidBuildingIdException;
-import org.meps.building.exception.InvalidKeywordException;
-import org.meps.common.auth.LoginRequiredException;
-import org.meps.common.geocoding.GeocodingException;
-import org.meps.hjd.exception.AiBriefingNotAvailableException;
-import org.meps.hjd.exception.HjdNotFoundException;
-import org.meps.insurance.exception.InvalidFactorException;
-import org.meps.user.exception.*;
-import org.meps.sgg.exception.SggNotFoundException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -23,120 +11,66 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+/**
+ * 모든 도메인 예외는 {@link BusinessException}을 상속하고 자신의 {@link ErrorCode}를 실어 던진다.
+ * 여기서는 BusinessException으로 표현되지 않는 프레임워크/외부 라이브러리 예외만 매핑한다.
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /** 필수 파라미터 누락/타입 오류, 좌표 범위 오류, keyword 공백, factors 오류 → 400 */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        if (errorCode.getStatus().is5xxServerError()) {
+            log.error("[{}] {}", errorCode, e.getMessage(), e);
+        } else {
+            log.warn("[{}] {}", errorCode, e.getMessage());
+        }
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode, e.getMessage()));
+    }
+
+    /** 400
+     * 입력값 검증 실패(@Valid), 필수 파라미터 누락/타입 오류 */
     @ExceptionHandler({
-            InvalidBoundsException.class,
-            InvalidBuildingIdException.class,
-            InvalidKeywordException.class,
-            InvalidFactorException.class,
+            MethodArgumentNotValidException.class,
             MissingServletRequestParameterException.class,
             MethodArgumentTypeMismatchException.class
     })
-    public ResponseEntity<Void> handleBadRequest(Exception e) {
+    public ResponseEntity<ErrorResponse> handleBadRequest(Exception e) {
         log.warn("잘못된 요청: {}", e.getMessage());
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE));
     }
 
-    /** 좌표에 대응하는 행정동 없음 → 404 */
-    @ExceptionHandler(HjdNotFoundException.class)
-    public ResponseEntity<Void> handleHjdNotFound(HjdNotFoundException e) {
-        log.warn("조회 결과 없음: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    /** 구(시군구) 코드에 대응하는 데이터 없음 → 404 */
-    @ExceptionHandler(SggNotFoundException.class)
-    public ResponseEntity<Void> handleSggNotFound(SggNotFoundException e) {
-        log.warn("조회 결과 없음: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    /** 지오코딩/외부 API 실패 → 502 */
-    @ExceptionHandler(GeocodingException.class)
-    public ResponseEntity<Void> handleGeocodingFailure(GeocodingException e) {
-        log.error("지오코딩/외부 API 실패: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
-    }
-
-    /** 매핑되지 않은 URL → 404 */
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<Void> handleNoHandlerFound(NoHandlerFoundException e) {
-        log.warn("존재하지 않는 경로 요청: {} {}", e.getHttpMethod(), e.getRequestURL());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-
-    /** 존재하지 않는 건물 → 404 */
-    @ExceptionHandler(BuildingNotFoundException.class)
-    public ResponseEntity<Void> handleBuildingNotFound(BuildingNotFoundException e) {
-        log.warn("건물 조회 결과 없음: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    /** 그 외 미처리 예외 → 500 */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Void> handleUnexpected(Exception e) {
-        log.error("처리되지 않은 예외 발생", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-
-    /** 행정동은 존재하나 AI 브리핑이 아직 생성되지 않음 (배치 미처리) → 502 */
-    @ExceptionHandler(AiBriefingNotAvailableException.class)
-    public ResponseEntity<Void> handleAiBriefingNotAvailable(AiBriefingNotAvailableException e) {
-        log.warn("AI 브리핑 미생성: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
-    }
-
-    /** 입력값 검증 실패 (@Valid) → 400 */
+    /** 401
+     * 토큰 없음/형식 오류/만료/위조 */
     @ExceptionHandler({
-            MethodArgumentNotValidException.class,
-            PasswordMismatchException.class
-    })
-    public ResponseEntity<Void> handleValidation(Exception e) {
-        log.warn("입력값 오류: {}", e.getMessage());
-        return ResponseEntity.badRequest().build();
-    }
-
-    /** 이메일 중복 → 409 */
-    @ExceptionHandler(DuplicateEmailException.class)
-    public ResponseEntity<Void> handleDuplicateEmail(DuplicateEmailException e) {
-        log.warn("가입 충돌: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
-    }
-
-    /** 인증 필수 API에 비로그인(토큰 부재·무효) 접근 → 401 */
-    @ExceptionHandler(LoginRequiredException.class)
-    public ResponseEntity<Void> handleLoginRequired(LoginRequiredException e) {
-        log.warn("비로그인 접근 차단: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-
-    /** 로그인 실패 → 401 */
-    @ExceptionHandler(LoginFailedException.class)
-    public ResponseEntity<Void> handleLoginFailed(LoginFailedException e) {
-        log.warn("로그인 실패: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-
-    /** 토큰 없음/형식 오류/만료/위조 → 401 */
-    @ExceptionHandler({
-            InvalidTokenException.class,
             JwtException.class,
             MissingRequestHeaderException.class
     })
-    public ResponseEntity<Void> handleUnauthorized(Exception e) {
+    public ResponseEntity<ErrorResponse> handleUnauthorized(Exception e) {
         log.warn("인증 실패: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.status(ErrorCode.UNAUTHORIZED.getStatus())
+                .body(ErrorResponse.of(ErrorCode.UNAUTHORIZED));
     }
 
-    /** 이미 찜한 건물 → 409 */
-    @ExceptionHandler(AlreadySavedException.class)
-    public ResponseEntity<Void> handleAlreadySaved(AlreadySavedException e) {
-        log.warn("찜 충돌: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    /** 404
+     * 매핑되지 않은 URL */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoHandlerFound(NoHandlerFoundException e) {
+        log.warn("존재하지 않는 경로 요청: {} {}", e.getHttpMethod(), e.getRequestURL());
+        return ResponseEntity.status(ErrorCode.NOT_FOUND_URL.getStatus())
+                .body(ErrorResponse.of(ErrorCode.NOT_FOUND_URL));
+    }
+
+    /** 500
+     * 그 외 미처리 예외 */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
+        log.error("처리되지 않은 예외 발생", e);
+        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
