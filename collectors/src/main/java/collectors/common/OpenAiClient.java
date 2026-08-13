@@ -90,7 +90,9 @@ public class OpenAiClient {
 
         ObjectNode requestBody = objectMapper.createObjectNode();
         requestBody.put("model", model);
-        requestBody.put("temperature", 0.4);
+        if (!model.startsWith("gpt-5")) {
+            requestBody.put("temperature", 0.4);
+        }
 
         ArrayNode messages = objectMapper.createArrayNode();
         messages.add(objectMapper.createObjectNode()

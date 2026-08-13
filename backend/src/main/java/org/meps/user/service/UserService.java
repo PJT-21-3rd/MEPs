@@ -8,7 +8,6 @@ import org.meps.user.dto.SignupRequestDto;
 import org.meps.user.dto.UserDto;
 import org.meps.user.exception.AlreadySavedException;
 import org.meps.user.exception.DuplicateEmailException;
-import org.meps.user.exception.InvalidTokenException;
 import org.meps.user.exception.LoginFailedException;
 import org.meps.user.exception.PasswordMismatchException;
 import org.meps.user.jwt.JwtProvider;
@@ -17,6 +16,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,41 +57,36 @@ public class UserService {
                 .build();
     }
 
-    /** 찜하기 등록 */
     @Transactional
-    public void saveBuilding(String accessToken, String buildingId) {
-        Integer userId = getUserIdOrThrow(accessToken);
-
+    public void saveBuilding(Integer userId, String buildingId) {
         if (userMapper.existsSavedBuilding(userId, buildingId)) {
             throw new AlreadySavedException(buildingId);
         }
-
         try {
             userMapper.insertSavedBuilding(userId, buildingId);
         } catch (DataIntegrityViolationException e) {
             throw new BuildingNotFoundException(buildingId);
         }
-
-        userMapper.incrementSavedCount(buildingId);   // ← 추가
+        userMapper.incrementSavedCount(buildingId);
     }
 
-    /** 찜하기 해제 */
     @Transactional
-    public void unsaveBuilding(String accessToken, String buildingId) {
-        Integer userId = getUserIdOrThrow(accessToken);
-
-        if (userMapper.existsSavedBuilding(userId, buildingId)) {   // ← 조건 추가
+    public void unsaveBuilding(Integer userId, String buildingId) {
+        if (userMapper.existsSavedBuilding(userId, buildingId)) {
             userMapper.deleteSavedBuilding(userId, buildingId);
             userMapper.decrementSavedCount(buildingId);
         }
     }
 
-    /** getUserId는 비로그인 리포트 조회를 위해 무효 토큰이면 null을 반환하므로, 인증 필수 API에서는 여기서 401로 변환한다 */
-    private Integer getUserIdOrThrow(String accessToken) {
-        Integer userId = jwtProvider.getUserId(accessToken);
-        if (userId == null) {
-            throw new InvalidTokenException();
+    /** 회원 탈퇴 — 찜 개수 정리 후 회원 삭제 (saved는 CASCADE) */
+    @Transactional
+    public void withdraw(Integer userId) {
+        // 회원 삭제 전에 찜 목록을 확보해야 한다 — CASCADE로 함께 사라지기 때문
+        List<String> savedBuildingIds = userMapper.findSavedBuildingIds(userId);
+        for (String buildingId : savedBuildingIds) {
+            userMapper.decrementSavedCount(buildingId);
         }
-        return userId;
+
+        userMapper.deleteUser(userId);
     }
 }

@@ -124,7 +124,9 @@ public class BasicReportService {
 
     /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 */
     private BasicReportResponseDto buildResponse(int totalScore, boolean loggedIn, BriefingInput input, BasicBriefingDto briefs) {
-        List<BasicFactorDto> factors = new ArrayList<>();
+        // 비로그인은 null 유지 — @JsonInclude(NON_NULL)로 응답에서 factors 필드 자체가 제거된다
+        // (빈 리스트를 넣으면 []로 직렬화돼 프론트가 로그인 응답으로 오인)
+        List<BasicFactorDto> factors = null;
         if (loggedIn) {
             factors = new ArrayList<>();
             factors.add(factor("STRUCTURE", input.getStructGrade(), briefs.getStructBrief()));

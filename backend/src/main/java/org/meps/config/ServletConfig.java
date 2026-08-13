@@ -1,6 +1,7 @@
 package org.meps.config;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.common.auth.AuthInterceptor;
 import org.meps.common.auth.LoginUserArgumentResolver;
 import org.meps.user.jwt.JwtProvider;
 import org.springframework.context.annotation.ComponentScan;
@@ -11,10 +12,7 @@ import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.*;
 
 import java.util.List;
 
@@ -45,6 +43,18 @@ public class ServletConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(new LoginUserArgumentResolver(jwtProvider));
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new AuthInterceptor(jwtProvider))
+                .addPathPatterns(
+                        "/api/member/**",
+                        "/api/users/me",
+                        "/api/buildings/*/safety-report/detailed",
+                        "/api/loans",
+                        "/api/insurances"
+                );
     }
 
     @Override

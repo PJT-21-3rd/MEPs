@@ -1,6 +1,8 @@
 package org.meps.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Param;
+import org.meps.common.auth.LoginUser;
 import org.meps.user.dto.LoginRequestDto;
 import org.meps.user.dto.LoginResponseDto;
 import org.meps.user.dto.SignupRequestDto;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,5 +32,12 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponseDto login(@Valid @RequestBody LoginRequestDto request) {
         return userService.login(request);
+    }
+
+    /** 회원 탈퇴 */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdraw(@LoginUser Integer userId) {
+        userService.withdraw(userId);
+        return ResponseEntity.noContent().build();
     }
 }

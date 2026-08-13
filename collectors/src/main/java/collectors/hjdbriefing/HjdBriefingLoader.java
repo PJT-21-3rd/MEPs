@@ -11,19 +11,20 @@ public class HjdBriefingLoader {
 
     private static final String SELECT_EXISTING_SQL =
             "SELECT hjd_cd, daily_flpop, flpop_chg_rate, top_induty_nm, top_induty_stor_cnt, " +
-                    "       major_age_grp, major_age_ratio " +
+                    "       total_induty_cnt, major_age_grp, major_age_ratio " +
                     "FROM hjd_ai_briefing";
 
     // ai_brf/ai_model_nm은 데이터가 변경되었을 때만 NULL로 리셋
     private static final String UPSERT_SQL =
             "INSERT INTO hjd_ai_briefing " +
-                    "    (hjd_cd, daily_flpop, flpop_chg_rate, top_induty_nm, top_induty_stor_cnt, major_age_grp, major_age_ratio) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+                    "    (hjd_cd, daily_flpop, flpop_chg_rate, top_induty_nm, top_induty_stor_cnt, total_induty_cnt, major_age_grp, major_age_ratio) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON DUPLICATE KEY UPDATE " +
                     "    daily_flpop = VALUES(daily_flpop), " +
                     "    flpop_chg_rate = VALUES(flpop_chg_rate), " +
                     "    top_induty_nm = VALUES(top_induty_nm), " +
                     "    top_induty_stor_cnt = VALUES(top_induty_stor_cnt), " +
+                    "    total_induty_cnt = VALUES(total_induty_cnt), " +
                     "    major_age_grp = VALUES(major_age_grp), " +
                     "    major_age_ratio = VALUES(major_age_ratio), " +
                     "    ai_brf = CASE WHEN ? THEN NULL ELSE ai_brf END, " +
@@ -35,6 +36,7 @@ public class HjdBriefingLoader {
             BigDecimal flpopChgRate,
             String topIndutyNm,
             Integer topIndutyStorCnt,
+            Integer totalIndutyCnt,
             String majorAgeGrp,
             BigDecimal majorAgeRatio
     ) {
@@ -44,6 +46,7 @@ public class HjdBriefingLoader {
                     || !bigDecimalEquals(flpopChgRate, other.flpopChgRate)
                     || !Objects.equals(topIndutyNm, other.topIndutyNm)
                     || !Objects.equals(topIndutyStorCnt, other.topIndutyStorCnt)
+                    || !Objects.equals(totalIndutyCnt, other.totalIndutyCnt)
                     || !Objects.equals(majorAgeGrp, other.majorAgeGrp)
                     || !bigDecimalEquals(majorAgeRatio, other.majorAgeRatio);
         }
@@ -67,6 +70,7 @@ public class HjdBriefingLoader {
                         rs.getBigDecimal("flpop_chg_rate"),
                         rs.getString("top_induty_nm"),
                         getNullableInt(rs, "top_induty_stor_cnt"),
+                        getNullableInt(rs, "total_induty_cnt"),
                         rs.getString("major_age_grp"),
                         rs.getBigDecimal("major_age_ratio")
                 ));
@@ -104,10 +108,11 @@ public class HjdBriefingLoader {
         stmt.setBigDecimal(3, stat.flpopChgRate());
         stmt.setString(4, stat.topIndutyNm());
         setNullableInt(stmt, 5, stat.topIndutyStorCnt());
-        stmt.setString(6, stat.majorAgeGrp());
-        stmt.setBigDecimal(7, stat.majorAgeRatio());
-        stmt.setBoolean(8, changed);
+        setNullableInt(stmt, 6, stat.totalIndutyCnt());
+        stmt.setString(7, stat.majorAgeGrp());
+        stmt.setBigDecimal(8, stat.majorAgeRatio());
         stmt.setBoolean(9, changed);
+        stmt.setBoolean(10, changed);
     }
 
     private static Integer getNullableInt(ResultSet rs, String column) throws SQLException {
