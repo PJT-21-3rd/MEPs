@@ -38,7 +38,7 @@
             v-if="authStore.isLoggedIn && isProfileOpen"
             class="absolute right-0 top-12 z-50 origin-top-right"
           >
-            <ProfileDropdown />
+            <ProfileDropdown @logout="handleLogout" @delete-account="handleDeleteAccount" />
           </div>
         </Transition>
       </div>
@@ -71,7 +71,7 @@ const handleMyPageClick = () => {
     toastStore.showToast('마이페이지는 로그인 후 이용할 수 있어요.', {
       action: {
         label: '로그인',
-        onClick: () => authStore.openLoginModal(),
+        onClick: () => router.push({ name: 'Login', query: { redirect: '/mypage' } }),
       },
     });
 
@@ -88,20 +88,15 @@ const handleUserClick = () => {
   }
 };
 
-// 로그인 api 추가시 수정
-// const handleLogout = () => {
-//   authStore.logout();
-//   isProfileOpen.value = false;
-//   toastStore.showToast('로그아웃 되었습니다.');
-//   router.push('/');
-// };
+const handleLogout = () => {
+  authStore.logout();
+  isProfileOpen.value = false;
+  toastStore.showToast('로그아웃 되었습니다.');
+  router.push('/');
+};
 
-// const handleDeleteAccount = () => {
-//   if (confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-//     // authStore.deleteAccount();
-//     authStore.logout();
-//     isProfileOpen.value = false;
-//     toastStore.showToast('계정이 삭제되었습니다.');
-//   }
-// };
+const handleDeleteAccount = () => {
+  //계정 삭제 API
+  console.log('계정삭제');
+};
 </script>

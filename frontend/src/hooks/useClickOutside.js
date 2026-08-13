@@ -15,10 +15,10 @@ export function useClickOutside(targetRef, callback) {
   };
 
   onMounted(() => {
-    document.addEventListener('click', handleClick);
+    document.addEventListener('mousedown', handleClick);
   });
 
   onUnmounted(() => {
-    document.removeEventListener('click', handleClick);
+    document.removeEventListener('mousedown', handleClick);
   });
 }
