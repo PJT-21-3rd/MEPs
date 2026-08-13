@@ -10,7 +10,7 @@
       - WKT 경로(ST_GeomFromText)는 위도-우선
       - 정렬 분기는 ${} 주입 대신 choose로 고정 (SQL 인젝션 차단),
         동률 시 2차 정렬은 bd_mgt_sn 오름차순 (같은 요청에 항상 같은 결과 보장)
-      - tot_area/use_apr_day DESC는 MySQL에서 NULL이 맨 뒤로 감
+      - IS NULL 선행 정렬로 면적/사용승인일 없는 건물은 맨 뒤로 보냄
     -->
     <select id="findBuildingsInBounds"
             resultType="org.meps.building.dto.NearbyBuildingDto">
@@ -23,7 +23,8 @@
                main_purps           AS mainPurpsNm,
                grnd_flr,
                ugrnd_flr,
-               use_apr_day
+               use_apr_day,
+               arch_area
         FROM buildings
         WHERE MBRContains(
                       ST_GeomFromText(
@@ -41,7 +42,7 @@
                 use_apr_day IS NULL, use_apr_day DESC, bd_mgt_sn
             </when>
             <when test="sortType == 'AREA'">
-                tot_area IS NULL, tot_area DESC, bd_mgt_sn
+                arch_area IS NULL, arch_area DESC, bd_mgt_sn
             </when>
             <otherwise>saved_cnt DESC, bd_mgt_sn</otherwise>
         </choose>

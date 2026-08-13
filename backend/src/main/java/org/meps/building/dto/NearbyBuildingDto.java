@@ -19,4 +19,5 @@ public class NearbyBuildingDto {
     private Integer grndFlr;
     private Integer ugrndFlr;
     private String useAprDay;
+    private Double archArea; // 건축면적(m2) - 면적순 정렬 기준
 }

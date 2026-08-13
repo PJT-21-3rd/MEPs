@@ -7,5 +7,5 @@ package org.meps.building.dto;
 public enum SortType {
     POPULAR,    // 찜많은순 (기본값) - 찜 수 내림차순
     LATEST,     // 최신순 - 사용승인일 내림차순, null은 맨 뒤
-    AREA        // 면적순 - 연면적 내림차순
+    AREA        // 면적순 - 건축면적 내림차순, null은 맨 뒤
 }
