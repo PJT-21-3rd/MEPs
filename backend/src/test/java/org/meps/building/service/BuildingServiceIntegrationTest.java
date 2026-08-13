@@ -28,7 +28,7 @@ class BuildingServiceIntegrationTest {
     void 줌10_이상이면_건물목록을_최대20개_반환한다() {
         // 광진구 자양동·구의동 일대 (데이터 존재 영역)
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 10, SortType.DISTANCE);
+                37.5250, 127.0550, 37.5450, 127.1000, 10, SortType.POPULAR);
 
         assertThat(result.isZoomRequired()).isFalse();
         assertThat(result.getBuildings()).isNotEmpty();
@@ -38,37 +38,10 @@ class BuildingServiceIntegrationTest {
     @Test
     void 줌이_부족하면_빈배열과_zoomRequired_true를_반환한다() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 9, SortType.DISTANCE);
+                37.5250, 127.0550, 37.5450, 127.1000, 9, SortType.POPULAR);
 
         assertThat(result.isZoomRequired()).isTrue();
         assertThat(result.getBuildings()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("건물 목록에 뷰포트 중심으로부터의 거리가 포함된다")
-    void buildings_contain_distance_from_viewport_center() {
-        NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.DISTANCE);
-
-        assertThat(result.getBuildings()).isNotEmpty();
-        for (NearbyBuildingDto building : result.getBuildings()) {
-            assertThat(building.getDistanceM()).isNotNull();
-            assertThat(building.getDistanceM()).isGreaterThanOrEqualTo(0);
-        }
-    }
-
-    @Test
-    @DisplayName("건물 목록은 뷰포트 중심에서 가까운 순으로 정렬된다")
-    void buildings_are_sorted_by_distance_ascending() {
-        NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.DISTANCE);
-
-        List<NearbyBuildingDto> buildings = result.getBuildings();
-        assertThat(buildings).isNotEmpty();
-        for (int i = 1; i < buildings.size(); i++) {
-            assertThat(buildings.get(i).getDistanceM())
-                    .isGreaterThanOrEqualTo(buildings.get(i - 1).getDistanceM());
-        }
     }
 
     @Test
@@ -97,8 +70,8 @@ class BuildingServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("최신순 정렬에서 사용승인일이 같으면 거리 오름차순으로 정렬된다")
-    void latest_sort_breaks_ties_by_distance_ascending() {
+    @DisplayName("최신순 정렬에서 사용승인일이 같으면 건물관리번호 오름차순으로 정렬된다")
+    void latest_sort_breaks_ties_by_building_id_ascending() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
                 37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.LATEST);
 
@@ -107,13 +80,13 @@ class BuildingServiceIntegrationTest {
             NearbyBuildingDto prev = buildings.get(i - 1);
             NearbyBuildingDto curr = buildings.get(i);
             if (prev.getUseAprDay() != null && prev.getUseAprDay().equals(curr.getUseAprDay())) {
-                assertThat(curr.getDistanceM()).isGreaterThanOrEqualTo(prev.getDistanceM());
+                assertThat(curr.getBuildingId()).isGreaterThan(prev.getBuildingId());
             }
         }
     }
 
     @Test
-    @DisplayName("인기순 정렬도 최대 20개를 정상 반환한다")
+    @DisplayName("찜많은순 정렬도 최대 20개를 정상 반환한다")
     void popular_sort_returns_buildings_normally() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
                 37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.POPULAR);
@@ -124,16 +97,27 @@ class BuildingServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("면적순 정렬도 최대 20개를 정상 반환한다")
+    void area_sort_returns_buildings_normally() {
+        NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
+                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.AREA);
+
+        assertThat(result.isZoomRequired()).isFalse();
+        assertThat(result.getBuildings()).isNotEmpty();
+        assertThat(result.getBuildings()).hasSizeLessThanOrEqualTo(20);
+    }
+
+    @Test
     void sw좌표가_ne좌표보다_크면_예외가_발생한다() {
         assertThatThrownBy(() -> buildingService.getNearbyBuildings(
-                37.5450, 127.1000, 37.5250, 127.0550, 17, SortType.DISTANCE))
+                37.5450, 127.1000, 37.5250, 127.0550, 17, SortType.POPULAR))
                 .isInstanceOf(InvalidBoundsException.class);
     }
 
     @Test
     void 한반도_범위를_벗어난_좌표는_예외가_발생한다() {
         assertThatThrownBy(() -> buildingService.getNearbyBuildings(
-                20.0, 100.0, 21.0, 101.0, 17, SortType.DISTANCE))
+                20.0, 100.0, 21.0, 101.0, 17, SortType.POPULAR))
                 .isInstanceOf(InvalidBoundsException.class);
     }
 }
