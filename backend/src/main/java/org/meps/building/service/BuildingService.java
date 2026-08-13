@@ -30,13 +30,9 @@ public class BuildingService {
             return NearbyBuildingsResponseDto.zoomRequired();
         }
 
-        // 뷰포트 중심 좌표 — 각 건물까지의 거리(distanceM) 계산 기준
-        double centerLat = (swLat + neLat) / 2;
-        double centerLng = (swLng + neLng) / 2;
-
         return NearbyBuildingsResponseDto.of(
                 buildingMapper.findBuildingsInBounds(
-                        swLat, swLng, neLat, neLng, centerLat, centerLng, sortType.name(), MAX_RESULTS));
+                        swLat, swLng, neLat, neLng, sortType.name(), MAX_RESULTS));
     }
 
     public BuildingDetailDto getBuildingDetail(String buildingId) {
