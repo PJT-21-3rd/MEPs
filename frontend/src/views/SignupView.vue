@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import mepsLogo from '@/assets/images/MEPS_LOGO.png';
 import { ChevronRight } from '@lucide/vue';
-import { signup } from '@/api/auth';
+import { signup, login } from '@/api/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
 
 const step = ref('terms');
 
@@ -43,24 +46,6 @@ function goToForm() {
   step.value = 'form';
 }
 
-// function handleSignup() {
-//   //에러 초기화
-//   errorMessage.value = '';
-//   //빈 칸 검사
-//   if (!email.value || !password.value || !passwordConfirm.value) {
-//     errorMessage.value = '모든 항목을 입력해주세요';
-//     return;
-//   }
-//   // 비밀번호 일치 검사
-//   if (password.value !== passwordConfirm.value) {
-//     errorMessage.value = '비밀번호가 일치하지 않습니다';
-//     return;
-//   }
-//   // 통과하면 회원가입 진행
-//   console.log('회원가입 시도:', email.value, password.value);
-//   // TODO: 백엔드 API 호출
-// }
-
 async function handleSignup() {
   errorMessage.value = '';
   // 빈 칸 검사
@@ -81,12 +66,18 @@ async function handleSignup() {
   }
   // API 호출
   try {
+    // 회원가입
     await signup({
       email: email.value,
       password: password.value,
       passwordConfirm: passwordConfirm.value,
     });
-    router.push('/login');
+    // 자동로그인
+    const data = await login({ email: email.value, password: password.value });
+    authStore.setToken(data.accessToken, email.value);
+    // 리다이렉트
+    const redirect = route.query.redirect || '/';
+    router.push(redirect);
   } catch (error) {
     if (error.response?.status === 409) {
       errorMessage.value = '이미 사용 중인 이메일입니다';
@@ -99,7 +90,7 @@ async function handleSignup() {
 }
 
 function goLogin() {
-  router.push('/login');
+  router.push({ name: 'Login', query: route.query });
 }
 
 // 약관 상세 (지금은 자리만)

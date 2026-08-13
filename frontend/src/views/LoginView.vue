@@ -7,7 +7,7 @@ const router = useRouter();
 const route = useRoute();
 
 function handleSignup() {
-  router.push('/signup'); // 회원가입 페이지로
+  router.push({ name: 'Signup', query: route.query });
 }
 function handleSuccess() {
   const redirect = route.query.redirect || '/';
