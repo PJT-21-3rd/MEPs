@@ -39,6 +39,7 @@ public class HjdBriefingStatCollector {
                         fp.flpopChgRate(),
                         sp != null ? sp.topIndutyNm() : null,
                         sp != null ? sp.topIndutyStorCnt() : null,
+                        sp != null ? sp.totalIndutyCnt() : null,
                         fp.majorAgeGrp(),
                         fp.majorAgeRatio()
                 ));

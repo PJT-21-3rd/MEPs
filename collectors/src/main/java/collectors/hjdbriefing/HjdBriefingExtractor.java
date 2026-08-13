@@ -18,15 +18,17 @@ public class HjdBriefingExtractor {
                     "FROM hjd_flpop " +
                     "WHERE yyqu = ?";
 
-    // 특정 분기의 hjd_store 1위 업종
+    // 특정 분기의 hjd_store 1위 업종 및 총 업종 개수
     private static final String TOP_STORE_BY_YYQU_SQL =
             "WITH ranked AS ( " +
                     "    SELECT hjd_cd, induty_nm, stor_co, " +
-                    "           ROW_NUMBER() OVER (PARTITION BY hjd_cd ORDER BY stor_co DESC) AS rn " +
+                    "           ROW_NUMBER() OVER (PARTITION BY hjd_cd ORDER BY stor_co DESC) AS rn, " +
+                    "           COUNT(*) OVER (PARTITION BY hjd_cd) AS induty_cnt " +
                     "    FROM hjd_store " +
                     "    WHERE yyqu = ? AND stor_co > 0 " +
                     ") " +
-                    "SELECT hjd_cd, induty_nm AS top_induty_nm, stor_co AS top_induty_stor_cnt " +
+                    "SELECT hjd_cd, induty_nm AS top_induty_nm, stor_co AS top_induty_stor_cnt, " +
+                    "       induty_cnt AS total_induty_cnt " +
                     "FROM ranked " +
                     "WHERE rn = 1";
 
@@ -37,8 +39,8 @@ public class HjdBriefingExtractor {
     ) {
     }
 
-    /** hjd_store 기준 1위 업종 */
-    public record StoreStat(String topIndutyNm, Integer topIndutyStorCnt) {
+    /** hjd_store 기준 1위 업종 및 총 업종 개수 */
+    public record StoreStat(String topIndutyNm, Integer topIndutyStorCnt, Integer totalIndutyCnt) {
     }
 
     /** hjd_flpop/hjd_store 중 더 이전 분기를 기준 분기로 선택 */
@@ -101,7 +103,8 @@ public class HjdBriefingExtractor {
                 while (rs.next()) {
                     result.put(rs.getString("hjd_cd"), new StoreStat(
                             rs.getString("top_induty_nm"),
-                            getNullableInt(rs, "top_induty_stor_cnt")
+                            getNullableInt(rs, "top_induty_stor_cnt"),
+                            getNullableInt(rs, "total_induty_cnt")
                     ));
                 }
             }
