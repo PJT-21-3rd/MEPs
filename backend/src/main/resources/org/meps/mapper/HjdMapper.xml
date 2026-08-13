@@ -13,7 +13,7 @@
         <result property="dailyFlpop" column="daily_flpop"/>
         <result property="flpopChangeRate" column="flpop_chg_rate"/>
         <result property="topIndustryName" column="top_induty_nm"/>
-        <result property="topIndustryCnt" column="top_induty_stor_cnt"/>
+        <result property="totalIndustryCnt" column="total_induty_cnt"/>
         <result property="avgBuildingAge" column="avg_bld_age"/>
         <result property="majorAgeGroup" column="major_age_grp"/>
         <result property="majorAgeRatio" column="major_age_ratio"/>
@@ -88,7 +88,7 @@
             b.daily_flpop,
             b.flpop_chg_rate,
             b.top_induty_nm,
-            b.top_induty_stor_cnt,
+            b.total_induty_cnt,
             st.avg_bld_age,
             b.major_age_grp,
             b.major_age_ratio,

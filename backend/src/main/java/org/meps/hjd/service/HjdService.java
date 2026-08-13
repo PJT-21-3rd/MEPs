@@ -46,6 +46,7 @@ public class HjdService {
         return hjdMapper.findBboxByHjdCd(hjdCd);
     }
 
+    /** 행정동 코드로 AI 브리핑 조회 */
     public HjdBriefingResponseDto getBriefing(String hjdCd) {
         HjdBriefingResponseDto briefing = hjdMapper.findByHjdCd(hjdCd);
 
