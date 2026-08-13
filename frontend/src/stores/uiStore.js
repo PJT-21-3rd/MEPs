@@ -13,6 +13,7 @@ export const useUiStore = defineStore('ui', () => {
   const insuranceModalConfig = ref(null); // 보험 모달 설정
   const loanModalConfig = ref(null); // 대출 모달 설정
   const hjdBriefingData = ref(null); // 행정동 브리핑 데이터
+  const currentSort = ref('POPULAR'); // 정렬
   const currentBuildings = ref([]); // 현재 화면의 건물 배열
   const currentBuildingDetail = ref(null); // 현재 건물 상세 데이터
   const isDetailLoading = ref(false);
@@ -106,6 +107,10 @@ export const useUiStore = defineStore('ui', () => {
     loanModalConfig.value = null;
   };
 
+  const setSort = (sortType) => {
+    currentSort.value = sortType;
+  };
+
   const setHjdBriefingData = (data) => {
     hjdBriefingData.value = data;
   };
@@ -125,6 +130,7 @@ export const useUiStore = defineStore('ui', () => {
     insuranceModalConfig,
     hjdBriefingData,
     loanModalConfig,
+    currentSort,
     currentBuildings,
     currentBuildingDetail,
     isDetailLoading,
@@ -142,6 +148,7 @@ export const useUiStore = defineStore('ui', () => {
     closeInsuranceModal,
     openLoanModal,
     closeLoanModal,
+    setSort,
     setHjdBriefingData,
     setBuildingsData,
   };

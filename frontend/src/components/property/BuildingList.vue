@@ -94,21 +94,21 @@ const TABS = [
 const activeTab = ref('nearby');
 
 const SORT_OPTIONS = [
-  { label: '거리순', value: 'distance' },
-  { label: '최신순', value: 'recent' },
+  { label: '랭킹순', value: 'POPULAR' },
+  { label: '최신순', value: 'LATEST' },
+  { label: '면적순', value: 'AREA' },
 ];
-const currentSort = ref('distance');
 
 const isSortOpen = ref(false);
 const sortDropdownRef = ref(null);
 
 const currentSortLabel = computed(() => {
-  const found = SORT_OPTIONS.find((o) => o.value === currentSort.value);
-  return found ? found.label : '정렬 선택';
+  const found = SORT_OPTIONS.find((o) => o.value === uiStore.currentSort);
+  return found ? found.label : '랭킹순';
 });
 
 const selectSort = (val) => {
-  currentSort.value = val;
+  uiStore.setSort(val);
   isSortOpen.value = false;
 };
 
@@ -116,20 +116,6 @@ useClickOutside(sortDropdownRef, () => {
   isSortOpen.value = false;
 });
 
-// 리스트 정렬 및 필터링 로직 (api)
-// const sortedBuildings = computed(() => {
-//   if (activeTab.value !== 'nearby') return [];
-
-//   const list = [...mockBuildings.value];
-
-//   if (currentSort.value === 'distance') {
-//     return list.sort((a, b) => a.distance - b.distance);
-//   } else if (currentSort.value === 'recent') {
-//     return list.sort((a, b) => parseInt(b.useAprDay) - parseInt(a.useAprDay));
-//   }
-
-//   return list;
-// });
 const displayBuildings = computed(() => {
   // TODOS '주변 상가' 탭이 아닐 때는 일단 빈 배열 처리 (나중에 탭 로직 추가 시 수정)
   if (activeTab.value !== 'nearby') return [];
@@ -139,11 +125,10 @@ const displayBuildings = computed(() => {
 
 const openDetail = (buildingId) => {
   console.log(`클릭된 건물 ID: ${buildingId}`);
-
   uiStore.openBuildingDetail(buildingId);
 
   if (router) {
-    router.push({ query: { buildingId } });
+    router.push({ query: { ...router.currentRoute.value.query, buildingId } });
   }
 };
 </script>
