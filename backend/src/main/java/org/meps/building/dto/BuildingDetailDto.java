@@ -40,4 +40,7 @@ public class BuildingDetailDto {
     // ---- 층별 현황 ----
     @JsonRawValue
     private String floors;
+
+    // ---- 찜 정보 ----
+    private boolean saved;
 }

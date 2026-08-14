@@ -1,8 +1,10 @@
 package org.meps.insurance.exception;
 
-/** factors 누락/공백 또는 유효하지 않은 진단 요소 코드 → 400 */
-public class InvalidFactorException extends RuntimeException {
+import org.meps.common.exception.BusinessException;
+import org.meps.common.exception.ErrorCode;
+
+public class InvalidFactorException extends BusinessException {
     public InvalidFactorException(String message) {
-        super(message);
+        super(ErrorCode.INVALID_FACTOR, message);
     }
 }

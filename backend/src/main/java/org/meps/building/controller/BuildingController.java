@@ -7,6 +7,7 @@ import org.meps.building.dto.NearbyBuildingsResponseDto;
 import org.meps.building.dto.SortType;
 import org.meps.building.service.BuildingSearchService;
 import org.meps.building.service.BuildingService;
+import org.meps.common.auth.LoginUser;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -36,8 +37,9 @@ public class BuildingController {
      * 건물 기본 상세 조회
      */
     @GetMapping("/{buildingId}")
-    public BuildingDetailDto detail(@PathVariable String buildingId) {
-        return buildingService.getBuildingDetail(buildingId);
+    public BuildingDetailDto detail(@PathVariable String buildingId,
+                                    @LoginUser Integer userId) {
+        return buildingService.getBuildingDetail(buildingId, userId);
     }
 
     /**
@@ -50,7 +52,8 @@ public class BuildingController {
 
     @GetMapping("/point")
     public BuildingDetailDto detailAt(@RequestParam double lat,
-                                      @RequestParam double lng) {
-        return buildingService.getBuildingDetailAt(lat, lng);
+                                      @RequestParam double lng,
+                                      @LoginUser Integer userId) {
+        return buildingService.getBuildingDetailAt(lat, lng, userId);
     }
 }

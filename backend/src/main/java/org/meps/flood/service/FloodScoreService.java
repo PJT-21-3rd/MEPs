@@ -3,6 +3,7 @@ package org.meps.flood.service;
 import lombok.RequiredArgsConstructor;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
+import org.meps.flood.exception.InvalidFloodGradeException;
 import org.meps.flood.mapper.FloodMapper;
 import org.springframework.stereotype.Service;
 
@@ -61,7 +62,7 @@ public class FloodScoreService {
     private double gradeWeight(int grade) {
         Double weight = GRADE_WEIGHTS.get(grade);
         if (weight == null) {
-            throw new IllegalStateException("Unexpected flood grade: " + grade);
+            throw new InvalidFloodGradeException(grade);
         }
         return weight;
     }

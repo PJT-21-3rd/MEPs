@@ -1,7 +1,10 @@
 package org.meps.building.exception;
 
-public class InvalidKeywordException extends RuntimeException {
+import org.meps.common.exception.BusinessException;
+import org.meps.common.exception.ErrorCode;
+
+public class InvalidKeywordException extends BusinessException {
     public InvalidKeywordException() {
-        super("keyword는 비어 있을 수 없습니다.");
+        super(ErrorCode.INVALID_KEYWORD);
     }
 }

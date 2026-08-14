@@ -1,7 +1,10 @@
 package org.meps.hjd.exception;
 
-public class AiBriefingNotAvailableException extends RuntimeException {
+import org.meps.common.exception.BusinessException;
+import org.meps.common.exception.ErrorCode;
+
+public class AiBriefingNotAvailableException extends BusinessException {
     public AiBriefingNotAvailableException(String message) {
-        super(message);
+        super(ErrorCode.AI_BRIEFING_NOT_AVAILABLE, message);
     }
 }

@@ -8,6 +8,7 @@ import org.meps.building.exception.BuildingNotFoundException;
 import org.meps.building.exception.InvalidBoundsException;
 import org.meps.building.exception.InvalidBuildingIdException;
 import org.meps.building.mapper.BuildingMapper;
+import org.meps.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
@@ -18,6 +19,7 @@ public class BuildingService {
     private static final int MIN_ZOOM = 14;
     private static final int MAX_RESULTS = 20;
     private final BuildingMapper buildingMapper;
+    private final UserMapper userMapper;
     private static final Pattern BUILDING_ID_PATTERN = Pattern.compile("\\d{25}");
 
     public NearbyBuildingsResponseDto getNearbyBuildings(
@@ -35,21 +37,28 @@ public class BuildingService {
                         swLat, swLng, neLat, neLng, sortType.name(), MAX_RESULTS));
     }
 
-    public BuildingDetailDto getBuildingDetail(String buildingId) {
+    public BuildingDetailDto getBuildingDetail(String buildingId, Integer userId) {
         validateBuildingId(buildingId);
 
         BuildingDetailDto detail = buildingMapper.findBuildingDetail(buildingId);
         if (detail == null) {
             throw new BuildingNotFoundException(buildingId);
         }
+
+        if (userId != null) {
+            detail.setSaved(userMapper.existsSavedBuilding(userId, buildingId));
+        }
         return detail;
     }
 
     /** 지도에서 건물 클릭 → 좌표로 상세 조회 */
-    public BuildingDetailDto getBuildingDetailAt(double lat, double lng) {
+    public BuildingDetailDto getBuildingDetailAt(double lat, double lng, Integer userId) {
         BuildingDetailDto detail = buildingMapper.findBuildingDetailAt(lat, lng);
         if (detail == null) {
             throw new BuildingNotFoundException("좌표에 건물 없음: " + lat + ", " + lng);
+        }
+        if (userId != null) {
+            detail.setSaved(userMapper.existsSavedBuilding(userId, detail.getBuildingId()));
         }
         return detail;
     }
