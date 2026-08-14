@@ -6,13 +6,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.meps.config.RootConfig;
 import org.meps.config.ServletConfig;
+import org.meps.user.dto.UserDto;
+import org.meps.user.jwt.JwtProvider;
+import org.meps.user.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -28,16 +34,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         @ContextConfiguration(classes = RootConfig.class),
         @ContextConfiguration(classes = ServletConfig.class)
 })
+@Transactional
 class BuildingControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext context;
+    @Autowired
+    private JwtProvider jwtProvider;
+    @Autowired
+    private UserMapper userMapper;
 
     private MockMvc mockMvc;
+    private String token;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+
+        UserDto user = UserDto.builder()
+                .email("test-" + System.nanoTime() + "@meps.local")
+                .password("encoded")
+                .build();
+        userMapper.insertUser(user);
+        token = jwtProvider.createToken(user.getUserId());
+    }
+
+    private String bearer() {
+        return "Bearer " + token;
     }
 
     @Test
@@ -335,5 +358,65 @@ class BuildingControllerIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertEquals(byId, byPoint);
+    }
+
+    // ---- 찜 여부(saved) ----
+
+    @Test
+    void 비로그인_상세조회는_saved가_false다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+    }
+
+    @Test
+    void 찜하지_않은_건물은_saved가_false다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+    }
+
+    @Test
+    void 찜한_건물은_saved가_true다() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{buildingId}", "1121510100100030059005620")
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":true"));
+    }
+
+    @Test
+    void 비로그인_좌표조회는_saved가_false다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+    }
+
+    @Test
+    void 찜한_건물은_좌표조회에서도_saved가_true다() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{buildingId}", "1121510100100030059005620")
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":true"));
     }
 }
