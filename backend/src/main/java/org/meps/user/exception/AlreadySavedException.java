@@ -1,7 +1,10 @@
 package org.meps.user.exception;
 
-public class AlreadySavedException extends RuntimeException {
+import org.meps.common.exception.BusinessException;
+import org.meps.common.exception.ErrorCode;
+
+public class AlreadySavedException extends BusinessException {
     public AlreadySavedException(String buildingId) {
-        super("이미 찜한 건물입니다: " + buildingId);
+        super(ErrorCode.ALREADY_SAVED, "이미 찜한 건물입니다: " + buildingId);
     }
 }
