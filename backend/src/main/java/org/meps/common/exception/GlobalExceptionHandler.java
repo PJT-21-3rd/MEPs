@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
             log.warn("[{}] {}", errorCode, e.getMessage());
         }
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ErrorResponse.of(errorCode, e.getMessage()));
+                .body(ErrorResponse.of(errorCode));
     }
 
     /** 400
