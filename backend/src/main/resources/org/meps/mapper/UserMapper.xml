@@ -77,6 +77,20 @@
         WHERE user_id = #{userId}
     </select>
 
+    <!-- 마이페이지 찜 목록 - 안전 리포트는 아직 생성되지 않았을 수 있어 LEFT JOIN -->
+    <select id="findSavedBuildings" resultType="org.meps.user.dto.SavedBuildingDto">
+        SELECT b.bd_mgt_sn   AS buildingId,
+               b.bld_nm      AS bldNm,
+               b.road_addr   AS roadAddr,
+               b.jibun_addr  AS jibunAddr,
+               r.total_score AS safetyScore
+        FROM saved s
+                 JOIN buildings b ON b.bd_mgt_sn = s.bd_mgt_sn
+                 LEFT JOIN building_safety_report r ON r.bd_mgt_sn = s.bd_mgt_sn
+        WHERE s.user_id = #{userId}
+        ORDER BY s.created_at DESC
+    </select>
+
     <!-- 회원 삭제 -->
     <delete id="deleteUser">
         DELETE FROM users
