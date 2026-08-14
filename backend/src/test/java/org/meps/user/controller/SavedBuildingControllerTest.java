@@ -20,6 +20,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -176,5 +177,45 @@ class SavedBuildingControllerTest {
                 .andExpect(status().isNoContent());
         mockMvc.perform(post(url).header("Authorization", bearer()))
                 .andExpect(status().isCreated());
+    }
+
+    // ---------- 목록 조회 ----------
+
+    @Test
+    @DisplayName("찜 목록 조회 성공")
+    void list_success() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{id}", BUILDING_ID)
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/member/saved")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(body).contains("\"buildingId\":\"" + BUILDING_ID + "\"");
+        assertThat(body).contains("\"roadAddr\"");
+        assertThat(body).contains("\"jibunAddr\"");
+    }
+
+    @Test
+    @DisplayName("찜한 매물이 없으면 빈 배열 반환")
+    void list_empty() throws Exception {
+        String body = mockMvc.perform(get("/api/member/saved")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(body).isEqualTo("[]");
+    }
+
+    @Test
+    @DisplayName("찜 목록 조회 시 토큰 없음")
+    void list_noToken() throws Exception {
+        mockMvc.perform(get("/api/member/saved"))
+                .andExpect(status().isUnauthorized());
     }
 }
