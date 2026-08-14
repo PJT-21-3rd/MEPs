@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import { HardHat, Info } from '@lucide/vue';
+import TypeWriterText from './TypeWriterText.vue';
 
 //  #25 - 구조 안전성 한줄 요약
 //  #32 - detail 모드: 번호+제목, 서브타이틀, AI 전문가 의견(3단락) 추가
@@ -29,7 +30,11 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  typingActive: { type: Boolean, default: false },
+  alreadyTyped: { type: Boolean, default: false },
 });
+
+defineEmits(['typing-done']);
 
 // aiReport가 3단락(근거 데이터 설명/리스크/솔루션)으로 온다는 가정 하에,
 // 빈 줄(\n\n) 기준으로 나눠서 단락별 여백을 확실히 준다.
@@ -41,8 +46,11 @@ const aiReportParagraphs = computed(() => {
 
 <template>
   <div
-    class="p-4 rounded-xl flex flex-col gap-3"
-    :class="mode === 'detail' ? '' : 'border border-surface-gray'"
+    class="p-4 rounded-xl flex flex-col gap-3 transition-opacity duration-300"
+    :class="[
+      mode === 'detail' ? '' : 'border border-surface-gray',
+      mode === 'summary' && !typingActive && !alreadyTyped ? 'opacity-40' : 'opacity-100',
+    ]"
   >
     <!-- summary 뷰 -->
     <template v-if="mode === 'summary'">
@@ -51,7 +59,10 @@ const aiReportParagraphs = computed(() => {
         <span class="flex-1 text-sm font-semibold text-text-main">구조안정성</span>
         <StatusBadge :status="status" />
       </div>
-      <p class="text-sm text-text-secondary">"{{ summary }}"</p>
+      <p class="text-sm text-text-secondary">
+        "<span v-if="alreadyTyped">{{ summary }}</span
+        ><TypeWriterText :text="summary" :active="typingActive" @done="$emit('typing-done')" />"
+      </p>
     </template>
 
     <!-- detail 뷰 -->

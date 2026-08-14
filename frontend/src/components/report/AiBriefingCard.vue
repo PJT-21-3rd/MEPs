@@ -1,4 +1,6 @@
 <script setup>
+import TypeWriterText from './TypeWriterText.vue';
+
 //  #138 - AI 핵심 브리핑 컴포넌트 구현
 
 defineProps({
@@ -10,7 +12,16 @@ defineProps({
     type: String,
     default: '',
   },
+  typingActive: {
+    type: Boolean,
+    default: false,
+  },
+  alreadyTyped: {
+    type: Boolean,
+    default: false,
+  },
 });
+defineEmits(['typing-done']);
 </script>
 
 <template>
@@ -25,7 +36,8 @@ defineProps({
 
     <!-- 브리핑 텍스트 -->
     <p v-else class="text-sm text-text-main leading-relaxed">
-      {{ briefing }}
+      <span v-if="alreadyTyped">{{ briefing }}</span>
+      <TypeWriterText v-else :text="briefing" :active="typingActive" @done="$emit('typing-done')" />
     </p>
   </div>
 </template>

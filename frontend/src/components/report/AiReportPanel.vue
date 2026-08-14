@@ -15,7 +15,7 @@ import { fetchReportData, fetchDetailedReportData } from '@/api/reportApi';
 import { X, ArrowLeft, ChevronRight, FileText, Zap } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import { useAuthStore } from '@/stores/authStore';
-// import ReportLoadingAnimation from './ReportLoadingAnimation.vue';
+import ReportSkeleton from './ReportSkeleton.vue';
 
 const authStore = useAuthStore();
 
@@ -49,7 +49,12 @@ const uiStore = useUiStore();
 const currentView = ref('summary');
 const isLoading = ref(true);
 const reportData = ref(null);
+const typingStage = ref(0); //0=브리핑, 1~4=구조/화재/지반침하/침수, 5=완료
 
+function advanceTyping() {
+  console.trace('advanceTyping 호출, 이전 값:', typingStage.value);
+  typingStage.value += 1;
+}
 // #32: 상세 리포트는 summary와 별도 API라, 상세보기 클릭 시점에 지연 로딩
 const detailReportData = ref(null);
 const isDetailLoading = ref(false);
@@ -99,18 +104,19 @@ async function loadReport() {
   isLoading.value = true;
   currentView.value = 'summary';
 
-  // const MIN_LOADING_MS = 3600; // ReportLoadingSteps 5단계(800ms × 4) 완주 시간 확보
-  // const startedAt = Date.now();
+  const MIN_LOADING_MS = 2800;
+  const startedAt = Date.now();
 
   try {
     reportData.value = await fetchReportData(props.buildingId);
     emit('report-loaded', reportData.value);
-
-    // const elapsed = Date.now() - startedAt;
-    // const remaining = MIN_LOADING_MS - elapsed;
-    // if (remaining > 0) {
-    //   await new Promise((resolve) => setTimeout(resolve, remaining));
-    // }
+    typingStage.value = 0; //새 리포트 로드마다 타이핑 처음부터 시작
+    const elapsed = Date.now() - startedAt;
+    const remaining = MIN_LOADING_MS - elapsed;
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+    isLoading.value = false;
   } catch (err) {
     console.error('[AiReportPanel] 리포트 조회 실패:', err);
   } finally {
@@ -249,16 +255,22 @@ const mockAgent = {
     </div>
 
     <!-- 로딩 중 -->
-    <div v-if="isLoading" class="flex-1 flex items-center justify-center text-sm text-text-sub">
+    <!-- <div v-if="isLoading" class="flex-1 flex items-center justify-center text-sm text-text-sub">
       리포트를 불러오는 중이에요...
-    </div>
-    <!-- <ReportLoadingAnimation v-if="isLoading" /> -->
+    </div> -->
+    <ReportSkeleton v-if="isLoading" />
 
     <!-- summary 뷰 -->
     <div v-else-if="currentView === 'summary'" class="flex-1 flex flex-col gap-5 px-5 py-2">
       <div class="flex flex-col gap-2">
         <ScoreGauge :score="reportData.score" :grade="reportData.grade" />
-        <AiBriefingCard :loading="false" :briefing="reportData.overallBriefing" />
+        <AiBriefingCard
+          :loading="false"
+          :briefing="reportData.overallBriefing"
+          :typing-active="typingStage === 0"
+          :already-typed="typingStage > 0"
+          @typing-done="advanceTyping"
+        />
       </div>
 
       <!-- 로그인 -->
@@ -268,6 +280,8 @@ const mockAgent = {
           v-if="reportData.hasDetail"
           :items="reportData.dangerItems"
           mode="summary"
+          :typing-stage="typingStage"
+          @typing-done="advanceTyping"
         />
 
         <button
