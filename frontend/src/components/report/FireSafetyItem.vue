@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import { Flame, Info } from '@lucide/vue';
+import TypeWriterText from './TypeWriterText.vue';
 
 const props = defineProps({
   status: {
@@ -26,7 +27,11 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  typingActive: { type: Boolean, default: false },
+  alreadyTyped: { type: Boolean, default: false },
 });
+
+defineEmits(['typing-done']);
 
 const aiReportParagraphs = computed(() => {
   if (!props.aiReport) return [];
@@ -36,20 +41,24 @@ const aiReportParagraphs = computed(() => {
 
 <template>
   <div
-    class="p-4 rounded-xl flex flex-col gap-3"
-    :class="mode === 'detail' ? '' : 'border border-surface-gray'"
+    class="p-4 rounded-xl flex flex-col gap-3 transition-opacity duration-300"
+    :class="[
+      mode === 'detail' ? '' : 'border border-surface-gray',
+      mode === 'summary' && !typingActive && !alreadyTyped ? 'opacity-40' : 'opacity-100',
+    ]"
   >
-    <!-- summary 뷰 -->
     <template v-if="mode === 'summary'">
       <div class="flex items-center gap-2">
         <Flame class="w-4 h-4 text-text-sub" />
         <span class="flex-1 text-sm font-semibold text-text-main">화재안정성</span>
         <StatusBadge :status="status" />
       </div>
-      <p class="text-sm text-text-secondary">"{{ summary }}"</p>
+      <p class="text-sm text-text-secondary">
+        "<span v-if="alreadyTyped">{{ summary }}</span
+        ><TypeWriterText :text="summary" :active="typingActive" @done="$emit('typing-done')" />"
+      </p>
     </template>
 
-    <!-- detail 뷰 -->
     <template v-else>
       <div class="flex items-center gap-2">
         <span
@@ -81,7 +90,6 @@ const aiReportParagraphs = computed(() => {
       </div>
     </template>
 
-    <!-- 특약 카드: 주의 등급이면 summary/detail 상관없이 항상 노출 -->
     <div v-if="status === 'warning' && detail?.insurance">
       <div class="bg-surface-base rounded-lg p-3">
         <p class="text-sm font-semibold text-text-main mb-0.5">{{ detail.insurance.name }}</p>

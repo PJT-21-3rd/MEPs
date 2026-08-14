@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import { TrendingDown, Info } from '@lucide/vue';
+import TypeWriterText from './TypeWriterText.vue';
 
 //  #25 - 지반침하사고이력 한줄 요약
 //  #32 - detail 모드: 번호+제목, 서브타이틀, AI 전문가 의견(3단락) 추가
@@ -29,7 +30,11 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  typingActive: { type: Boolean, default: false },
+  alreadyTyped: { type: Boolean, default: false },
 });
+
+defineEmits(['typing-done']); // 추가
 
 const aiReportParagraphs = computed(() => {
   if (!props.aiReport) return [];
@@ -39,8 +44,11 @@ const aiReportParagraphs = computed(() => {
 
 <template>
   <div
-    class="p-4 rounded-xl flex flex-col gap-3"
-    :class="mode === 'detail' ? '' : 'border border-surface-gray'"
+    class="p-4 rounded-xl flex flex-col gap-3 transition-opacity duration-300"
+    :class="[
+      mode === 'detail' ? '' : 'border border-surface-gray',
+      mode === 'summary' && !typingActive && !alreadyTyped ? 'opacity-40' : 'opacity-100',
+    ]"
   >
     <!-- summary 뷰 -->
     <template v-if="mode === 'summary'">
@@ -49,7 +57,10 @@ const aiReportParagraphs = computed(() => {
         <span class="flex-1 text-sm font-semibold text-text-main">지반침하사고이력</span>
         <StatusBadge :status="status" />
       </div>
-      <p class="text-sm text-text-secondary">"{{ summary }}"</p>
+      <p class="text-sm text-text-secondary">
+        "<span v-if="alreadyTyped">{{ summary }}</span
+        ><TypeWriterText :text="summary" :active="typingActive" @done="$emit('typing-done')" />"
+      </p>
     </template>
 
     <!-- detail 뷰 -->
