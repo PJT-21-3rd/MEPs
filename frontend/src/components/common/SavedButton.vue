@@ -30,8 +30,7 @@ async function handleClick() {
     return;
   }
 
-  // 이미 찜했으면 (지금은 취소 없으니) 아무것도 안 함 or 그냥 둠
-  if (isSaved.value) return; // DELETE는 다음 브랜치
+  if (isSaved.value) return;
 
   try {
     await addSaved(props.buildingId);

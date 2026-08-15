@@ -15,7 +15,7 @@
         <div class="flex items-start justify-between gap-2">
           <p class="truncate text-[16px] tracking-tight text-text-main">{{ displayAddress }}</p>
 
-          <SavedButton :building-id="building.buildingId" />
+          <SavedButton :building-id="building.buildingId" :initial-saved="building.saved" />
         </div>
         <p v-if="displayName" class="-mt-1 truncate text-[14px] text-text-secondary">
           {{ displayName }}
