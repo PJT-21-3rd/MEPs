@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router';
 const props = defineProps({
   buildingId: { type: [String, Number], required: true },
   initialSaved: { type: Boolean, default: false },
+  hoverClass: { type: String, default: 'hover:bg-surface-base' },
 });
 
 const authStore = useAuthStore();
@@ -53,7 +54,11 @@ async function handleClick() {
 </script>
 
 <template>
-  <button @click.stop="handleClick" aria-label="찜하기">
+  <button
+    @click.stop="handleClick"
+    aria-label="찜하기"
+    :class="['rounded-full p-2 transition-colors', hoverClass]"
+  >
     <Heart :size="20" :class="isSaved ? 'fill-status-like text-status-like' : 'text-text-sub'" />
   </button>
 </template>
