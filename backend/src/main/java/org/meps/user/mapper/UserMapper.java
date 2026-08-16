@@ -35,7 +35,7 @@ public interface UserMapper {
     /** 건물 찜 개수 감소 */
     void decrementSavedCount(@Param("buildingId") String buildingId);
 
-    /** 회원이 찜한 건물 목록 (탈퇴 시 saved_cnt 감소용) */
+    /** 회원이 찜한 건물 목록 (매물 리스트 saved 표시, 탈퇴 시 saved_cnt 감소용) */
     List<String> findSavedBuildingIds(@Param("userId") Integer userId);
 
     /** 회원 삭제 — saved는 FK CASCADE로 함께 삭제된다 */
