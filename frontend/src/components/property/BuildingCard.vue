@@ -39,9 +39,6 @@
           <span>·</span>
           <span>{{ formattedFloor }}</span>
         </div>
-
-        <!-- todo: api에 거리 정보 추가 되면 매핑 -->
-        <span class="text-text-sub/70 ml-auto"> 120m </span>
       </div>
     </div>
   </button>
