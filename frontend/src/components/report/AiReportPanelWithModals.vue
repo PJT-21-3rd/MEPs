@@ -7,7 +7,7 @@ import { useUiStore } from '@/stores/uiStore.js';
 import {
   // getFloodInsuranceProducts,
   getBusinessInsuranceRiders,
-  getRequiredMandatoryInsurance,
+  getMandatoryInsuranceItems,
 } from '@/utils/insuranceFilters';
 import { fetchLoanProducts, fetchInsuranceRidersByFactor } from '@/api/financeApi.js';
 
@@ -47,12 +47,12 @@ function handleReportLoaded(data) {
 // );
 
 const businessItems = computed(() => {
-  const mandatory = getRequiredMandatoryInsurance(
+  const mandatory = getMandatoryInsuranceItems(
     reportData.value?.disasterLiability,
     reportData.value?.fireLiability,
   );
   const riders = getBusinessInsuranceRiders(reportData.value?.insuranceRidersByFactor);
-  return mandatory ? [mandatory, ...riders] : riders;
+  return [...mandatory, ...riders];
 });
 
 // 보험 신청 URL — 풍수해/사업장종합 각각 별도 상품 페이지로 연결
@@ -99,11 +99,6 @@ async function handleOpenLoan() {
     console.warn('[AiReportPanelWithModals] 대출 상품 조회 실패', err);
   }
 }
-
-// 대출 배너 클릭 시 uiStore에 위임 (등급과 무관하게 항상 동일한 상품 4종)
-// function handleOpenLoan() {
-//   uiStore.openLoanModal({ products: LOAN_PRODUCTS });
-// }
 
 // 외부 링크를 새 탭으로 여는 공통 헬퍼
 function openExternalLink(url) {
