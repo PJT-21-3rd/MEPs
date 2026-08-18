@@ -66,21 +66,29 @@
   </div>
 
   <div class="px-6 pb-6 pt-1">
-    <div v-if="displayBuildings.length > 0" class="flex flex-col gap-3">
-      <BuildingCard
-        v-for="building in displayBuildings"
-        :key="building.buildingId"
-        :building="building"
-        @click="openDetail(building)"
-      />
-    </div>
+    <template v-if="uiStore.isBuildingsLoading">
+      <BuildingCardSkeleton />
+    </template>
 
-    <div v-else class="flex flex-col items-center justify-center h-40 gap-2 text-center">
-      <span class="text-[40px]">🏢</span>
-      <p class="text-[14px] text-text-sub">
-        {{ activeTab === 'recent' ? '최근 본 매물이 없습니다.' : '해당하는 매물이 없습니다.' }}
-      </p>
-    </div>
+    <template v-else-if="displayBuildings.length > 0">
+      <div class="flex flex-col gap-3">
+        <BuildingCard
+          v-for="building in displayBuildings"
+          :key="building.buildingId"
+          :building="building"
+          @click="openDetail(building)"
+        />
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="flex flex-col items-center justify-center h-40 gap-2 text-center">
+        <span class="text-[40px]">🏢</span>
+        <p class="text-[14px] text-text-sub">
+          {{ activeTab === 'recent' ? '최근 본 매물이 없습니다.' : '해당하는 매물이 없습니다.' }}
+        </p>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -91,6 +99,7 @@ import { useUiStore } from '@/stores/uiStore.js';
 import { Check, ChevronDown } from '@lucide/vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
 import BuildingCard from './BuildingCard.vue';
+import BuildingCardSkeleton from './BuildingCardSkeleton.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();

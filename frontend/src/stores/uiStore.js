@@ -6,6 +6,7 @@ import { fetchBuildingDetail, fetchBuildingDetailByCoord } from '@/api/building'
 export const useUiStore = defineStore('ui', () => {
   const searchQuery = ref(''); // 검색어
   const selectedBuildingId = ref(null); // 건물선택
+  const isBuildingsLoading = ref(false); // 빌딩목록로딩
   const isDetailOpen = ref(false); // 상세화면 열람
   const isReportOpen = ref(false); // 리포트화면 열람
   const isRoadViewModalOpen = ref(false); // 로드뷰
@@ -22,6 +23,10 @@ export const useUiStore = defineStore('ui', () => {
   const isZoomRequired = ref(false);
   const recentBuildings = ref([]); // 최근 본 매물
   const RECENT_KEY = 'meps_recent_buildings';
+
+  const setBuildingsLoading = (status) => {
+    isBuildingsLoading.value = status;
+  };
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
@@ -167,9 +172,11 @@ export const useUiStore = defineStore('ui', () => {
   const setBuildingsData = (data) => {
     isZoomRequired.value = data.zoomRequired;
     currentBuildings.value = data.buildings || [];
+    isBuildingsLoading.value = false;
   };
 
   return {
+    isBuildingsLoading,
     isDetailOpen,
     isReportOpen,
     isRoadViewModalOpen,
@@ -187,6 +194,7 @@ export const useUiStore = defineStore('ui', () => {
     preventMapMove,
     isZoomRequired,
     recentBuildings,
+    setBuildingsLoading,
     addRecentBuilding,
     openBuildingDetail,
     openBuildingDetailByCoord,

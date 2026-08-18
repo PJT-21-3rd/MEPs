@@ -175,6 +175,7 @@ const updateHjdBriefing = async (lat, lng, zoom) => {
 
 // 건물리스트 업데이트
 const updateNearbyBuildings = async () => {
+  uiStore.setBuildingsLoading(true);
   const map = mapStore.mapInstance;
   if (!map) return;
 
@@ -195,6 +196,7 @@ const updateNearbyBuildings = async () => {
     uiStore.setBuildingsData(data);
     console.log(data);
   } catch (error) {
+    uiStore.setBuildingsLoading(false);
     console.error('주변 건물 데이터를 불러오는 데 실패했습니다.', error);
   }
 };
