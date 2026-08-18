@@ -2,6 +2,7 @@ package org.meps.building.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.building.dto.BuildingDetailDto;
+import org.meps.building.dto.NearbyBuildingDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
 import org.meps.building.dto.SortType;
 import org.meps.building.exception.BuildingNotFoundException;
@@ -11,6 +12,7 @@ import org.meps.building.mapper.BuildingMapper;
 import org.meps.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -23,7 +25,8 @@ public class BuildingService {
     private static final Pattern BUILDING_ID_PATTERN = Pattern.compile("\\d{25}");
 
     public NearbyBuildingsResponseDto getNearbyBuildings(
-            double swLat, double swLng, double neLat, double neLng, int zoom, SortType sortType) {
+            double swLat, double swLng, double neLat, double neLng, int zoom, SortType sortType,
+            Integer userId) {
 
         validateBounds(swLat, swLng, neLat, neLng);
 
@@ -32,9 +35,17 @@ public class BuildingService {
             return NearbyBuildingsResponseDto.zoomRequired();
         }
 
-        return NearbyBuildingsResponseDto.of(
-                buildingMapper.findBuildingsInBounds(
-                        swLat, swLng, neLat, neLng, sortType.name(), MAX_RESULTS));
+        List<NearbyBuildingDto> buildings = buildingMapper.findBuildingsInBounds(
+                swLat, swLng, neLat, neLng, sortType.name(), MAX_RESULTS);
+
+        if (userId != null && !buildings.isEmpty()) {
+            List<String> savedIds = userMapper.findSavedBuildingIds(userId);
+            for (NearbyBuildingDto building : buildings) {
+                building.setSaved(savedIds.contains(building.getBuildingId()));
+            }
+        }
+
+        return NearbyBuildingsResponseDto.of(buildings);
     }
 
     public BuildingDetailDto getBuildingDetail(String buildingId, Integer userId) {

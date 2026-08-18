@@ -1,5 +1,7 @@
 package org.meps.building.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,6 +49,7 @@ class BuildingControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private String token;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -418,5 +422,69 @@ class BuildingControllerIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertTrue(body.contains("\"saved\":true"));
+    }
+
+    // ---- 매물리스트 찜 여부(saved) ----
+
+    // 찜 테스트 건물(1121510100100030059005620) 주변 좁은 영역 — 리스트 20개안에 무조건 포함되도록 설정
+    private static final String SAVED_SW_LAT = "37.5620";
+    private static final String SAVED_SW_LNG = "127.0960";
+    private static final String SAVED_NE_LAT = "37.5627";
+    private static final String SAVED_NE_LNG = "127.0967";
+
+    @Test
+    @DisplayName("비로그인 매물리스트는 saved가 모두 false다")
+    void nearby_savedIsAllFalseWithoutLogin() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", SAVED_SW_LAT).param("swLng", SAVED_SW_LNG)
+                        .param("neLat", SAVED_NE_LAT).param("neLng", SAVED_NE_LNG)
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+        assertFalse(body.contains("\"saved\":true"));
+    }
+
+    @Test
+    @DisplayName("로그인해도 찜하지 않은 건물은 매물리스트에서 saved가 false다")
+    void nearby_savedIsFalseForUnsavedBuildingEvenWhenLoggedIn() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", SAVED_SW_LAT).param("swLng", SAVED_SW_LNG)
+                        .param("neLat", SAVED_NE_LAT).param("neLng", SAVED_NE_LNG)
+                        .param("zoom", "17")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+        assertFalse(body.contains("\"saved\":true"));
+    }
+
+    @Test
+    @DisplayName("찜한 건물은 매물리스트에서 saved가 true다")
+    void nearby_savedIsTrueForSavedBuilding() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{buildingId}", "1121510100100030059005620")
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", SAVED_SW_LAT).param("swLng", SAVED_SW_LNG)
+                        .param("neLat", SAVED_NE_LAT).param("neLng", SAVED_NE_LNG)
+                        .param("zoom", "17")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 찜한 건물의 JSON 객체에서 saved가 true인지 확인
+        JsonNode buildings = objectMapper.readTree(body).get("buildings");
+        JsonNode savedBuilding = null;
+        for (JsonNode building : buildings) {
+            if (building.get("buildingId").asText().equals("1121510100100030059005620")) {
+                savedBuilding = building;
+                break;
+            }
+        }
+        assertNotNull(savedBuilding);
+        assertTrue(savedBuilding.get("saved").asBoolean());
     }
 }

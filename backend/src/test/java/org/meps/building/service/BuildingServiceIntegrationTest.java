@@ -29,7 +29,7 @@ class BuildingServiceIntegrationTest {
     void returns_up_to_20_buildings_when_zoom_is_at_least_14() {
         // 광진구 자양동·구의동 일대 (데이터 존재 영역)
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 14, SortType.POPULAR);
+                37.5250, 127.0550, 37.5450, 127.1000, 14, SortType.POPULAR, null);
 
         assertThat(result.isZoomRequired()).isFalse();
         assertThat(result.getBuildings()).isNotEmpty();
@@ -40,7 +40,7 @@ class BuildingServiceIntegrationTest {
     @DisplayName("줌이 부족하면 빈 배열과 zoomRequired true를 반환한다")
     void returns_empty_list_with_zoom_required_when_zoom_is_insufficient() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 13, SortType.POPULAR);
+                37.5250, 127.0550, 37.5450, 127.1000, 13, SortType.POPULAR, null);
 
         assertThat(result.isZoomRequired()).isTrue();
         assertThat(result.getBuildings()).isEmpty();
@@ -50,7 +50,7 @@ class BuildingServiceIntegrationTest {
     @DisplayName("최신순 정렬은 사용승인일 내림차순이고 null은 맨 뒤로 간다")
     void latest_sort_orders_by_use_apr_day_desc_with_nulls_last() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.LATEST);
+                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.LATEST, null);
 
         List<NearbyBuildingDto> buildings = result.getBuildings();
         assertThat(buildings).isNotEmpty();
@@ -75,7 +75,7 @@ class BuildingServiceIntegrationTest {
     @DisplayName("최신순 정렬에서 사용승인일이 같으면 건물관리번호 오름차순으로 정렬된다")
     void latest_sort_breaks_ties_by_building_id_ascending() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.LATEST);
+                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.LATEST, null);
 
         List<NearbyBuildingDto> buildings = result.getBuildings();
         for (int i = 1; i < buildings.size(); i++) {
@@ -91,7 +91,7 @@ class BuildingServiceIntegrationTest {
     @DisplayName("찜많은순 정렬도 최대 20개를 정상 반환한다")
     void popular_sort_returns_buildings_normally() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.POPULAR);
+                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.POPULAR, null);
 
         assertThat(result.isZoomRequired()).isFalse();
         assertThat(result.getBuildings()).isNotEmpty();
@@ -102,7 +102,7 @@ class BuildingServiceIntegrationTest {
     @DisplayName("면적순 정렬은 건축면적 내림차순이고 null은 맨 뒤로 간다")
     void area_sort_orders_by_arch_area_desc_with_nulls_last() {
         NearbyBuildingsResponseDto result = buildingService.getNearbyBuildings(
-                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.AREA);
+                37.5250, 127.0550, 37.5450, 127.1000, 17, SortType.AREA, null);
 
         List<NearbyBuildingDto> buildings = result.getBuildings();
         assertThat(buildings).isNotEmpty();
@@ -122,16 +122,18 @@ class BuildingServiceIntegrationTest {
     }
 
     @Test
-    void sw좌표가_ne좌표보다_크면_예외가_발생한다() {
+    @DisplayName("sw좌표가 ne좌표보다 크면 예외가 발생한다")
+    void throws_exception_when_sw_coords_exceed_ne_coords() {
         assertThatThrownBy(() -> buildingService.getNearbyBuildings(
-                37.5450, 127.1000, 37.5250, 127.0550, 17, SortType.POPULAR))
+                37.5450, 127.1000, 37.5250, 127.0550, 17, SortType.POPULAR, null))
                 .isInstanceOf(InvalidBoundsException.class);
     }
 
     @Test
-    void 한반도_범위를_벗어난_좌표는_예외가_발생한다() {
+    @DisplayName("한반도 범위를 벗어난 좌표는 예외가 발생한다")
+    void throws_exception_when_coords_are_outside_korea() {
         assertThatThrownBy(() -> buildingService.getNearbyBuildings(
-                20.0, 100.0, 21.0, 101.0, 17, SortType.POPULAR))
+                20.0, 100.0, 21.0, 101.0, 17, SortType.POPULAR, null))
                 .isInstanceOf(InvalidBoundsException.class);
     }
 }
