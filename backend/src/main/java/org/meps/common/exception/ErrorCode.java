@@ -18,6 +18,8 @@ public enum ErrorCode {
     INVALID_BOUNDS(HttpStatus.BAD_REQUEST, "좌표 범위가 올바르지 않습니다."),
     INVALID_BUILDING_ID(HttpStatus.BAD_REQUEST, "buildingId 형식이 올바르지 않습니다."),
     INVALID_KEYWORD(HttpStatus.BAD_REQUEST, "keyword는 비어 있을 수 없습니다."),
+    INVALID_COMPARE_REQUEST(HttpStatus.BAD_REQUEST, "비교할 매물은 2~3개여야 합니다."),
+    BUILDING_NOT_SAVED(HttpStatus.FORBIDDEN, "찜하지 않은 매물은 비교할 수 없습니다."),
 
     // hjd
     HJD_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 행정동입니다."),

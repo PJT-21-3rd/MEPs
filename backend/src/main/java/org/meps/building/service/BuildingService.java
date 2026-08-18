@@ -1,6 +1,7 @@
 package org.meps.building.service;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.building.dto.BuildingCompareDetailDto;
 import org.meps.building.dto.BuildingDetailDto;
 import org.meps.building.dto.NearbyBuildingDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
@@ -58,6 +59,19 @@ public class BuildingService {
 
         if (userId != null) {
             detail.setSaved(userMapper.existsSavedBuilding(userId, buildingId));
+        }
+        return detail;
+    }
+
+    /**
+     * 매물 비교용 조회
+     */
+    public BuildingCompareDetailDto getBuildingCompareDetail(String buildingId) {
+        validateBuildingId(buildingId);
+
+        BuildingCompareDetailDto detail = buildingMapper.findBuildingCompareDetail(buildingId);
+        if (detail == null) {
+            throw new BuildingNotFoundException(buildingId);
         }
         return detail;
     }

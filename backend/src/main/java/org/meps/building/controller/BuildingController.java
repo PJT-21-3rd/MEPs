@@ -1,14 +1,19 @@
 package org.meps.building.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.meps.building.dto.BuildingCompareResponseDto;
 import org.meps.building.dto.BuildingDetailDto;
 import org.meps.building.dto.BuildingSearchResponseDto;
 import org.meps.building.dto.NearbyBuildingsResponseDto;
 import org.meps.building.dto.SortType;
+import org.meps.building.service.BuildingCompareService;
 import org.meps.building.service.BuildingSearchService;
 import org.meps.building.service.BuildingService;
+import org.meps.common.auth.LoginRequiredException;
 import org.meps.common.auth.LoginUser;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/buildings")
@@ -17,6 +22,7 @@ public class BuildingController {
 
     private final BuildingService buildingService;
     private final BuildingSearchService buildingSearchService;
+    private final BuildingCompareService buildingCompareService;
 
     /**
      * 위치 기반 매물 리스트 조회
@@ -56,5 +62,17 @@ public class BuildingController {
                                       @RequestParam double lng,
                                       @LoginUser Integer userId) {
         return buildingService.getBuildingDetailAt(lat, lng, userId);
+    }
+
+    /**
+     * 찜한 매물 비교
+     */
+    @GetMapping("/compare")
+    public BuildingCompareResponseDto compare(@RequestParam("buildingIds") List<String> buildingIds,
+                                              @LoginUser Integer userId) {
+        if (userId == null) {
+            throw new LoginRequiredException("로그인 필수");
+        }
+        return buildingCompareService.compare(buildingIds, userId);
     }
 }
