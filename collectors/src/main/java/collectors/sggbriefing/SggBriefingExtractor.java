@@ -29,15 +29,23 @@ public class SggBriefingExtractor {
                     "JOIN hjd h ON h.hjd_cd = f.hjd_cd " +
                     "WHERE h.sgg_cd = ? AND f.yyqu = ?";
 
-    // 특정 구·분기의 1위 업종
+    // 특정 구·분기의 1위 업종 및 총 업종 개수
     private static final String TOP_STORE_BY_SGG_YYQU_SQL =
-            "SELECT s.induty_nm, SUM(s.stor_co) AS stor_co " +
-                    "FROM hjd_store s " +
-                    "JOIN hjd h ON h.hjd_cd = s.hjd_cd " +
-                    "WHERE h.sgg_cd = ? AND s.yyqu = ? AND s.stor_co > 0 " +
-                    "GROUP BY s.induty_nm " +
-                    "ORDER BY stor_co DESC " +
-                    "LIMIT 1";
+            "WITH grouped AS ( " +
+                    "    SELECT s.induty_nm, SUM(s.stor_co) AS stor_co " +
+                    "    FROM hjd_store s " +
+                    "    JOIN hjd h ON h.hjd_cd = s.hjd_cd " +
+                    "    WHERE h.sgg_cd = ? AND s.yyqu = ? AND s.stor_co > 0 " +
+                    "    GROUP BY s.induty_nm " +
+                    "), ranked AS ( " +
+                    "    SELECT induty_nm, stor_co, " +
+                    "           ROW_NUMBER() OVER (ORDER BY stor_co DESC) AS rn, " +
+                    "           COUNT(*) OVER () AS induty_cnt " +
+                    "    FROM grouped " +
+                    ") " +
+                    "SELECT induty_nm, stor_co, induty_cnt AS total_induty_cnt " +
+                    "FROM ranked " +
+                    "WHERE rn = 1";
 
     // 구에 속한 행정동별 평균 건물연령·동수
     private static final String HJD_STAT_BY_SGG_SQL =
@@ -48,7 +56,7 @@ public class SggBriefingExtractor {
 
     private static final String EXISTING_SGG_STAT_SQL =
             "SELECT daily_flpop, flpop_chg_rate, top_induty_nm, top_induty_stor_cnt, " +
-                    "       major_age_grp, major_age_ratio " +
+                    "       total_induty_cnt, major_age_grp, major_age_ratio " +
                     "FROM sgg_ai_briefing WHERE sgg_cd = ?";
 
 
@@ -58,7 +66,7 @@ public class SggBriefingExtractor {
     ) {
     }
 
-    public record TopStore(String indutyNm, int storCnt) {
+    public record TopStore(String indutyNm, int storCnt, Integer totalIndutyCnt) {
     }
 
     public record HjdStatRow(BigDecimal avgBldAge, int bldCnt) {
@@ -134,7 +142,11 @@ public class SggBriefingExtractor {
                 if (!rs.next()) {
                     return null;
                 }
-                return new TopStore(rs.getString("induty_nm"), rs.getInt("stor_co"));
+                return new TopStore(
+                        rs.getString("induty_nm"),
+                        rs.getInt("stor_co"),
+                        getNullableInt(rs, "total_induty_cnt")
+                );
             }
         }
     }
@@ -166,6 +178,7 @@ public class SggBriefingExtractor {
                         rs.getBigDecimal("flpop_chg_rate"),
                         rs.getString("top_induty_nm"),
                         getNullableInt(rs, "top_induty_stor_cnt"),
+                        getNullableInt(rs, "total_induty_cnt"),
                         rs.getString("major_age_grp"),
                         rs.getBigDecimal("major_age_ratio")
                 );
