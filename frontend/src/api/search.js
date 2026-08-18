@@ -51,10 +51,10 @@ const cleanHtmlTitle = (title) => {
     .replace(/&apos;/g, "'");
 };
 // 네이버 ncloud 뉴스 검색 api
-export const fetchLocalRealEstateNews = async (sggName, hjdName) => {
+export const fetchLocalRealEstateNews = async (sggName, hjdName, sidoName = '서울') => {
   try {
     const location = `${sggName || ''} ${hjdName || ''}`.trim();
-    const query = `${location} 부동산`;
+    const query = `${sidoName} ${location} 부동산`;
 
     const response = await axios.get('/api-hub/search/v1/news', {
       params: {
