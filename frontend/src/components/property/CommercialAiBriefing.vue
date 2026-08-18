@@ -1,30 +1,48 @@
 <script setup>
 import { Users, Store, Building2, ChartNetwork } from '@lucide/vue';
 import StatChip from './StatChip.vue';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 import { formatPopulation, formatRate } from '@/utils/formatters';
+import { fetchLocalRealEstateNews } from '@/api/search.js';
 
-defineProps({
+const props = defineProps({
   summary: {
     type: Object,
     required: true,
   },
 });
 
-const mockNews = ref([
-  "'대치동' 인근 상습 침수 구역 하수관거 정비 사업 착수",
-  '강남구, 학원가 및 노후 상가 화재 예방 특별 점검 실시',
-  '대치동 꼬마빌딩 거래량 전월 대비 15% 껑충',
-]);
+// const mockNews = ref([
+//   "'대치동' 인근 상습 침수 구역 하수관거 정비 사업 착수",
+//   '강남구, 학원가 및 노후 상가 화재 예방 특별 점검 실시',
+//   '대치동 꼬마빌딩 거래량 전월 대비 15% 껑충',
+// ]);
 
+const newsList = ref([]);
 const currentNewsIndex = ref(0);
 let newsInterval = null;
 
-onMounted(() => {
-  newsInterval = setInterval(() => {
-    currentNewsIndex.value = (currentNewsIndex.value + 1) % mockNews.value.length;
-  }, 5000);
-});
+const startNewsTicker = () => {
+  if (newsInterval) clearInterval(newsInterval);
+  currentNewsIndex.value = 0;
+
+  if (newsList.value.length > 1) {
+    newsInterval = setInterval(() => {
+      currentNewsIndex.value = (currentNewsIndex.value + 1) % newsList.value.length;
+    }, 5000);
+  }
+};
+
+watch(
+  () => props.summary,
+  async (newSummary) => {
+    if (!newSummary) return;
+
+    newsList.value = await fetchLocalRealEstateNews(newSummary.sggName, newSummary.hjdName);
+    startNewsTicker();
+  },
+  { deep: true, immediate: true },
+);
 
 onUnmounted(() => {
   if (newsInterval) clearInterval(newsInterval);
@@ -72,12 +90,15 @@ onUnmounted(() => {
         <div class="relative flex-1 h-6 overflow-hidden">
           <Transition name="slide-up">
             <div :key="currentNewsIndex" class="absolute inset-0 flex items-center">
-              <p
+              <a
+                v-if="newsList.length > 0"
+                :href="newsList[currentNewsIndex]?.link"
+                target="_blank"
                 class="w-full truncate text-[13px] text-status-like hover:underline cursor-pointer"
                 title="클릭하여 상세 보기"
               >
-                {{ mockNews[currentNewsIndex] }}
-              </p>
+                {{ newsList[currentNewsIndex]?.title }}
+              </a>
             </div>
           </Transition>
         </div>
