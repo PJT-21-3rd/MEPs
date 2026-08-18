@@ -54,6 +54,7 @@ import ProfileDropdown from '../auth/ProfileDropdown.vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
 import { useAuthStore } from '@/stores/authStore';
 import { useToastStore } from '@/stores/toastStore';
+import { deleteAccount } from '@/api/auth.js';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -95,8 +96,19 @@ const handleLogout = () => {
   router.push('/');
 };
 
-const handleDeleteAccount = () => {
-  //계정 삭제 API
-  console.log('계정삭제');
+const handleDeleteAccount = async () => {
+  try {
+    await deleteAccount();
+    authStore.logout();
+    isProfileOpen.value = false;
+    toastStore.showToast('계정이 삭제되었습니다.');
+    router.push('/');
+  } catch (error) {
+    if (error.response?.status === 401) {
+      toastStore.showToast('로그인이 필요합니다.');
+    } else {
+      toastStore.showToast('계정 삭제에 실패했습니다.');
+    }
+  }
 };
 </script>
