@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.meps.safetyreport.mapper.SafetyReportMapper">
 
-    <!-- 캐시 행 조회. 기본/상세 리포트가 캐시 판정 로직을 공유하므로 조회 쿼리를 하나로 유지 -->
+    <!-- 저장 행 조회. 기본/상세 리포트가 재사용 판정 로직을 공유하므로 조회 쿼리를 하나로 유지 -->
     <select id="findByBdMgtSn" resultType="org.meps.safetyreport.dto.SafetyReportRowDto">
         SELECT bd_mgt_sn,
                ai_model_nm,
@@ -49,9 +49,12 @@
             flood_report  = NULL,
             sink_report   = NULL,
             fire_report   = NULL,
-            struct_report = NULL
+            struct_report = NULL,
+            brief_status  = NULL,
+            generation_started_at = NULL
     </insert>
 
+    <!-- 저장과 DONE 전이를 한 문장으로 — 저장만 되고 상태가 남는 중간 상태를 없앤다 -->
     <update id="updateBriefs">
         UPDATE building_safety_report
         SET ai_model_nm  = #{aiModelNm},
@@ -59,8 +62,33 @@
             flood_brief  = #{briefs.floodBrief},
             sink_brief   = #{briefs.sinkBrief},
             fire_brief   = #{briefs.fireBrief},
-            struct_brief = #{briefs.structBrief}
+            struct_brief = #{briefs.structBrief},
+            brief_status = 'DONE',
+            generation_started_at = NULL
         WHERE bd_mgt_sn = #{bdMgtSn}
+    </update>
+
+    <!--
+        브리핑 생성 권한 클레임: InnoDB 행 락 위에서 affected rows = 1을 받은 요청만 리더.
+        GENERATING 30초 초과 조건은 리더 인스턴스 사망 시 재클레임을 여는 스테일 타임아웃
+        (기본 브리핑 LLM read timeout 5초 대비 충분한 여유)
+    -->
+    <update id="tryClaimBriefGeneration">
+        UPDATE building_safety_report
+        SET brief_status = 'GENERATING', generation_started_at = NOW()
+        WHERE bd_mgt_sn = #{bdMgtSn}
+          AND (brief_status IS NULL
+               OR (brief_status = 'DONE' AND total_brief IS NULL)
+               OR (brief_status = 'GENERATING'
+                   AND generation_started_at &lt; NOW() - INTERVAL 30 SECOND))
+    </update>
+
+    <!-- GENERATING 조건: 스테일 타임아웃 후 다른 리더가 재클레임한 상태를 덮어쓰지 않게 -->
+    <update id="releaseBriefClaim">
+        UPDATE building_safety_report
+        SET brief_status = NULL, generation_started_at = NULL
+        WHERE bd_mgt_sn = #{bdMgtSn}
+          AND brief_status = 'GENERATING'
     </update>
 
     <update id="updateReports">
