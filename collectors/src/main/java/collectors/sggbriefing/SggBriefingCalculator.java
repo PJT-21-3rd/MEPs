@@ -41,6 +41,7 @@ public class SggBriefingCalculator {
                 flpopChgRate,
                 topStore == null ? null : topStore.indutyNm(),
                 topStore == null ? null : topStore.storCnt(),
+                topStore == null ? null : topStore.totalIndutyCnt(),
                 majorBracket.label(),
                 majorAgeRatio
         );

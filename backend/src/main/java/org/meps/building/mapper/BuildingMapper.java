@@ -2,6 +2,7 @@ package org.meps.building.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.meps.building.dto.BuildingCompareDetailDto;
 import org.meps.building.dto.BuildingDetailDto;
 
 import org.meps.building.dto.BuildingPointDto;
@@ -30,6 +31,10 @@ public interface BuildingMapper {
     BuildingDetailDto findBuildingDetailAt(
             @Param("lat") double lat,
             @Param("lng") double lng
+    );
+
+    BuildingCompareDetailDto findBuildingCompareDetail(
+            @Param("buildingId") String buildingId
     );
 
     BuildingPointDto findByPnu(@Param("pnu") String pnu);

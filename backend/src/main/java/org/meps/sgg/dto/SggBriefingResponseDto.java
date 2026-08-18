@@ -14,7 +14,7 @@ public class SggBriefingResponseDto {
     private Integer dailyFlpop;
     private BigDecimal flpopChangeRate;
     private String topIndustryName;
-    private Integer topIndustryCnt;
+    private Integer totalIndustryCnt;
     private BigDecimal avgBuildingAge;
     private String majorAgeGroup;
     private BigDecimal majorAgeRatio;
