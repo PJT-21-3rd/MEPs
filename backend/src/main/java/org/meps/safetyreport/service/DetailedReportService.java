@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * AI 안심 진단 상세 리포트
@@ -145,8 +146,13 @@ public class DetailedReportService {
         }
         try {
             self.generateDetailedReportAsync(buildingId);
+        } catch (RejectedExecutionException e) {
+            // 스레드 풀 거부(큐 포화)로 기본 리포트 응답까지 실패시키지 않는다 —
+            // 상세 리포트는 상세 조회 시점의 동기 경로가 다시 생성하므로 버리고 로그만 남긴다
+            inFlightBuildings.remove(buildingId);
+            log.warn("상세 리포트 백그라운드 생성이 거부되어 건너뜀(큐 포화). buildingId={}", buildingId, e);
         } catch (RuntimeException e) {
-            // 스레드 풀이 작업을 거부(큐 포화)했을 때 표식을 남겨두면 그 건물이 영구 재시도 불가가 된다
+            // 거부 외의 실패에서도 표식을 남겨두면 그 건물이 영구 재시도 불가가 된다
             inFlightBuildings.remove(buildingId);
             throw e;
         }

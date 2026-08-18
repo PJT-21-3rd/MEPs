@@ -308,8 +308,8 @@ class DetailedReportServiceTest {
     }
 
     @Test
-    @DisplayName("스레드 풀이 작업을 거부하면 진행 중 표식을 지워 다음 요청이 재시도할 수 있다")
-    void requestDetailedReportAsync_clearsInFlightMark_whenSubmissionFails() {
+    @DisplayName("스레드 풀이 작업을 거부하면 예외를 전파하지 않고 표식만 지운다")
+    void requestDetailedReportAsync_swallowsRejection_andClearsInFlightMark() {
         FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
         DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
         service.self = new DetailedReportService(null, null, null, null, null, null, null) {
@@ -319,8 +319,26 @@ class DetailedReportServiceTest {
             }
         };
 
+        // 거부가 호출자(기본 리포트 응답)까지 전파되면 여기서 테스트가 실패한다
+        service.requestDetailedReportAsync(BUILDING_ID);
+
+        assertThat(service.inFlightBuildings).isEmpty();
+    }
+
+    @Test
+    @DisplayName("거부 외의 실패는 그대로 전파하되 표식은 지워 다음 요청의 재시도를 보장한다")
+    void requestDetailedReportAsync_clearsInFlightMark_whenSubmissionFailsUnexpectedly() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+        service.self = new DetailedReportService(null, null, null, null, null, null, null) {
+            @Override
+            public void generateDetailedReportAsync(String buildingId) {
+                throw new IllegalStateException("예상 밖 실패(테스트용)");
+            }
+        };
+
         assertThatThrownBy(() -> service.requestDetailedReportAsync(BUILDING_ID))
-                .isInstanceOf(java.util.concurrent.RejectedExecutionException.class);
+                .isInstanceOf(IllegalStateException.class);
 
         assertThat(service.inFlightBuildings).isEmpty();
     }
