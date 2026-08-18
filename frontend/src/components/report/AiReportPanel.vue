@@ -104,7 +104,7 @@ async function loadReport() {
   isLoading.value = true;
   currentView.value = 'summary';
 
-  const MIN_LOADING_MS = 2800;
+  const MIN_LOADING_MS = 900;
   const startedAt = Date.now();
 
   try {
