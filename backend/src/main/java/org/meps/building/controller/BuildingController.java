@@ -28,9 +28,10 @@ public class BuildingController {
             @RequestParam double neLat,
             @RequestParam double neLng,
             @RequestParam int zoom,
-            @RequestParam(name = "sort", defaultValue = "POPULAR") SortType sortType) {
+            @RequestParam(name = "sort", defaultValue = "POPULAR") SortType sortType,
+            @LoginUser Integer userId) {
 
-        return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom, sortType);
+        return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom, sortType, userId);
     }
 
     /**

@@ -2,8 +2,10 @@ package org.meps.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.meps.building.exception.BuildingNotFoundException;
+import org.meps.common.util.SafetyGrade;
 import org.meps.user.dto.LoginRequestDto;
 import org.meps.user.dto.LoginResponseDto;
+import org.meps.user.dto.SavedBuildingDto;
 import org.meps.user.dto.SignupRequestDto;
 import org.meps.user.dto.UserDto;
 import org.meps.user.exception.AlreadySavedException;
@@ -88,5 +90,16 @@ public class UserService {
         }
 
         userMapper.deleteUser(userId);
+    }
+
+    /** 마이페이지 찜 목록 조회 */
+    public List<SavedBuildingDto> getSavedBuildings(Integer userId) {
+        List<SavedBuildingDto> buildings = userMapper.findSavedBuildings(userId);
+        for (SavedBuildingDto building : buildings) {
+            if (building.getSafetyScore() != null) {
+                building.setSafetyGrade(SafetyGrade.fromScore(building.getSafetyScore()).name());
+            }
+        }
+        return buildings;
     }
 }

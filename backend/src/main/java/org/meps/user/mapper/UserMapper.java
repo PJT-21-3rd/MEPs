@@ -2,6 +2,7 @@ package org.meps.user.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.meps.user.dto.SavedBuildingDto;
 import org.meps.user.dto.UserDto;
 
 import java.util.List;
@@ -35,8 +36,11 @@ public interface UserMapper {
     /** 건물 찜 개수 감소 */
     void decrementSavedCount(@Param("buildingId") String buildingId);
 
-    /** 회원이 찜한 건물 목록 (탈퇴 시 saved_cnt 감소용) */
+    /** 회원이 찜한 건물 목록 (매물 리스트 saved 표시, 탈퇴 시 saved_cnt 감소용) */
     List<String> findSavedBuildingIds(@Param("userId") Integer userId);
+
+    /** 마이페이지 찜 목록 - 최근 찜한 순. safetyScore는 안전 리포트 미생성 시 null */
+    List<SavedBuildingDto> findSavedBuildings(@Param("userId") Integer userId);
 
     /** 회원 삭제 — saved는 FK CASCADE로 함께 삭제된다 */
     void deleteUser(@Param("userId") Integer userId);
