@@ -46,7 +46,7 @@ public class DetailedReportService {
 
     /**
      * 점수는 DB와 비교하지 않는다 — 그 판정은 기본 리포트 조회 시점(BasicReportService)에서만
-     * 이루어지고, 점수가 바뀌었을 때만 여기까지 (비동기로) 트리거된다. 여기서는 캐시 행에
+     * 이루어지고, 점수가 바뀌었을 때만 여기까지 (비동기로) 트리거된다. 여기서는 저장 행에
      * report 5개 컬럼이 이미 채워져 있는지만 보고, 없으면 생성해서 채운다
      */
     public DetailedReportResponseDto getDetailedReport(String buildingId) {
