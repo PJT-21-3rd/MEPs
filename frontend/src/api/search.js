@@ -68,7 +68,7 @@ export const fetchLocalRealEstateNews = async (sggName, hjdName, sidoName = '서
       },
     });
 
-    console.log(response.data);
+    // console.log(response.data);
 
     if (response.data.items && response.data.items.length > 0) {
       return response.data.items.map((item) => ({

@@ -68,7 +68,7 @@ onUnmounted(() => {
           label="주요 업종"
           :icon="Store"
           :value="summary.topIndustryName"
-          :sub="summary.topIndustryCnt ? `외 ${summary.topIndustryCnt}종` : ''"
+          :sub="summary.totalIndustryCnt ? `외 ${summary.totalIndustryCnt}종` : ''"
         />
         <StatChip label="평균 노후도" :icon="Building2" :value="`${summary.avgBuildingAge}년`" />
         <StatChip
