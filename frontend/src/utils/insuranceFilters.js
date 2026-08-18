@@ -24,26 +24,26 @@ export function getBusinessInsuranceRiders(insuranceRidersByFactor) {
 }
 
 /**
- * 사업장종합보험 모달 맨 위에 표시할 "필수" 의무보험 1건
- * disasterLiability/fireLiability 중 required=true인 것의 첫 번째를 반환
- * @param {object} disasterLiability - { required, description, evidenceTags }
- * @param {object} fireLiability - { required, description, evidenceTags }
- * @returns {{name: string, description: string, badge: string} | null}
+ * 사업장종합보험 모달 맨 위에 표시할 의무보험 2건 고정 노출
+ * API 판별 없이 재난배상책임보험/화재배상책임보험 둘 다 항상 "필수" 배지로 표시
+ * @param {object} disasterLiability - { description, evidenceTags }
+ * @param {object} fireLiability - { description, evidenceTags }
+ * @returns {Array<{name: string, description: string, badge: string}>}
  */
-export function getRequiredMandatoryInsurance(disasterLiability, fireLiability) {
-  if (disasterLiability?.required) {
-    return {
+export function getMandatoryInsuranceItems(disasterLiability, fireLiability) {
+  return [
+    {
       name: '재난배상책임보험',
-      description: disasterLiability.description,
+      description:
+        disasterLiability?.description ?? '재난 및 안전관리 기본법에 따른 의무 가입 대상입니다.',
       badge: '필수',
-    };
-  }
-  if (fireLiability?.required) {
-    return {
+    },
+    {
       name: '화재배상책임보험',
-      description: fireLiability.description,
+      description:
+        fireLiability?.description ??
+        '화재로 인한 재해보상과 손해배상을 위한 의무 가입 대상입니다.',
       badge: '필수',
-    };
-  }
-  return null;
+    },
+  ];
 }
