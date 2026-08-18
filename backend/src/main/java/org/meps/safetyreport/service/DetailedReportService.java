@@ -17,11 +17,15 @@ import org.meps.sinkhole.service.SinkholeScoreService;
 import org.meps.structure.dto.StructuralFactorDto;
 import org.meps.structure.dto.StructuralStabilityScoreResultDto;
 import org.meps.structure.service.StructuralStabilityScoreService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * AI 안심 진단 상세 리포트
@@ -43,6 +47,16 @@ public class DetailedReportService {
     private final TotalScoreService totalScoreService;
     private final DetailedBriefingService detailedBriefingService;
     private final SafetyReportMapper safetyReportMapper;
+
+    /**
+     * 백그라운드 생성이 시작(대기열 등록)~완료 사이인 건물들.
+     * 같은 건물의 작업이 스레드 풀 대기열에 두 번 들어가지 않게 앞단에서 걸러낸다
+     */
+    final Set<String> inFlightBuildings = ConcurrentHashMap.newKeySet();
+
+    /** 같은 빈 안에서 @Async 메서드를 직접 호출하면 프록시를 타지 않아 동기 실행되므로, 자기 프록시를 주입받아 호출한다 */
+    @Autowired @Lazy
+    DetailedReportService self;
 
     /**
      * 점수는 DB와 비교하지 않는다 — 그 판정은 기본 리포트 조회 시점(BasicReportService)에서만
@@ -121,11 +135,30 @@ public class DetailedReportService {
     }
 
     /**
-     * BasicReportService가 점수 변경을 감지했을 때만 호출
+     * BasicReportService가 점수 변경을 감지했을 때 호출하는 진입점.
+     * 같은 건물이 이미 생성 대기/진행 중이면 아무것도 하지 않는다 — 백그라운드 작업이라
+     * 결과를 기다리는 쪽이 없으므로, 중복이면 조용히 빠지는 것으로 충분하다
      */
+    public void requestDetailedReportAsync(String buildingId) {
+        if (!inFlightBuildings.add(buildingId)) {
+            return;
+        }
+        try {
+            self.generateDetailedReportAsync(buildingId);
+        } catch (RuntimeException e) {
+            // 스레드 풀이 작업을 거부(큐 포화)했을 때 표식을 남겨두면 그 건물이 영구 재시도 불가가 된다
+            inFlightBuildings.remove(buildingId);
+            throw e;
+        }
+    }
+
     @Async("detailedReportExecutor")
     public void generateDetailedReportAsync(String buildingId) {
-        getDetailedReport(buildingId);
+        try {
+            getDetailedReport(buildingId);
+        } finally {
+            inFlightBuildings.remove(buildingId);
+        }
     }
 
     private boolean hasAllReports(SafetyReportRowDto row) {

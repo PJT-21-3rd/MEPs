@@ -87,7 +87,8 @@ public class BasicReportService {
             safetyReportMapper.upsertScores(buildingId, basicBriefingService.getModelName(),
                     totalScore, flood.getScore(), sink.getScore(), fire.getScore(), struct.getScore());
             // 점수 변경(최초 조회 포함) 시 비동기로 상세 리포트 재생성.
-            detailedReportService.generateDetailedReportAsync(buildingId);
+            // 같은 건물이 이미 생성 중이면 requestDetailedReportAsync가 무시한다
+            detailedReportService.requestDetailedReportAsync(buildingId);
         }
 
         if (!scoreChanged && row.hasAllBriefs()) {
