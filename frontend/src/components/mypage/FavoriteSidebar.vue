@@ -31,7 +31,7 @@ function goBack() {
 </script>
 
 <template>
-  <aside class="w-[330px] shrink-0 flex flex-col h-full pt-4 px-4">
+  <aside class="w-[350px] shrink-0 flex flex-col h-full pt-4 px-4">
     <div class="shrink-0">
       <header class="flex items-start gap-2 mb-4">
         <ArrowLeft :size="22" class="mt-0.5" @click="goBack" />
@@ -53,10 +53,10 @@ function goBack() {
     <ul class="list-none p-0 m-0 flex flex-col gap-2.5 flex-1 overflow-y-auto">
       <FavoriteCard
         v-for="building in buildings"
-        :key="building.id"
+        :key="building.buildingId"
         :building="building"
-        :order="selectOrder(building.id)"
-        @toggle="emit('toggle', building.id)"
+        :order="selectOrder(building.buildingId)"
+        @toggle="emit('toggle', building.buildingId)"
         @unlike="emit('unlike', $event)"
       />
     </ul>

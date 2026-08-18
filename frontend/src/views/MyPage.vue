@@ -1,17 +1,24 @@
 <script setup>
-import { favoriteBuildings } from '@/mocks/favorites';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import ComparePanel from '@/components/mypage/ComparePanel.vue';
 import FavoriteSidebar from '@/components/mypage/FavoriteSidebar.vue';
+import { getSavedList } from '@/api/saved';
 
-const buildings = ref([...favoriteBuildings]);
+const buildings = ref([]);
+onMounted(async () => {
+  try {
+    buildings.value = await getSavedList();
+  } catch (error) {
+    console.error('찜 목록 조회 실패:', error);
+  }
+});
 
 const MAX_SELECT = 3;
 
 const selectedIds = ref([]);
 
-function toggleSelect(id) {
-  const index = selectedIds.value.indexOf(id);
+function toggleSelect(buildingId) {
+  const index = selectedIds.value.indexOf(buildingId);
 
   if (index !== -1) {
     selectedIds.value.splice(index, 1);
@@ -19,12 +26,12 @@ function toggleSelect(id) {
     if (selectedIds.value.length >= MAX_SELECT) {
       selectedIds.value.shift();
     }
-    selectedIds.value.push(id);
+    selectedIds.value.push(buildingId);
   }
 }
 
 function removeFavorite(id) {
-  const index = buildings.value.findIndex((b) => b.id === id);
+  const index = buildings.value.findIndex((b) => b.buildingId === id);
   if (index !== -1) {
     buildings.value.splice(index, 1);
   }
