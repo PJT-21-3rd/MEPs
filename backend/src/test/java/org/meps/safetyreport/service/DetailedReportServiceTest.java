@@ -381,6 +381,16 @@ class DetailedReportServiceTest {
         }
 
         @Override
+        public int tryClaimBriefGeneration(String bdMgtSn) {
+            throw new UnsupportedOperationException("DetailedReportService는 tryClaimBriefGeneration을 호출하지 않는다");
+        }
+
+        @Override
+        public void releaseBriefClaim(String bdMgtSn) {
+            throw new UnsupportedOperationException("DetailedReportService는 releaseBriefClaim을 호출하지 않는다");
+        }
+
+        @Override
         public void updateReports(String bdMgtSn, String totalReport, String floodReport,
                                    String sinkReport, String fireReport, String structReport) {
             updateReportsCallCount++;
