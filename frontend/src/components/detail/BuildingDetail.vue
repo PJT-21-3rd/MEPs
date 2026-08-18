@@ -10,16 +10,11 @@
         <ChevronLeft :size="20" /> 목록
       </button>
       <div class="flex items-center gap-1">
-        <button
-          @click="toggleFavorite"
-          class="rounded-full p-2 hover:bg-surface-base"
-          aria-label="찜하기"
-        >
-          <Heart
-            :size="20"
-            :class="isFavorite ? 'fill-status-like text-status-like' : 'text-text-sub'"
-          />
-        </button>
+        <SavedButton
+          v-if="buildingDetail"
+          :building-id="buildingDetail.buildingId"
+          :initial-saved="buildingDetail.saved"
+        />
         <button
           @click="handleShare"
           class="rounded-full p-2 hover:bg-surface-base"
@@ -75,21 +70,17 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToastStore } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore.js';
-import { ChevronLeft, Heart, Share2 } from '@lucide/vue';
+import { ChevronLeft, Share2 } from '@lucide/vue';
 import RoadViewImage from './RoadViewImage.vue';
 import BuildingInfoPannel from './BuildingInfoPannel.vue';
 import BuildingInfoChips from './BuildingInfoChips.vue';
 import BuildingSpecs from './BuildingSpecs.vue';
 import ReportCTAButton from './ReportCTAButton.vue';
+import SavedButton from '../common/SavedButton.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
 const toastStore = useToastStore();
-
-const isFavorite = ref(false);
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value;
-};
 
 // 건물 상세 데이터
 const buildingDetail = computed(() => uiStore.currentBuildingDetail);

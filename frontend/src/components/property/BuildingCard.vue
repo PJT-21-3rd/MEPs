@@ -15,15 +15,7 @@
         <div class="flex items-start justify-between gap-2">
           <p class="truncate text-[16px] tracking-tight text-text-main">{{ displayAddress }}</p>
 
-          <span
-            @click.prevent.stop="toggleFavorite"
-            class="-mr-1 -mt-1 shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/70"
-          >
-            <Heart
-              :size="20"
-              :class="isFavorite ? 'fill-status-like text-status-like' : 'text-text-secondary/50'"
-            />
-          </span>
+          <SavedButton :building-id="building.buildingId" :initial-saved="building.saved" />
         </div>
         <p v-if="displayName" class="-mt-1 truncate text-[14px] text-text-secondary">
           {{ displayName }}
@@ -48,14 +40,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { Building2, Heart } from '@lucide/vue';
+import { computed } from 'vue';
+import { Building2 } from '@lucide/vue';
 import {
   formatBuildingAge,
   formatFloor,
   formatShortAddress,
-  formatDistance,
+  // formatDistance,
 } from '@/utils/formatters';
+import SavedButton from '../common/SavedButton.vue';
 
 const props = defineProps({
   building: {
@@ -63,12 +56,6 @@ const props = defineProps({
     required: true,
   },
 });
-
-// 임시 찜 기능
-const isFavorite = ref(false);
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value;
-};
 
 // 건물명 Fallback
 const displayName = computed(() => {
@@ -80,5 +67,5 @@ const displayAddress = computed(() =>
 );
 const formattedYear = computed(() => formatBuildingAge(props.building.useAprDay));
 const formattedFloor = computed(() => formatFloor(props.building.grndFlr, props.building.ugrndFlr));
-const formattedDistance = computed(() => formatDistance(props.building.distance));
+// const formattedDistance = computed(() => formatDistance(props.building.distance));
 </script>
