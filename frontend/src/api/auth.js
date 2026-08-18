@@ -21,3 +21,9 @@ export async function deleteAccount() {
   const { data } = await http.delete('/api/users/me');
   return data;
 }
+
+// 로그아웃
+export async function logoutApi() {
+  const { data } = await http.post('/api/users/logout');
+  return data;
+}
