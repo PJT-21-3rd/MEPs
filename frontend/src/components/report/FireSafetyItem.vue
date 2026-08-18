@@ -47,9 +47,10 @@ const aiReportParagraphs = computed(() => {
       mode === 'summary' && !typingActive && !alreadyTyped ? 'opacity-40' : 'opacity-100',
     ]"
   >
+    <!-- summary뷰 -->
     <template v-if="mode === 'summary'">
       <div class="flex items-center gap-2">
-        <Flame class="w-4 h-4 text-text-sub" />
+        <Flame class="w-4 h-4 text-status-like" />
         <span class="flex-1 text-sm font-semibold text-text-main">화재안정성</span>
         <StatusBadge :status="status" />
       </div>
@@ -59,12 +60,13 @@ const aiReportParagraphs = computed(() => {
       </p>
     </template>
 
+    <!-- detail뷰 -->
     <template v-else>
       <div class="flex items-center gap-2">
         <span
-          class="w-7 h-7 shrink-0 rounded-[10px] bg-surface-blue flex items-center justify-center"
+          class="w-7 h-7 shrink-0 rounded-[10px] bg-surface-red flex items-center justify-center"
         >
-          <Flame class="w-4 h-4 text-button-primary" />
+          <Flame class="w-4 h-4 text-status-like" />
         </span>
         <span class="flex-1 text-sm font-semibold text-text-main">2. 화재안정성</span>
         <StatusBadge :status="status" />
