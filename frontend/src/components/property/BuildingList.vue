@@ -21,7 +21,7 @@
         총 <span class="text-text-main font-bold"> {{ displayBuildings.length }} </span>개
       </p>
 
-      <div class="relative" ref="sortDropdownRef">
+      <div v-if="activeTab === 'nearby'" class="relative" ref="sortDropdownRef">
         <button
           type="button"
           @click="isSortOpen = !isSortOpen"
@@ -43,18 +43,25 @@
                 @click="selectSort(option.value)"
                 class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] transition-colors"
                 :class="
-                  currentSort === option.value
+                  uiStore.currentSort === option.value
                     ? 'bg-surface-gray text-text-main'
                     : 'text-text-secondary hover:bg-surface-base'
                 "
               >
                 <span>{{ option.label }}</span>
-                <Check v-if="currentSort === option.value" :size="14" class="text-text-secondary" />
+                <Check
+                  v-if="uiStore.currentSort === option.value"
+                  :size="14"
+                  class="text-text-secondary"
+                />
               </button>
             </div>
           </div>
         </Transition>
       </div>
+      <p v-else-if="activeTab === 'recent'" class="text-[12px] text-text-sub">
+        최근 본 20개까지 저장됩니다.
+      </p>
     </div>
   </div>
 
@@ -64,13 +71,15 @@
         v-for="building in displayBuildings"
         :key="building.buildingId"
         :building="building"
-        @click="openDetail(building.buildingId)"
+        @click="openDetail(building)"
       />
     </div>
 
     <div v-else class="flex flex-col items-center justify-center h-40 gap-2 text-center">
       <span class="text-[40px]">🏢</span>
-      <p class="text-[14px] text-text-sub">해당하는 매물이 없습니다.</p>
+      <p class="text-[14px] text-text-sub">
+        {{ activeTab === 'recent' ? '최근 본 매물이 없습니다.' : '해당하는 매물이 없습니다.' }}
+      </p>
     </div>
   </div>
 </template>
@@ -79,9 +88,9 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUiStore } from '@/stores/uiStore.js';
-import BuildingCard from './BuildingCard.vue';
 import { Check, ChevronDown } from '@lucide/vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
+import BuildingCard from './BuildingCard.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();
@@ -116,19 +125,17 @@ useClickOutside(sortDropdownRef, () => {
   isSortOpen.value = false;
 });
 
+// 매물 리스트 분기
 const displayBuildings = computed(() => {
-  // TODOS '주변 상가' 탭이 아닐 때는 일단 빈 배열 처리 (나중에 탭 로직 추가 시 수정)
-  if (activeTab.value !== 'nearby') return [];
-
+  if (activeTab.value === 'recent') return uiStore.recentBuildings;
+  if (activeTab.value === 'scrapped') return [];
   return uiStore.currentBuildings || [];
 });
 
-const openDetail = (buildingId) => {
-  console.log(`클릭된 건물 ID: ${buildingId}`);
-  uiStore.openBuildingDetail(buildingId);
-
+const openDetail = (building) => {
+  uiStore.openBuildingDetail(building.buildingId);
   if (router) {
-    router.push({ query: { ...router.currentRoute.value.query, buildingId } });
+    router.push({ query: { ...router.currentRoute.value.query, buildingId: building.buildingId } });
   }
 };
 </script>

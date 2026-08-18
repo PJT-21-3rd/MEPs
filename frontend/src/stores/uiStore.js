@@ -20,10 +20,55 @@ export const useUiStore = defineStore('ui', () => {
   const isDetailLoading = ref(false);
   const preventMapMove = ref(false);
   const isZoomRequired = ref(false);
+  const recentBuildings = ref([]); // 최근 본 매물
+  const RECENT_KEY = 'meps_recent_buildings';
 
   const toggleDetailPanel = () => {
     isDetailOpen.value = !isDetailOpen.value;
   };
+  // 로컬스토리지에서 데이터 불러오기
+  const loadRecentBuildings = () => {
+    const stored = localStorage.getItem(RECENT_KEY);
+    if (stored) {
+      try {
+        recentBuildings.value = JSON.parse(stored);
+      } catch (e) {
+        console.error('로컬스토리지 파싱 에러:', e);
+        recentBuildings.value = [];
+      }
+    }
+  };
+  const addRecentBuilding = (buildingData) => {
+    console.log(buildingData);
+    if (!buildingData || !buildingData.buildingId) return;
+
+    const summaryBuilding = {
+      buildingId: buildingData.buildingId,
+      bldNm: buildingData.bldNm,
+      jibunAddr: buildingData.jibunAddr,
+      roadAddr: buildingData.roadAddr,
+      mainPurpsNm: buildingData.mainPurpsNm,
+      archArea: buildingData.archArea,
+      grndFlr: buildingData.detail?.grndFlr,
+      ugrndFlr: buildingData.detail?.ugrndFlr,
+      useAprDay: buildingData.detail?.useAprDay,
+      lat: buildingData.lat,
+      lng: buildingData.lng,
+    };
+    console.log(summaryBuilding);
+
+    let list = [...recentBuildings.value];
+    list = list.filter((b) => b.buildingId !== summaryBuilding.buildingId); // 중복 제거
+    list.unshift(summaryBuilding);
+
+    if (list.length > 20) {
+      list = list.slice(0, 20);
+    }
+
+    recentBuildings.value = list;
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+  };
+  loadRecentBuildings();
 
   // 상세화면 여닫
   const openBuildingDetail = async (buildingId) => {
@@ -37,6 +82,7 @@ export const useUiStore = defineStore('ui', () => {
     try {
       const data = await fetchBuildingDetail(buildingId);
       currentBuildingDetail.value = data;
+      addRecentBuilding(data);
     } catch (error) {
       currentBuildingDetail.value = null;
     } finally {
@@ -55,6 +101,7 @@ export const useUiStore = defineStore('ui', () => {
       if (data && data.buildingId) {
         selectedBuildingId.value = data.buildingId;
         currentBuildingDetail.value = data;
+        addRecentBuilding(data);
         return data.buildingId;
       } else {
         closeBuildingDetail(); // 길거리나 빈 땅
@@ -139,6 +186,8 @@ export const useUiStore = defineStore('ui', () => {
     isDetailLoading,
     preventMapMove,
     isZoomRequired,
+    recentBuildings,
+    addRecentBuilding,
     openBuildingDetail,
     openBuildingDetailByCoord,
     closeBuildingDetail,
