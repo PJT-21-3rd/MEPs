@@ -1,9 +1,10 @@
 <script setup>
 import { Heart } from '@lucide/vue';
-import { getGradeByScore, GRADE_META } from '@/constants/reportConstants';
+import { GRADE_META, getGradeByStatusCode } from '@/constants/reportConstants';
 
-function gradeMeta(score) {
-  return GRADE_META[getGradeByScore(score)];
+function gradeMeta(safetyGrade) {
+  if (!safetyGrade) return null;
+  return GRADE_META[getGradeByStatusCode(safetyGrade)];
 }
 
 defineProps({
@@ -27,24 +28,38 @@ const emit = defineEmits(['toggle', 'unlike']);
       {{ order }}
     </span>
 
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center gap-1.5">
-        <span class="text-[13px] font-bold truncate">{{ building.address }}</span>
+    <div class="flex-1 min-w-0 pr-6">
+      <div class="flex items-center gap-1 min-w-0">
+        <span class="text-[16px] font-bold truncate" :title="building.roadAddr">{{
+          building.roadAddr
+        }}</span>
         <span
-          class="text-[13px] px-[7px] py-0.5 rounded"
-          :class="[gradeMeta(building.score).badgeBg, gradeMeta(building.score).text]"
+          v-if="building.safetyGrade"
+          class="shrink-0 text-[13px] px-[7px] py-0.5 rounded"
+          :class="[gradeMeta(building.safetyGrade).badgeBg, gradeMeta(building.safetyGrade).text]"
         >
-          {{ gradeMeta(building.score).label }}
+          {{ gradeMeta(building.safetyGrade).label }}
+        </span>
+        <span
+          v-else
+          class="shrink-0 text-[13px] px-[7px] py-0.5 rounded bg-surface-gray text-text-sub"
+        >
+          진단 전
         </span>
       </div>
-      <p class="text-xs text-text-sub mt-[3px]">{{ building.name }}</p>
+      <p class="text-[13px] text-text-sub mt-[3px]">{{ building.bldNm || '건물명 없음' }}</p>
     </div>
 
     <div class="flex items-center gap-2.5 shrink-0">
-      <span class="text-[17px] font-bold" :class="gradeMeta(building.score).text">
-        {{ building.score }}
+      <span
+        v-if="building.safetyScore !== null"
+        class="text-[17px] font-bold"
+        :class="gradeMeta(building.safetyGrade)?.text"
+      >
+        {{ building.safetyScore }}
       </span>
-      <button @click.stop="emit('unlike', building.id)" class="cursor-pointer group">
+      <span v-else class="text-[17px] font-bold text-text-sub"> - </span>
+      <button @click.stop="emit('unlike', building.buildingId)" class="cursor-pointer group">
         <Heart
           :size="18"
           fill="currentColor"

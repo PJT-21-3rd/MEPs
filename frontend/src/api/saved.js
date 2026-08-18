@@ -11,3 +11,8 @@ export async function removeSaved(buildingId) {
   const { data } = await http.delete(`/api/member/saved/${buildingId}`);
   return data;
 }
+
+export async function getSavedList() {
+  const { data } = await http.get('/api/member/saved');
+  return Array.isArray(data) ? data : [];
+}
