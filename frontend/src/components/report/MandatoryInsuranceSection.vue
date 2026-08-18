@@ -36,7 +36,7 @@ defineProps({
     <MandatoryInsuranceCard
       name="화재배상책임보험"
       :description="
-        fireLiability?.description ?? '화재로 인한 재해보상과 손해배상을 위한 의무 가입 상품입니다.'
+        fireLiability?.description ?? '화재 재해보상과 손해배상을 위한 의무 가입 상품입니다.'
       "
       :evidence-tags="fireLiability?.evidenceTags ?? []"
     />

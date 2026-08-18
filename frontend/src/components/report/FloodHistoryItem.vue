@@ -59,7 +59,7 @@ const aiReportParagraphs = computed(() => {
     <!-- summary 뷰 -->
     <template v-if="mode === 'summary'">
       <div class="flex items-center gap-2">
-        <WavesHorizontal class="w-4 h-4 text-text-sub" />
+        <WavesHorizontal class="w-4 h-4 text-button-primary" />
         <span class="flex-1 text-sm font-semibold text-text-main">침수이력</span>
         <StatusBadge :status="status" />
       </div>

@@ -53,7 +53,7 @@ const aiReportParagraphs = computed(() => {
     <!-- summary 뷰 -->
     <template v-if="mode === 'summary'">
       <div class="flex items-center gap-2">
-        <TrendingDown class="w-4 h-4 text-text-sub" />
+        <TrendingDown class="w-4 h-4 text-text-loan" />
         <span class="flex-1 text-sm font-semibold text-text-main">지반침하사고이력</span>
         <StatusBadge :status="status" />
       </div>
@@ -67,9 +67,9 @@ const aiReportParagraphs = computed(() => {
     <template v-else>
       <div class="flex items-center gap-2">
         <span
-          class="w-7 h-7 shrink-0 rounded-[10px] bg-surface-blue flex items-center justify-center"
+          class="w-7 h-7 shrink-0 rounded-[10px] bg-badge-loan flex items-center justify-center"
         >
-          <TrendingDown class="w-4 h-4 text-button-primary" />
+          <TrendingDown class="w-4 h-4 text-text-loan" />
         </span>
         <span class="flex-1 text-sm font-semibold text-text-main">3. 지반침하사고이력</span>
         <StatusBadge :status="status" />

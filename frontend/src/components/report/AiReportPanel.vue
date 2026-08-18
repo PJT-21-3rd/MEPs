@@ -52,7 +52,6 @@ const reportData = ref(null);
 const typingStage = ref(0); //0=브리핑, 1~4=구조/화재/지반침하/침수, 5=완료
 
 function advanceTyping() {
-  console.trace('advanceTyping 호출, 이전 값:', typingStage.value);
   typingStage.value += 1;
 }
 // #32: 상세 리포트는 summary와 별도 API라, 상세보기 클릭 시점에 지연 로딩

@@ -55,7 +55,7 @@ const aiReportParagraphs = computed(() => {
     <!-- summary 뷰 -->
     <template v-if="mode === 'summary'">
       <div class="flex items-center gap-2">
-        <HardHat class="w-4 h-4 text-text-sub" />
+        <HardHat class="w-4 h-4 text-secondary" />
         <span class="flex-1 text-sm font-semibold text-text-main">구조안정성</span>
         <StatusBadge :status="status" />
       </div>
@@ -68,10 +68,8 @@ const aiReportParagraphs = computed(() => {
     <!-- detail 뷰 -->
     <template v-else>
       <div class="flex items-center gap-2">
-        <span
-          class="w-7 h-7 shrink-0 rounded-[10px] bg-surface-blue flex items-center justify-center"
-        >
-          <HardHat class="w-4 h-4 text-button-primary" />
+        <span class="w-7 h-7 shrink-0 rounded-[10px] bg-[#FFFAE5] flex items-center justify-center">
+          <HardHat class="w-4 h-4 text-secondary" />
         </span>
         <span class="flex-1 text-sm font-semibold text-text-main">1. 구조안정성</span>
         <StatusBadge :status="status" />
