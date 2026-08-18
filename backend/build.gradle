@@ -111,6 +111,13 @@ dependencies {
 
 test {
     useJUnitPlatform()
+
+    // CI 환경(GitHub Actions 등)에는 로컬 전용 DB 터널이 없어
+    // 실제 DB에 연결하는 *IntegrationTest는 여기서 제외한다.
+    if (System.getenv("CI") != null) {
+        exclude '**/*IntegrationTest.class'
+    }
+
     finalizedBy jacocoTestReport
 }
 
