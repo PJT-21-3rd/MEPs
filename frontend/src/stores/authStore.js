@@ -4,7 +4,17 @@ import { ref, computed } from 'vue';
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(localStorage.getItem('accessToken') || null);
   const email = ref(localStorage.getItem('email') || null);
-  const isLoggedIn = computed(() => !!accessToken.value);
+  const isLoggedIn = computed(() => {
+    const token = accessToken.value;
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Date.now() / 1000;
+      return payload.exp > now;
+    } catch {
+      return false;
+    }
+  });
 
   // 로그인 모달 상태
   const isLoginModalOpen = ref(false);
