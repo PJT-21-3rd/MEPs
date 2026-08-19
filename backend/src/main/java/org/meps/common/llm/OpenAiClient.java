@@ -16,11 +16,14 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * OpenAI Chat Completions 래퍼.
  * Lombok @RequiredArgsConstructor는 필드 @Qualifier를 생성자 파라미터로 복사하지 않아
  * (lombok.config 미설정) 명시적 생성자를 쓴다
  */
+@Slf4j
 @Component
 public class OpenAiClient {
 
@@ -32,6 +35,7 @@ public class OpenAiClient {
     private static final int MAX_COMPLETION_TOKENS = 8000;
 
     private final RestTemplate llmRestTemplate;
+    private final RestTemplate llmDetailedRestTemplate;
     private final ObjectMapper objectMapper;
 
     @Value("${openai.api-key}")
@@ -41,8 +45,10 @@ public class OpenAiClient {
     private String model;
 
     public OpenAiClient(@Qualifier("llmRestTemplate") RestTemplate llmRestTemplate,
+                        @Qualifier("llmDetailedRestTemplate") RestTemplate llmDetailedRestTemplate,
                         ObjectMapper objectMapper) {
         this.llmRestTemplate = llmRestTemplate;
+        this.llmDetailedRestTemplate = llmDetailedRestTemplate;
         this.objectMapper = objectMapper;
     }
 
@@ -83,6 +89,7 @@ public class OpenAiClient {
             if (content == null || content.isBlank()) {
                 throw new LlmCallFailedException("OpenAI 응답에 content가 없음");
             }
+            logUsage(root, "default");
             return content;
         } catch (LlmCallFailedException e) {
             throw e;
@@ -120,18 +127,37 @@ public class OpenAiClient {
         }
 
         try {
-            ResponseEntity<String> response = llmRestTemplate.postForEntity(
+            // 응답이 긴 호출이라 읽기 타임아웃이 넉넉한(15초) 상세용 템플릿 사용
+            ResponseEntity<String> response = llmDetailedRestTemplate.postForEntity(
                     CHAT_COMPLETIONS_URL, new HttpEntity<>(body, headers), String.class);
             JsonNode root = objectMapper.readTree(response.getBody());
             String content = root.path("choices").path(0).path("message").path("content").asText();
             if (content == null || content.isBlank()) {
                 throw new LlmCallFailedException("OpenAI 응답에 content가 없음");
             }
+            logUsage(root, "maxTokens=" + maxTokens);
             return content;
         } catch (LlmCallFailedException e) {
             throw e;
         } catch (Exception e) {
             throw new LlmCallFailedException("OpenAI 호출 실패", e);
         }
+    }
+
+    /**
+     * 응답의 usage 필드 기록 — 호출당 토큰 비용 추적용.
+     * tag는 호출 경로 구분: "default" = 기본 브리핑(2-인자), "maxTokens=N" = 상세 리포트(3-인자)
+     */
+    private void logUsage(JsonNode root, String tag) {
+        JsonNode usage = root.path("usage");
+        if (usage.isMissingNode()) {
+            return;
+        }
+        log.info("OpenAI 사용량[{}]. model={}, prompt={}, completion={}(reasoning={}), total={}",
+                tag, model,
+                usage.path("prompt_tokens").asInt(),
+                usage.path("completion_tokens").asInt(),
+                usage.path("completion_tokens_details").path("reasoning_tokens").asInt(),
+                usage.path("total_tokens").asInt());
     }
 }
