@@ -81,11 +81,11 @@
             b.major_age_grp,
             b.major_age_ratio,
             b.ai_brf
-        FROM hjd_ai_briefing b
-                 JOIN hjd h ON h.hjd_cd = b.hjd_cd
+        FROM hjd h
                  JOIN sgg s ON s.sgg_cd = h.sgg_cd
-                 LEFT JOIN hjd_stat st ON st.hjd_cd = b.hjd_cd
-        WHERE b.hjd_cd = #{hjdCd}
+                 LEFT JOIN hjd_ai_briefing b ON b.hjd_cd = h.hjd_cd
+                 LEFT JOIN hjd_stat st ON st.hjd_cd = h.hjd_cd
+        WHERE h.hjd_cd = #{hjdCd}
     </select>
 
 
