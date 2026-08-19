@@ -17,14 +17,17 @@ function goToDetail(buildingId) {
 <template>
   <div class="flex gap-4">
     <div
-      v-for="building in buildings"
-      :key="building.buildingId"
-      @click="goToDetail(building.buildingId)"
+      v-for="item in buildings"
+      :key="item.building.buildingId"
+      @click="goToDetail(item.building.buildingId)"
       class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm cursor-pointer hover:bg-surface-blue hover: transition-colors"
     >
-      <RoadViewImage :lat="building.lat" :lng="building.lng" />
+      <RoadViewImage
+        :lat="item.building.center?.coordinates?.[1]"
+        :lng="item.building.center?.coordinates?.[0]"
+      />
       <div class="p-4">
-        <BuildingInfoPannel :buildingData="building" />
+        <BuildingInfoPannel :buildingData="item.building" />
       </div>
     </div>
   </div>

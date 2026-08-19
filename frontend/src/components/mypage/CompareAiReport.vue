@@ -5,6 +5,7 @@ import DiagnosticFactorList from '@/components/report/DiagnosticFactorList.vue';
 import { Sparkles } from '@lucide/vue';
 import DetailedReportDisclaimer from '../report/DetailedReportDisclaimer.vue';
 import { getGradeByScore, GRADE_META } from '@/constants/reportConstants.js';
+import { FACTOR_CODE_TO_KEY, getGradeByStatusCode } from '@/constants/reportConstants.js';
 
 const props = defineProps({
   buildings: Array,
@@ -18,6 +19,18 @@ function isActive(key) {
 function gradeMeta(score) {
   return GRADE_META[getGradeByScore(score)];
 }
+
+function toDiagnosis(factors) {
+  const result = {};
+  factors.forEach((f) => {
+    const key = FACTOR_CODE_TO_KEY[f.code]; // STRUCTURE → structure
+    result[key] = {
+      status: getGradeByStatusCode(f.status),
+      summary: f.briefing, // briefing을 summary로 (하위가 summary 기대 시)
+    };
+  });
+  return result;
+}
 </script>
 
 <template>
@@ -28,8 +41,8 @@ function gradeMeta(score) {
     </h4>
     <div class="flex gap-4">
       <div
-        v-for="building in buildings"
-        :key="building.buildingId"
+        v-for="item in buildings"
+        :key="item.building.buildingId"
         class="flex-1 min-w-0 p-4 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm"
       >
         <!-- 매물 헤더 -->
@@ -37,28 +50,41 @@ function gradeMeta(score) {
           <!-- 왼쪽: 아이콘+건물명-->
           <div class="flex items-center gap-1.5">
             <Sparkles :size="15" class="text-secondary" />
-            <span class="text-[14px] font-semibold">{{ building.bldNm }}</span>
+            <span class="text-[14px] font-semibold">{{
+              item.building.bldNm || '건물명 없음'
+            }}</span>
           </div>
 
           <!-- 오른쪽: 등급 배지 -->
           <span
             class="text-[12px] px-2 py-0.5 rounded-full"
-            :class="[gradeMeta(building.score).badgeBg, gradeMeta(building.score).text]"
+            :class="[
+              gradeMeta(item.safetyReport.safetyScore).badgeBg,
+              gradeMeta(item.safetyReport.safetyScore).text,
+            ]"
           >
-            {{ gradeMeta(building.score).label }}
+            {{ gradeMeta(item.safetyReport.safetyScore).label }}
           </span>
         </div>
 
         <!-- 게이지+브리핑 -->
         <div class="flex items-center gap-4 py-2">
           <div class="scale-[0.7] origin-center shrink-0 -mx-6 -my-6">
-            <ScoreGauge :score="building.score" :showLabel="false" />
+            <ScoreGauge :score="item.safetyReport.safetyScore" :showLabel="false" />
           </div>
           <div class="flex-1 min-w-0">
-            <AiBriefingCard :loading="false" :briefing="building.briefing" />
+            <AiBriefingCard
+              :loading="false"
+              :briefing="item.safetyReport.overallBriefing"
+              :already-typed="true"
+            />
           </div>
         </div>
-        <DiagnosticFactorList :items="building.diagnosis" mode="summary" class="mt-3" />
+        <DiagnosticFactorList
+          :items="toDiagnosis(item.safetyReport.factors)"
+          mode="summary"
+          class="mt-3"
+        />
         <div class="mt-3">
           <DetailedReportDisclaimer />
         </div>

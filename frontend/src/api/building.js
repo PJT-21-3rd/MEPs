@@ -47,3 +47,10 @@ export const fetchBuildingDetailByCoord = async (lat, lng) => {
     throw error;
   }
 };
+
+export async function getCompareData(buildingIds) {
+  const params = new URLSearchParams();
+  buildingIds.forEach((id) => params.append('buildingIds', id));
+  const { data } = await api.get('/api/buildings/compare', { params });
+  return data.buildings;
+}
