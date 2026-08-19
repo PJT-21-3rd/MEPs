@@ -35,17 +35,11 @@ function toggleSelect(buildingId) {
 async function removeFavorite(id) {
   try {
     await removeSaved(id);
-
-    // 성공하면 목록에서 제거
     const index = buildings.value.findIndex((b) => b.buildingId === id);
-    if (index !== -1) {
-      buildings.value.splice(index, 1);
-    }
-    // 선택(비교)돼 있었으면 선택도 해제
+    if (index !== -1) buildings.value.splice(index, 1);
     const selIndex = selectedIds.value.indexOf(id);
-    if (selIndex !== -1) {
-      selectedIds.value.splice(selIndex, 1);
-    }
+    if (selIndex !== -1) selectedIds.value.splice(selIndex, 1);
+    toastStore.showToast('찜 목록에서 삭제했어요.');
   } catch (error) {
     console.error('찜 취소 실패:', error);
     toastStore.showToast('찜 취소에 실패했어요.'); // 실패 알림

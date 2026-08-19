@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { ArrowLeft, Scale, FolderHeart } from '@lucide/vue';
+import { ArrowLeft, Scale, FolderHeart, Heart } from '@lucide/vue';
 import FavoriteCard from '@/components/mypage/FavoriteCard.vue';
 import { useRouter } from 'vue-router';
 
@@ -34,7 +34,7 @@ function goBack() {
   <aside class="w-[350px] shrink-0 flex flex-col h-full pt-4 px-4">
     <div class="shrink-0">
       <header class="flex items-start gap-2 mb-4">
-        <ArrowLeft :size="22" class="mt-0.5" @click="goBack" />
+        <ArrowLeft :size="22" class="mt-0.5 cursor-pointer" @click="goBack" />
         <div>
           <h1 class="flex items-center gap-1 text-lg font-bold m-0">
             마이페이지
@@ -44,13 +44,19 @@ function goBack() {
         </div>
       </header>
 
-      <p class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2">
+      <p
+        v-if="buildings.length > 0"
+        class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2"
+      >
         <Scale :size="18" />
         {{ guideText }}
       </p>
     </div>
 
-    <ul class="list-none p-0 m-0 flex flex-col gap-2.5 flex-1 overflow-y-auto">
+    <ul
+      v-if="buildings.length > 0"
+      class="list-none p-0 m-0 flex flex-col gap-2.5 flex-1 overflow-y-auto"
+    >
       <FavoriteCard
         v-for="building in buildings"
         :key="building.buildingId"
@@ -60,5 +66,21 @@ function goBack() {
         @unlike="emit('unlike', $event)"
       />
     </ul>
+    <!-- 찜 목록 없으면 (빈 상태) -->
+    <div v-else class="flex-1 flex flex-col items-center justify-center text-center px-6">
+      <div class="w-16 h-16 rounded-full bg-surface-blue flex items-center justify-center mb-4">
+        <Heart :size="30" class="text-primary" />
+      </div>
+      <p class="text-[15px] font-bold text-text-main mb-1.5">아직 찜한 매물이 없어요</p>
+      <p class="text-[13px] text-text-sub mb-5 leading-relaxed">
+        관심 있는 매물을 찜하고<br />한눈에 비교해보세요
+      </p>
+      <button
+        @click="goBack"
+        class="px-5 py-2 bg-primary text-white text-[13px] font-semibold rounded-full hover:bg-primary/90 transition-colors cursor-pointer"
+      >
+        매물 보러 가기
+      </button>
+    </div>
   </aside>
 </template>
