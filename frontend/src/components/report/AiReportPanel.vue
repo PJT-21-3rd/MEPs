@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-// import { useRouter } from 'vue-router';
 import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
 import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
 import ReportBanners from './ReportBanners.vue';
@@ -44,7 +43,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'open-insurance', 'open-loan', 'report-loaded']);
-// const router = useRouter();
 const uiStore = useUiStore();
 
 const currentView = ref('summary');
@@ -71,9 +69,19 @@ const floodOverlapNotice = computed(() => {
   }
   return '';
 });
+// #29: 브리핑 레벨(동/구)에 따라 공인중개사 카드에 표시할 지역명 결정
+const locationName = computed(() => {
+  if (uiStore.briefingLevel === 'dong') {
+    return uiStore.currentBriefing?.hjdName ?? '';
+  }
+  if (uiStore.briefingLevel === 'gu') {
+    return uiStore.currentBriefing?.sggName ?? '';
+  }
+  return '';
+});
 
 // basic 응답(status/summary)과 상세 응답(aiReport)을 병합해서 -> mergedDetailItems
-// DiagnosticFactorList(detail 모드)에 넘길 최종 데이터를 만듦
+// DiagnosticFactorList(detail 모드)에 넘길 최종 데이터
 const mergedDetailItems = computed(() => {
   if (!reportData.value || !detailReportData.value) return null;
   const merged = {};
@@ -192,8 +200,6 @@ const dummyItems = {
 };
 
 // #29: 리포트 패널 스크롤이 바닥에 닿으면 공인중개사 카드를 지도 위에 노출
-// 지도 정확한 좌표를 모르는 상태라, 화면 우측 지도 영역쯤을 대략적인 fixed 좌표로 배치
-// TODO: 실제 3단 레이아웃 폭 확정되면 좌표 조정 필요
 const scrollContainer = ref(null);
 const showAgentCard = ref(false);
 
@@ -201,7 +207,6 @@ function handleScroll() {
   const el = scrollContainer.value;
   if (!el) return;
 
-  // 이미 떠있으면 재판단 안 함 (한번 뜨면 유지)
   if (showAgentCard.value) return;
 
   const isScrollable = el.scrollHeight > el.clientHeight;
@@ -214,7 +219,7 @@ function handleScroll() {
 const mockAgent = {
   name: '김민준',
   company: 'KB부동산개발법인(주)',
-  phone: '010-0000-0000',
+  phone: '010-9876-5432',
 };
 </script>
 
@@ -395,8 +400,8 @@ const mockAgent = {
     >
       <OfflineAgentCard
         v-if="showAgentCard && authStore.isLoggedIn"
-        class="fixed bottom-12 right-60 z-20"
-        dong-name="역삼동"
+        class="fixed bottom-150 right-5 z-20"
+        :dong-name="locationName"
         :agent="mockAgent"
       />
     </Transition>
