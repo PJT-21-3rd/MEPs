@@ -136,6 +136,7 @@ useClickOutside(sortDropdownRef, () => {
   isSortOpen.value = false;
 });
 
+// 찜한 리스트
 watch(activeTab, async (newTab) => {
   if (newTab === 'scrapped') {
     uiStore.setBuildingsLoading(true);
