@@ -25,48 +25,43 @@
       </div>
     </header>
 
-    <div
-      v-if="uiStore.isDetailLoading"
-      class="flex-1 flex flex-col items-center justify-center gap-3 text-text-sub"
-    >
-      <div
-        class="w-8 h-8 border-3 border-button-primary border-t-transparent rounded-full animate-spin"
-      ></div>
-      <p class="text-[14px]">건물 상세 정보를 불러오는 중입니다...</p>
-    </div>
+    <template v-if="uiStore.isDetailLoading">
+      <BuildingDetailSkeleton />
+    </template>
 
-    <div
-      v-else-if="!buildingDetail"
-      class="flex-1 flex flex-col items-center justify-center gap-2 text-text-sub"
-    >
-      <span class="text-[40px]">🏢</span>
-      <p class="text-[14px]">건물 상세 정보를 찾을 수 없습니다.</p>
-    </div>
+    <template v-else-if="!buildingDetail">
+      <div class="flex-1 flex flex-col items-center justify-center gap-2 text-text-sub">
+        <span class="text-[40px]">🏢</span>
+        <p class="text-[14px]">건물 상세 정보를 찾을 수 없습니다.</p>
+      </div>
+    </template>
 
-    <div v-else class="relative flex-1 overflow-y-auto">
-      <!-- 로드뷰 -->
-      <div class="px-4">
-        <RoadViewImage :lat="roadViewLat" :lng="roadViewLng" />
-      </div>
+    <template v-else>
+      <div class="relative flex-1 overflow-y-auto">
+        <!-- 로드뷰 -->
+        <div class="px-4">
+          <RoadViewImage :lat="roadViewLat" :lng="roadViewLng" />
+        </div>
 
-      <!-- 인포 -->
-      <div class="px-5 pt-4">
-        <BuildingInfoPannel :buildingData="buildingDetail" />
+        <!-- 인포 -->
+        <div class="px-5 pt-4">
+          <BuildingInfoPannel :buildingData="buildingDetail" />
+        </div>
+        <!-- 칩 -->
+        <div class="px-5">
+          <BuildingInfoChips :buildingData="buildingDetail" />
+        </div>
+        <!-- 탭 + 토지/건물 -->
+        <BuildingSpecs :buildingData="buildingDetail" />
       </div>
-      <!-- 칩 -->
-      <div class="px-5">
-        <BuildingInfoChips :buildingData="buildingDetail" />
-      </div>
-      <!-- 탭 + 토지/건물 -->
-      <BuildingSpecs :buildingData="buildingDetail" />
-    </div>
-    <!-- 리포트 생성 버튼 -->
-    <ReportCTAButton v-if="buildingDetail" @action="handleGenerateReport" />
+      <!-- 리포트 생성 버튼 -->
+      <ReportCTAButton v-if="buildingDetail" @action="handleGenerateReport" />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToastStore } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore.js';
@@ -77,6 +72,7 @@ import BuildingInfoChips from './BuildingInfoChips.vue';
 import BuildingSpecs from './BuildingSpecs.vue';
 import ReportCTAButton from './ReportCTAButton.vue';
 import SavedButton from '../common/SavedButton.vue';
+import BuildingDetailSkeleton from './BuildingDetailSkeleton.vue';
 
 const router = useRouter();
 const uiStore = useUiStore();

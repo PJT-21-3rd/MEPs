@@ -59,12 +59,17 @@
         </div>
       </div>
     </Variant>
+
+    <Variant title="3. 로딩">
+      <BuildingCardSkeleton />
+    </Variant>
   </Story>
 </template>
 
 <script setup>
 import BuildingCard from './BuildingCard.vue';
-import { ShieldCheck, Layers, CalendarDays, Store, Building2, Heart } from '@lucide/vue';
+import { ShieldCheck, Layers, CalendarDays, Store } from '@lucide/vue';
+import BuildingCardSkeleton from './BuildingCardSkeleton.vue';
 
 // =========================================
 // 백엔드 API 명세서 기반 더미 데이터
