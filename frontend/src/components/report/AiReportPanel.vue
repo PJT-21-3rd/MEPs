@@ -16,6 +16,7 @@ import { X, ArrowLeft, ChevronRight, FileText, Zap } from '@lucide/vue';
 import { useUiStore } from '@/stores/uiStore.js';
 import { useAuthStore } from '@/stores/authStore';
 import ReportSkeleton from './ReportSkeleton.vue';
+import DetailedReportSkeleton from './DetailedReportSkeleton.vue';
 
 const authStore = useAuthStore();
 
@@ -133,8 +134,17 @@ async function loadDetailReport() {
 
   isDetailLoading.value = true;
   detailHasError.value = false;
+
+  const MIN_DETAIL_LOADING_MS = 1500;
+  const startedAt = Date.now();
+
   try {
     detailReportData.value = await fetchDetailedReportData(props.buildingId);
+    const elapsed = Date.now() - startedAt;
+    const remaining = MIN_DETAIL_LOADING_MS - elapsed;
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
   } catch (err) {
     console.warn('[AiReportPanel] 상세 리포트 조회 실패', err);
     detailHasError.value = true;
@@ -263,9 +273,6 @@ const mockAgent = {
     </div>
 
     <!-- 로딩 중 -->
-    <!-- <div v-if="isLoading" class="flex-1 flex items-center justify-center text-sm text-text-sub">
-      리포트를 불러오는 중이에요...
-    </div> -->
     <ReportSkeleton v-if="isLoading" />
 
     <!-- summary 뷰 -->
@@ -340,37 +347,29 @@ const mockAgent = {
     </div>
 
     <!-- detail 뷰 -->
-    <Transition
-      enter-active-class="transition duration-600 ease-out"
-      enter-from-class="opacity-0 translate-y-6"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-6"
-    >
-      <div v-if="currentView === 'detail'" class="flex-1 flex flex-col gap-5 px-1 pb-2 pt-5">
-        <div
-          v-if="isDetailLoading"
-          class="flex-1 flex items-center justify-center text-sm text-text-sub"
-        >
-          상세 리포트를 불러오는 중이에요...
-        </div>
+    <div v-if="currentView === 'detail'" class="flex-1 flex flex-col gap-5 px-1 pb-2 pt-5">
+      <DetailedReportSkeleton v-if="isDetailLoading" />
 
-        <div
-          v-else-if="detailHasError"
-          class="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-text-sub"
+      <div
+        v-else-if="detailHasError"
+        class="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-text-sub"
+      >
+        <p>상세 리포트를 불러오지 못했어요. 다시 시도해주세요.</p>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold"
+          @click="loadDetailReport"
         >
-          <p>상세 리포트를 불러오지 못했어요. 다시 시도해주세요.</p>
-          <button
-            type="button"
-            class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold"
-            @click="loadDetailReport"
-          >
-            다시 시도
-          </button>
-        </div>
+          다시 시도
+        </button>
+      </div>
 
-        <template v-else-if="mergedDetailItems">
+      <Transition
+        enter-active-class="transition duration-[900ms] ease-out"
+        enter-from-class="opacity-0 translate-y-6"
+        enter-to-class="opacity-100 translate-y-0"
+      >
+        <div v-if="mergedDetailItems" class="flex flex-col gap-5">
           <DetailedReportSummary
             :grade="reportData.grade"
             :ai-report="detailReportData.overallAiReport"
@@ -381,9 +380,9 @@ const mockAgent = {
           <div class="mt-5">
             <DetailedReportDisclaimer />
           </div>
-        </template>
-      </div>
-    </Transition>
+        </div>
+      </Transition>
+    </div>
 
     <!-- #29: 공인중개사 안내 카드 (지도 영역 위 fixed 배치, 좌표는 임시값) -->
     <Transition
