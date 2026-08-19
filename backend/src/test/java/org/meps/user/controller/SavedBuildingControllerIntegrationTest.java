@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = {RootConfig.class, ServletConfig.class})
 @Transactional
 @DisplayName("찜하기 API 통합 테스트")
-class SavedBuildingControllerTest {
+class SavedBuildingControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private JwtProvider jwtProvider;

@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = {RootConfig.class, ServletConfig.class})
 @Transactional
 @DisplayName("회원 API 통합 테스트")
-class UserControllerTest {
+class UserWithdrawalControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private JwtProvider jwtProvider;
