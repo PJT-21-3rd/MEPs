@@ -24,6 +24,12 @@ export async function deleteAccount() {
 
 // 로그아웃
 export async function logoutApi() {
-  const { data } = await http.post('/api/users/logout');
-  return data;
+  try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    const { data } = await http.post('/api/users/logout', { refreshToken });
+    return data;
+  } catch (error) {
+    console.error('로그아웃 실패:', error);
+    throw error;
+  }
 }
