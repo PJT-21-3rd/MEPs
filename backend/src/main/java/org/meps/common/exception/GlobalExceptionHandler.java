@@ -3,6 +3,9 @@ package org.meps.common.exception;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -44,6 +47,14 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE));
     }
 
+    /** 400 — 요청 본문이 없거나 JSON 파싱 실패 */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException e) {
+        log.warn("요청 본문 오류: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE));
+    }
+
     /** 401
      * 토큰 없음/형식 오류/만료/위조 */
     @ExceptionHandler({
@@ -63,6 +74,22 @@ public class GlobalExceptionHandler {
         log.warn("존재하지 않는 경로 요청: {} {}", e.getHttpMethod(), e.getRequestURL());
         return ResponseEntity.status(ErrorCode.NOT_FOUND_URL.getStatus())
                 .body(ErrorResponse.of(ErrorCode.NOT_FOUND_URL));
+    }
+
+    /** 405 — 지원하지 않는 HTTP 메서드 */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException e) {
+        log.warn("지원하지 않는 메서드: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.METHOD_NOT_ALLOWED.getStatus())
+                .body(ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED));
+    }
+
+    /** 415 — 지원하지 않는 Content-Type */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException e) {
+        log.warn("지원하지 않는 Content-Type: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getStatus())
+                .body(ErrorResponse.of(ErrorCode.UNSUPPORTED_MEDIA_TYPE));
     }
 
     /** 500
