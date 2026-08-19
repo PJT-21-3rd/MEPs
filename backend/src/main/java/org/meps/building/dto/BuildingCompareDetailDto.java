@@ -21,6 +21,9 @@ public class BuildingCompareDetailDto {
     private Double platArea;
     private Double totArea;
 
+    @JsonRawValue
+    private String center;
+
     // ---- 토지 정보 ----
     private BuildingLandDto land;
 

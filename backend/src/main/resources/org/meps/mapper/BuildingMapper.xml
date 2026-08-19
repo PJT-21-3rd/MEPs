@@ -113,7 +113,7 @@
         WHERE bd_mgt_sn = #{buildingId}
     </select>
 
-    <!-- 매물 비교용 조회 - center/footprint/parcelGeom(ST_AsGeoJSON) 계산·전송은 제외함 -->
+    <!-- 매물 비교용 조회 - footprint/parcelGeom(ST_AsGeoJSON) 계산·전송은 제외함 -->
     <resultMap id="buildingCompareDetailMap" type="org.meps.building.dto.BuildingCompareDetailDto">
         <id     property="buildingId"  column="buildingId"/>
         <result property="bldNm"       column="bldNm"/>
@@ -122,6 +122,7 @@
         <result property="mainPurpsNm" column="mainPurpsNm"/>
         <result property="platArea"    column="platArea"/>
         <result property="totArea"     column="totArea"/>
+        <result property="center"      column="center"/>
         <result property="floors"      column="floors"/>
 
         <association property="land" javaType="org.meps.building.dto.BuildingLandDto">
@@ -151,6 +152,7 @@
                main_purps        AS mainPurpsNm,
                plat_area         AS platArea,
                tot_area          AS totArea,
+               ST_AsGeoJSON(center)      AS center,
 
                lndcgr_code_nm    AS lndcgrCodeNm,
                prpos_area_nm     AS prposAreaNm,
