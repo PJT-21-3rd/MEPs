@@ -11,32 +11,35 @@ function isActive(key) {
   return props.activeSections.includes(key);
 }
 
-// 토지 정보 항목
+// 토지 정보
 const landRows = [
-  { label: '면적', get: (b) => `${b.platArea.toLocaleString()}㎡` },
-  { label: '지목', get: (b) => b.land.lndcgrCodeNm },
-  { label: '용도지역', get: (b) => b.land.prposAreaNm },
-  { label: '도로접면', get: (b) => b.land.roadSideCodeNm },
-  { label: '공시지가', get: (b) => `${b.land.pbIntfPcInd.toLocaleString()}원/㎡` },
+  { label: '면적', get: (b) => `${b.building.platArea.toLocaleString()}㎡` },
+  { label: '지목', get: (b) => b.building.land.lndcgrCodeNm },
+  { label: '용도지역', get: (b) => b.building.land.prposAreaNm },
+  { label: '도로접면', get: (b) => b.building.land.roadSideCodeNm },
+  { label: '공시지가', get: (b) => `${b.building.land.pblntfPclnd.toLocaleString()}원/㎡` },
 ];
 
-// 건축물 정보 항목
+// 건축물 정보
 const buildingRows = [
-  { label: '건물이름', get: (b) => b.bldNm },
-  { label: '주용도', get: (b) => b.mainPurps },
-  { label: '주구조', get: (b) => b.detail.strctCdNm },
-  { label: '높이', get: (b) => `${b.detail.heit}m` },
-  { label: '지상/지하', get: (b) => `지상 ${b.detail.grndFlr}층 / 지하 ${b.detail.ugrndFlr}층` },
-  { label: '대지면적', get: (b) => `${b.platArea.toLocaleString()}㎡` },
-  { label: '연면적', get: (b) => `${b.totArea.toLocaleString()}㎡` },
+  { label: '건물이름', get: (b) => b.building.bldNm || '건물명 없음' },
+  { label: '주용도', get: (b) => b.building.mainPurpsNm },
+  { label: '주구조', get: (b) => b.building.detail.strctCdNm },
+  { label: '높이', get: (b) => `${b.building.detail.heit}m` },
+  {
+    label: '지상/지하',
+    get: (b) => `지상 ${b.building.detail.grndFlr}층 / 지하 ${b.building.detail.ugrndFlr}층`,
+  },
+  { label: '대지면적', get: (b) => `${b.building.platArea.toLocaleString()}㎡` },
+  { label: '연면적', get: (b) => `${b.building.totArea.toLocaleString()}㎡` },
   {
     label: '건축면적',
     get: (b) =>
-      `${b.detail.archArea.toLocaleString()}㎡ (건폐율 ${getBuildingCoverageRatio(b.detail.archArea, b.platArea)}%)`,
+      `${b.building.detail.archArea.toLocaleString()}㎡ (건폐율 ${getBuildingCoverageRatio(b.building.detail.archArea, b.building.platArea)}%)`,
   },
-  { label: '호수', get: (b) => `${b.detail.hoCnt}호` },
-  { label: '사용승인일', get: (b) => formatDate(b.detail.useAprDay) },
-  { label: '위반건축물', get: (b) => (b.detail.violBdYn === 'Y' ? '해당' : '해당없음') },
+  { label: '호수', get: (b) => `${b.building.detail.hoCnt}호` },
+  { label: '사용승인일', get: (b) => formatDate(b.building.detail.useAprDay) },
+  { label: '위반건축물', get: (b) => (b.building.detail.violBdYn === 'Y' ? '해당' : '해당없음') },
 ];
 </script>
 
@@ -55,7 +58,7 @@ const buildingRows = [
               <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
               <td
                 v-for="building in buildings"
-                :key="building.buildingId"
+                :key="building.building.buildingId"
                 class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
@@ -83,7 +86,7 @@ const buildingRows = [
               <td class="pl-4 py-3 pr-4 text-text-sub w-[140px] align-top">{{ row.label }}</td>
               <td
                 v-for="building in buildings"
-                :key="building.buildingId"
+                :key="building.building.buildingId"
                 class="py-3 px-4 align-top border-l border-surface-gray"
               >
                 {{ row.get(building) }}
@@ -104,7 +107,7 @@ const buildingRows = [
         <!-- 매물마다 자기 층 목록 표 -->
         <div
           v-for="building in buildings"
-          :key="building.buildingId"
+          :key="building.building.buildingId"
           class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm px-4 py-1.5"
         >
           <table class="w-full text-[12px] table-fixed">
@@ -117,7 +120,7 @@ const buildingRows = [
             </thead>
             <tbody>
               <tr
-                v-for="(floor, index) in building.floors"
+                v-for="(floor, index) in building.building.floors"
                 :key="index"
                 class="border-b border-surface-gray"
               >

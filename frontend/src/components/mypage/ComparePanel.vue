@@ -1,18 +1,31 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { Scale, Sparkles, LandPlot, Building2, Layers } from '@lucide/vue';
-import { compareData } from '@/mocks/compareData';
+import { getCompareData } from '@/api/building.js';
 import CompareBasicInfo from './CompareBasicInfo.vue';
 import CompareAiReport from './CompareAiReport.vue';
 import CompareTable from './CompareTable.vue';
-
-const compareBuildings = computed(() => {
-  return props.selectedIds.map((id) => compareData[id]);
-});
-
 const props = defineProps({
   selectedIds: Array,
 });
+const compareBuildings = ref([]);
+watch(
+  () => props.selectedIds,
+  async (ids) => {
+    if (!ids || ids.length < 2) {
+      compareBuildings.value = [];
+      return;
+    }
+    try {
+      const raw = await getCompareData(ids);
+      compareBuildings.value = raw;
+    } catch (error) {
+      console.error('비교 데이터 조회 실패:', error);
+      compareBuildings.value = [];
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 const sections = [
   { key: 'report', label: 'AI 안전진단', icon: Sparkles },
@@ -87,7 +100,7 @@ function isActive(key) {
 
       <!-- 비교 뷰 -->
 
-      <div v-else class="pt-4">
+      <div v-else class="pt-4 pb-6">
         <CompareBasicInfo :buildings="compareBuildings" />
         <CompareAiReport :buildings="compareBuildings" :activeSections="activeSections" />
         <CompareTable :buildings="compareBuildings" :activeSections="activeSections" />
