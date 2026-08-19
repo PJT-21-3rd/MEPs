@@ -88,6 +88,7 @@
         </div>
       </div>
     </section>
+    <FeedbackBanner />
   </div>
 </template>
 
@@ -103,6 +104,7 @@ import {
   formatViolation,
 } from '@/utils/formatters';
 import InfoRow from './InfoRow.vue';
+import FeedbackBanner from '../common/FeedbackBanner.vue';
 
 const props = defineProps({
   buildingData: { type: Object, default: () => null },
