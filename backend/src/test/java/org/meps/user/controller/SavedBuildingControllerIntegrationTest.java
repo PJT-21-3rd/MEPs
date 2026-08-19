@@ -197,6 +197,11 @@ class SavedBuildingControllerIntegrationTest {
         assertThat(body).contains("\"buildingId\":\"" + BUILDING_ID + "\"");
         assertThat(body).contains("\"roadAddr\"");
         assertThat(body).contains("\"jibunAddr\"");
+        assertThat(body).contains("\"mainPurpsNm\"");
+        assertThat(body).contains("\"grndFlr\"");
+        assertThat(body).contains("\"ugrndFlr\"");
+        assertThat(body).contains("\"useAprDay\"");
+        assertThat(body).contains("\"saved\":true");
     }
 
     @Test
