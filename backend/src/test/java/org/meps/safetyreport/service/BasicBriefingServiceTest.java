@@ -16,7 +16,7 @@ class BasicBriefingServiceTest {
 
     /** 고정 응답을 돌려주는 OpenAiClient 스텁 (Mockito 미사용 프로젝트라 서브클래스로 대체) */
     private static OpenAiClient stubClient(String cannedContent) {
-        return new OpenAiClient(null, null) {
+        return new OpenAiClient(null, null, null) {
             @Override
             public String completeJson(String systemPrompt, String userPrompt) {
                 return cannedContent;

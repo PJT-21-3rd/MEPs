@@ -191,9 +191,8 @@ public class RootConfig {
     }
 
     /**
-     * LLM 호출 전용 RestTemplate — 한줄 브리핑 5문장 생성은 공용 빈의 5초 읽기 타임아웃을
-     * 넘길 수 있어 분리. gpt-5-nano reasoning medium이 20초를 넘는 실측이 있어 45초.
-     * 주입 시 @Qualifier("llmRestTemplate") 필요
+     * 기본 브리핑 LLM 호출용 RestTemplate — 실측 최대 ~2.3초
+     * 여유를 둔 5초. 주입 시 @Qualifier("llmRestTemplate") 필요
      */
     @Bean
     public RestTemplate llmRestTemplate() {
@@ -203,7 +202,24 @@ public class RootConfig {
 
         factory.setConnectTimeout(3_000);
 
-        factory.setReadTimeout(45_000);
+        factory.setReadTimeout(5_000);
+
+        return new RestTemplate(factory);
+    }
+
+    /**
+     * 상세 리포트 LLM 호출용 RestTemplate — 실측 최대 ~8.7초,
+     * 여유를 둔 15초. 주입 시 @Qualifier("llmDetailedRestTemplate") 필요
+     */
+    @Bean
+    public RestTemplate llmDetailedRestTemplate() {
+
+        SimpleClientHttpRequestFactory factory =
+                new SimpleClientHttpRequestFactory();
+
+        factory.setConnectTimeout(3_000);
+
+        factory.setReadTimeout(15_000);
 
         return new RestTemplate(factory);
     }
