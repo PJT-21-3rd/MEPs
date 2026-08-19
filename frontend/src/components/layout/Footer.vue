@@ -32,7 +32,7 @@
         <li class="flex items-center gap-2">
           <span class="w-[30px] shrink-0 text-center px-1 py-0.5 tracking-wider">FE</span>
           <a
-            href="https://github.com/팀원1깃헙"
+            href="https://github.com/yesyes-12"
             target="_blank"
             class="truncate hover:text-text-main hover:underline transition-colors"
           >
