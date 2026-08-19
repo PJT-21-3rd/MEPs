@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -25,6 +26,10 @@ public class JwtProvider {
     /** 만료 시간(ms) */
     @Value("${jwt.expiration}")
     private long expirationMs;
+
+    /** refresh 만료 시간(ms) */
+    @Value("${jwt.refreshExpiration}")
+    private long refreshExpirationMs;
 
     private Key key;
 
@@ -58,6 +63,25 @@ public class JwtProvider {
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
+    }
+
+
+    /** 리프레시 토큰 발급 */
+    public String createRefreshToken(Integer userId) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key)
+                .compact();
+    }
+
+    /** 리프레시 토큰 만료 시각 — DB 저장용 */
+    public LocalDateTime getRefreshExpiresAt() {
+        return LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000);
     }
 
     /** 만료 시간(초) — 응답의 expiresIn용 */
