@@ -12,14 +12,12 @@ const compareBuildings = ref([]);
 watch(
   () => props.selectedIds,
   async (ids) => {
-    console.log('선택된 ids:', ids, ids?.length);
     if (!ids || ids.length < 2) {
       compareBuildings.value = [];
       return;
     }
     try {
       const raw = await getCompareData(ids);
-      console.log('받은 데이터:', raw);
       compareBuildings.value = raw;
     } catch (error) {
       console.error('비교 데이터 조회 실패:', error);
