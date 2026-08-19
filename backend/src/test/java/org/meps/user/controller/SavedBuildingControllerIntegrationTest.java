@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = {RootConfig.class, ServletConfig.class})
 @Transactional
 @DisplayName("찜하기 API 통합 테스트")
-class SavedBuildingControllerTest {
+class SavedBuildingControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private JwtProvider jwtProvider;
@@ -197,6 +197,11 @@ class SavedBuildingControllerTest {
         assertThat(body).contains("\"buildingId\":\"" + BUILDING_ID + "\"");
         assertThat(body).contains("\"roadAddr\"");
         assertThat(body).contains("\"jibunAddr\"");
+        assertThat(body).contains("\"mainPurpsNm\"");
+        assertThat(body).contains("\"grndFlr\"");
+        assertThat(body).contains("\"ugrndFlr\"");
+        assertThat(body).contains("\"useAprDay\"");
+        assertThat(body).contains("\"saved\":true");
     }
 
     @Test

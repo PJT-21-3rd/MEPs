@@ -27,6 +27,7 @@ import org.meps.structure.service.StructuralStabilityScoreService;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** 상세 리포트 details 조립부 단위 테스트 */
 class DetailedReportServiceTest {
@@ -270,6 +271,106 @@ class DetailedReportServiceTest {
         assertThat(mapper.updateReportsCallCount).isZero();
     }
 
+    @Test
+    @DisplayName("같은 건물의 생성이 진행 중이면 중복 요청은 스레드 풀에 넘기지 않는다")
+    void requestDetailedReportAsync_skipsSubmission_whenSameBuildingInFlight() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+        int[] submitCount = {0};
+        // 호출 횟수만 세고 완료 처리(표식 제거)는 하지 않는 스텁 — 첫 작업이 아직 실행 중인 상황 재현
+        service.self = submitCountingStub(submitCount);
+
+        service.requestDetailedReportAsync(BUILDING_ID);
+        service.requestDetailedReportAsync(BUILDING_ID);
+
+        assertThat(submitCount[0]).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("생성이 완료된 뒤의 요청은 다시 스레드 풀에 넘겨진다")
+    void requestDetailedReportAsync_resubmits_afterPreviousGenerationCompleted() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+        int[] submitCount = {0};
+        // 넘겨받은 즉시 완료되는 스텁 — 실제 비동기 작업의 finally(표식 제거)까지 재현
+        service.self = new DetailedReportService(null, null, null, null, null, null, null) {
+            @Override
+            public void generateDetailedReportAsync(String buildingId) {
+                submitCount[0]++;
+                service.inFlightBuildings.remove(buildingId);
+            }
+        };
+
+        service.requestDetailedReportAsync(BUILDING_ID);
+        service.requestDetailedReportAsync(BUILDING_ID);
+
+        assertThat(submitCount[0]).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("스레드 풀이 작업을 거부하면 예외를 전파하지 않고 표식만 지운다")
+    void requestDetailedReportAsync_swallowsRejection_andClearsInFlightMark() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+        service.self = new DetailedReportService(null, null, null, null, null, null, null) {
+            @Override
+            public void generateDetailedReportAsync(String buildingId) {
+                throw new java.util.concurrent.RejectedExecutionException("큐 포화(테스트용)");
+            }
+        };
+
+        // 거부가 호출자(기본 리포트 응답)까지 전파되면 여기서 테스트가 실패한다
+        service.requestDetailedReportAsync(BUILDING_ID);
+
+        assertThat(service.inFlightBuildings).isEmpty();
+    }
+
+    @Test
+    @DisplayName("거부 외의 실패는 그대로 전파하되 표식은 지워 다음 요청의 재시도를 보장한다")
+    void requestDetailedReportAsync_clearsInFlightMark_whenSubmissionFailsUnexpectedly() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+        service.self = new DetailedReportService(null, null, null, null, null, null, null) {
+            @Override
+            public void generateDetailedReportAsync(String buildingId) {
+                throw new IllegalStateException("예상 밖 실패(테스트용)");
+            }
+        };
+
+        assertThatThrownBy(() -> service.requestDetailedReportAsync(BUILDING_ID))
+                .isInstanceOf(IllegalStateException.class);
+
+        assertThat(service.inFlightBuildings).isEmpty();
+    }
+
+    @Test
+    @DisplayName("비동기 생성 작업이 끝나면 진행 중 표식이 지워진다")
+    void generateDetailedReportAsync_clearsInFlightMark_afterCompletion() {
+        FakeSafetyReportMapper mapper = new FakeSafetyReportMapper();
+        mapper.row = SafetyReportRowDto.builder()
+                .totalReport("캐시된 종합 리포트")
+                .structReport("캐시된 구조 리포트")
+                .fireReport("캐시된 화재 리포트")
+                .sinkReport("캐시된 지반침하 리포트")
+                .floodReport("캐시된 침수 리포트")
+                .build();
+        DetailedReportService service = serviceWith(generateShouldNotBeCalledBriefingService(), mapper);
+        service.inFlightBuildings.add(BUILDING_ID);
+
+        service.generateDetailedReportAsync(BUILDING_ID);
+
+        assertThat(service.inFlightBuildings).isEmpty();
+    }
+
+    private static DetailedReportService submitCountingStub(int[] submitCount) {
+        return new DetailedReportService(null, null, null, null, null, null, null) {
+            @Override
+            public void generateDetailedReportAsync(String buildingId) {
+                submitCount[0]++;
+            }
+        };
+    }
+
     private static DetailedFactorDto factorByCode(DetailedReportResponseDto response, String code) {
         return response.getFactors().stream()
                 .filter(f -> f.getCode().equals(code))
@@ -378,6 +479,16 @@ class DetailedReportServiceTest {
         @Override
         public void updateBriefs(String bdMgtSn, String aiModelNm, BasicBriefingDto briefs) {
             throw new UnsupportedOperationException("DetailedReportService는 updateBriefs를 호출하지 않는다");
+        }
+
+        @Override
+        public int tryClaimBriefGeneration(String bdMgtSn) {
+            throw new UnsupportedOperationException("DetailedReportService는 tryClaimBriefGeneration을 호출하지 않는다");
+        }
+
+        @Override
+        public void releaseBriefClaim(String bdMgtSn) {
+            throw new UnsupportedOperationException("DetailedReportService는 releaseBriefClaim을 호출하지 않는다");
         }
 
         @Override

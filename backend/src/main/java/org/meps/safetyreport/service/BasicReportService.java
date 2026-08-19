@@ -1,8 +1,6 @@
 package org.meps.safetyreport.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.util.SafetyGrade;
 import org.meps.fire.dto.FireScoreResult;
 import org.meps.fire.service.FireScoreService;
@@ -27,13 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * AI 안심 진단 기본 리포트 — 룰 엔진 점수 조합 + building_safety_report 캐시 + AI 브리핑.
+ * AI 안심 진단 기본 리포트 — 룰 엔진 점수 조합 + AI 브리핑.
+ * 브리핑은 매번 생성하지 않고 building_safety_report에 저장해 두고 재사용한다.
  *
- * 캐시 판단: 점수는 배치 원천에서 결정론적으로 나오므로 "재산출 점수 == 저장 점수"가
+ * 재사용 판단: 점수는 배치 원천에서 결정론적으로 나오므로 "재산출 점수 == 저장 점수"가
  * 곧 입력 불변 판정. 불일치면 upsert가 브리핑을 함께 무효화해 재생성을 유도한다.
- * 폴백 브리핑은 DB에 저장하지 않는다 — brief NULL 유지가 다음 요청의 재시도 트리거
+ * 폴백 브리핑은 DB에 저장하지 않는다 — brief NULL 유지가 다음 요청의 재시도 트리거.
+ * 저장된 브리핑이 없을 때의 생성은 SingleFlightBriefGenerator가 감싸 중복 LLM 호출을 막는다
+ * (인스턴스 안은 JVM single-flight, 인스턴스 간은 brief_status 컬럼 클레임)
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BasicReportService {
@@ -46,12 +46,13 @@ public class BasicReportService {
     private final FloodScoreService floodScoreService;
     private final TotalScoreService totalScoreService;
     private final BasicBriefingService basicBriefingService;
+    private final SingleFlightBriefGenerator singleFlightBriefGenerator;
     private final SafetyReportMapper safetyReportMapper;
     private final DetailedReportService detailedReportService;
 
     /**
      * @param loggedIn 비로그인이면 factors 미노출(응답에서 필드 제거) — 프론트는 그 자리를
-     *                 blur 플레이스홀더 + 로그인 유도로 렌더. 점수·브리핑 생성/캐시는 동일하게 수행
+     *                 blur 플레이스홀더 + 로그인 유도로 렌더. 점수·브리핑 생성/저장은 동일하게 수행
      */
     public BasicReportResponseDto getBasicReport(String buildingId, boolean loggedIn) {
         FireScoreResult fire = fireScoreService.getFireScore(buildingId); // 미존재 건물이면 여기서 404
@@ -86,40 +87,16 @@ public class BasicReportService {
             safetyReportMapper.upsertScores(buildingId, basicBriefingService.getModelName(),
                     totalScore, flood.getScore(), sink.getScore(), fire.getScore(), struct.getScore());
             // 점수 변경(최초 조회 포함) 시 비동기로 상세 리포트 재생성.
-            detailedReportService.generateDetailedReportAsync(buildingId);
+            // 같은 건물이 이미 생성 중이면 requestDetailedReportAsync가 무시한다
+            detailedReportService.requestDetailedReportAsync(buildingId);
         }
 
-        if (!scoreChanged && hasAllBriefs(row)) {
-            return buildResponse(totalScore, loggedIn, input, BasicBriefingDto.builder()
-                    .totalBrief(row.getTotalBrief())
-                    .structBrief(row.getStructBrief())
-                    .fireBrief(row.getFireBrief())
-                    .sinkBrief(row.getSinkBrief())
-                    .floodBrief(row.getFloodBrief())
-                    .build());
+        if (!scoreChanged && row.hasAllBriefs()) {
+            return buildResponse(totalScore, loggedIn, input, row.toBriefingDto());
         }
 
-        BasicBriefingDto briefs;
-        long startMillis = System.currentTimeMillis();
-        try {
-            briefs = basicBriefingService.generate(input);
-            log.info("AI 브리핑 생성 완료. buildingId={}, model={}, 소요={}ms",
-                    buildingId, basicBriefingService.getModelName(), System.currentTimeMillis() - startMillis);
-            safetyReportMapper.updateBriefs(buildingId, basicBriefingService.getModelName(), briefs);
-        } catch (LlmCallFailedException e) {
-            log.warn("AI 브리핑 생성 실패(소요={}ms), 템플릿 폴백 응답. buildingId={}",
-                    System.currentTimeMillis() - startMillis, buildingId, e);
-            briefs = basicBriefingService.fallback(input);
-        }
+        BasicBriefingDto briefs = singleFlightBriefGenerator.generateOnce(buildingId, input);
         return buildResponse(totalScore, loggedIn, input, briefs);
-    }
-
-    private boolean hasAllBriefs(SafetyReportRowDto row) {
-        return row.getTotalBrief() != null
-                && row.getStructBrief() != null
-                && row.getFireBrief() != null
-                && row.getSinkBrief() != null
-                && row.getFloodBrief() != null;
     }
 
     /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 */

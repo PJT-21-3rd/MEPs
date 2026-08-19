@@ -83,7 +83,12 @@
                b.bld_nm      AS bldNm,
                b.road_addr   AS roadAddr,
                b.jibun_addr  AS jibunAddr,
-               r.total_score AS safetyScore
+               r.total_score AS safetyScore,
+               b.main_purps  AS mainPurpsNm,
+               b.grnd_flr    AS grndFlr,
+               b.ugrnd_flr   AS ugrndFlr,
+               b.use_apr_day AS useAprDay,
+               TRUE          AS saved
         FROM saved s
                  JOIN buildings b ON b.bd_mgt_sn = s.bd_mgt_sn
                  LEFT JOIN building_safety_report r ON r.bd_mgt_sn = s.bd_mgt_sn

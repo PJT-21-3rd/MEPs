@@ -3,22 +3,17 @@ package org.meps.user.service;
 import lombok.RequiredArgsConstructor;
 import org.meps.building.exception.BuildingNotFoundException;
 import org.meps.common.util.SafetyGrade;
-import org.meps.user.dto.LoginRequestDto;
-import org.meps.user.dto.LoginResponseDto;
-import org.meps.user.dto.SavedBuildingDto;
-import org.meps.user.dto.SignupRequestDto;
-import org.meps.user.dto.UserDto;
-import org.meps.user.exception.AlreadySavedException;
-import org.meps.user.exception.DuplicateEmailException;
-import org.meps.user.exception.LoginFailedException;
-import org.meps.user.exception.PasswordMismatchException;
+import org.meps.user.dto.*;
+import org.meps.user.exception.*;
 import org.meps.user.jwt.JwtProvider;
+import org.meps.user.mapper.RefreshTokenMapper;
 import org.meps.user.mapper.UserMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,6 +21,7 @@ import java.util.List;
 public class UserService {
 
     private final UserMapper userMapper;
+    private final RefreshTokenMapper refreshTokenMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
@@ -46,14 +42,23 @@ public class UserService {
         userMapper.insertUser(user);
     }
 
-    public LoginResponseDto login(LoginRequestDto request) {   // ← 메서드 추가
+    @Transactional
+    public LoginResponseDto login(LoginRequestDto request) {
         UserDto user = userMapper.findByEmail(request.getEmail());
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new LoginFailedException();
         }
 
+        String refreshToken = jwtProvider.createRefreshToken(user.getUserId());
+        refreshTokenMapper.upsert(RefreshTokenDto.builder()
+                .userId(user.getUserId())
+                .token(refreshToken)
+                .expiresAt(jwtProvider.getRefreshExpiresAt())
+                .build());
+
         return LoginResponseDto.builder()
                 .accessToken(jwtProvider.createToken(user.getUserId()))
+                .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtProvider.getExpiresInSeconds())
                 .build();
@@ -101,5 +106,32 @@ public class UserService {
             }
         }
         return buildings;
+    }
+
+    /** 액세스 토큰 재발급 — 리프레시 토큰이 DB에 있고 만료되지 않아야 한다 */
+    public LoginResponseDto refresh(String refreshToken) {
+        RefreshTokenDto stored = refreshTokenMapper.findByToken(refreshToken);
+        if (stored == null) {
+            throw new InvalidRefreshTokenException("등록되지 않은 리프레시 토큰입니다.");
+        }
+        if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidRefreshTokenException("만료된 리프레시 토큰입니다. userId=" + stored.getUserId());
+        }
+        // 서명·형식 검증 (무효 시 null 반환)
+        if (jwtProvider.getUserId(refreshToken) == null) {
+            throw new InvalidRefreshTokenException("서명이 유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        return LoginResponseDto.builder()
+                .accessToken(jwtProvider.createToken(stored.getUserId()))
+                .tokenType("Bearer")
+                .expiresIn(jwtProvider.getExpiresInSeconds())
+                .build();
+    }
+
+    /** 로그아웃 — 리프레시 토큰 삭제 (없어도 성공 처리) */
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenMapper.deleteByToken(refreshToken);
     }
 }

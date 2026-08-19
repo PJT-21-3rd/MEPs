@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = {RootConfig.class, ServletConfig.class})
 @Transactional
 @DisplayName("회원 API 통합 테스트")
-class UserControllerIntegrationTest {
+class UserWithdrawalControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private JwtProvider jwtProvider;
@@ -44,7 +44,6 @@ class UserControllerIntegrationTest {
     private MockMvc mockMvc;
     private String token;
     private Integer userId;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String BUILDING_ID = "1121510100100180001026332";
     /** { "refreshToken": "..." } 형태의 요청 본문 */
