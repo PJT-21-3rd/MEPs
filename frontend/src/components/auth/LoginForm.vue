@@ -19,7 +19,7 @@ async function handleLogin() {
   }
   try {
     const data = await login({ email: email.value, password: password.value });
-    authStore.setToken(data.accessToken, email.value);
+    authStore.setToken(data.accessToken, data.refreshToken, email.value);
     emit('success');
   } catch (error) {
     console.log('로그인 에러:', error);

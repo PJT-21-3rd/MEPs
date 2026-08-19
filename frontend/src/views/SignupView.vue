@@ -74,7 +74,7 @@ async function handleSignup() {
     });
     // 자동로그인
     const data = await login({ email: email.value, password: password.value });
-    authStore.setToken(data.accessToken, email.value);
+    authStore.setToken(data.accessToken, data.refreshToken, email.value);
     // 리다이렉트
     const redirect = route.query.redirect || '/';
     router.push(redirect);

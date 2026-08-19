@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(localStorage.getItem('accessToken') || null);
+  const refreshToken = ref(localStorage.getItem('refreshToken') || null);
   const email = ref(localStorage.getItem('email') || null);
   const isLoggedIn = computed(() => {
     const token = accessToken.value;
@@ -25,9 +26,15 @@ export const useAuthStore = defineStore('auth', () => {
     isLoginModalOpen.value = false;
   };
 
-  function setToken(token, userEmail) {
+  function setToken(token, newRefreshToken, userEmail) {
     accessToken.value = token;
     localStorage.setItem('accessToken', token);
+
+    if (newRefreshToken) {
+      refreshToken.value = newRefreshToken;
+      localStorage.setItem('refreshToken', newRefreshToken); // 추가
+    }
+
     if (userEmail) {
       email.value = userEmail;
       localStorage.setItem('email', userEmail);
@@ -36,13 +43,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   function logout() {
     accessToken.value = null;
+    refreshToken.value = null;
+
     email.value = null;
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+
     localStorage.removeItem('email');
   }
 
   return {
     accessToken,
+    refreshToken,
     isLoggedIn,
     isLoginModalOpen,
     email,
