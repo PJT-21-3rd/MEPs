@@ -55,6 +55,7 @@ import { useClickOutside } from '@/hooks/useClickOutside.js';
 import { useAuthStore } from '@/stores/authStore';
 import { useToastStore } from '@/stores/toastStore';
 import { deleteAccount } from '@/api/auth.js';
+import { logoutApi } from '@/api/auth.js';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -89,11 +90,17 @@ const handleUserClick = () => {
   }
 };
 
-const handleLogout = () => {
-  authStore.logout();
-  isProfileOpen.value = false;
-  toastStore.showToast('로그아웃 되었습니다.');
-  router.push('/');
+const handleLogout = async () => {
+  try {
+    await logoutApi();
+  } catch (error) {
+    console.error('로그아웃API실패', error);
+  } finally {
+    authStore.logout();
+    isProfileOpen.value = false;
+    toastStore.showToast('로그아웃 되었습니다.');
+    router.push('/');
+  }
 };
 
 const handleDeleteAccount = async () => {
