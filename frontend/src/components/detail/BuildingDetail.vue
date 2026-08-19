@@ -42,7 +42,6 @@
         <div class="px-4">
           <RoadViewImage :lat="roadViewLat" :lng="roadViewLng" />
         </div>
-
         <!-- 인포 -->
         <div class="px-5 pt-4">
           <BuildingInfoPannel :buildingData="buildingDetail" />

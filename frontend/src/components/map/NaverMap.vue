@@ -349,7 +349,7 @@ onMounted(() => {
       const currentCenter = map.getCenter();
       const currentZoom = map.getZoom();
       updateHjdBriefing(currentCenter.lat(), currentCenter.lng(), currentZoom);
-      // updateNearbyBuildings();
+      updateNearbyBuildings();
       syncMapStateToUrl();
     }, 800);
   };

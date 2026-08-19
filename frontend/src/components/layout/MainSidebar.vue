@@ -73,6 +73,10 @@
         <!-- 매물 리스트 -->
         <BuildingList />
 
+        <div class="px-6">
+          <FeedbackBanner />
+        </div>
+
         <Footer />
       </div>
     </template>
@@ -90,6 +94,7 @@ import CommercialAiBriefingSkeleton from '../property/CommercialAiBriefingSkelet
 import BuildingList from '../property/BuildingList.vue';
 import BuildingDetail from '../detail/BuildingDetail.vue';
 import Footer from './Footer.vue';
+import FeedbackBanner from '../common/FeedbackBanner.vue';
 
 const uiStore = useUiStore();
 
