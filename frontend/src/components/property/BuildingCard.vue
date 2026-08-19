@@ -15,11 +15,15 @@
         <div class="flex items-start justify-between gap-2">
           <p class="truncate text-[16px] tracking-tight text-text-main">{{ displayAddress }}</p>
 
-          <SavedButton :building-id="building.buildingId" :initial-saved="building.saved" />
+          <SavedButton
+            :building-id="building.buildingId"
+            :initial-saved="building.saved"
+            class="-mt-1.5"
+          />
         </div>
         <p
           v-if="displayName"
-          class="-mt-1 truncate text-[14px] text-text-secondary"
+          class="-mt-1.5 truncate text-[14px] text-text-secondary"
           hover-class="hover:bg-white/70"
         >
           {{ displayName }}
