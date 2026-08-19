@@ -7,8 +7,6 @@
     >
       <AiReportPanelWithModals :building-id="uiStore.selectedBuildingId" />
     </div>
-    <!-- uiStore.selectedBuildingId : api 구현될 시 -->
-    <!-- '1121510700102020000025797': 실제 buildingId 예시 -->
 
     <main class="relative h-full flex-1 overflow-hidden">
       <Transition

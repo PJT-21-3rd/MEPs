@@ -72,6 +72,8 @@
 
         <!-- 매물 리스트 -->
         <BuildingList />
+
+        <Footer />
       </div>
     </template>
   </aside>
@@ -87,6 +89,7 @@ import CommercialAiBriefing from '../property/CommercialAiBriefing.vue';
 import CommercialAiBriefingSkeleton from '../property/CommercialAiBriefingSkeleton.vue';
 import BuildingList from '../property/BuildingList.vue';
 import BuildingDetail from '../detail/BuildingDetail.vue';
+import Footer from './Footer.vue';
 
 const uiStore = useUiStore();
 
