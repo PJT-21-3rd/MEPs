@@ -110,7 +110,10 @@ const buildingRows = [
           :key="building.building.buildingId"
           class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm px-4 py-1.5"
         >
-          <table class="w-full text-[12px] table-fixed">
+          <table
+            v-if="building.building.floors && building.building.floors.length > 0"
+            class="w-full text-[12px] table-fixed"
+          >
             <thead>
               <tr class="text-text-sub border-b border-surface-gray">
                 <th class="text-left py-1.5 font-medium">층</th>
@@ -130,6 +133,11 @@ const buildingRows = [
               </tr>
             </tbody>
           </table>
+
+          <!-- floors 없으면 정보 없음 -->
+          <div v-else class="py-8 text-center text-[13px] text-text-sub">
+            등록된 층별 현황이 없어요
+          </div>
         </div>
       </div>
     </div>
