@@ -56,7 +56,12 @@ const aiReportParagraphs = computed(() => {
       </div>
       <p class="text-sm text-text-secondary">
         "<span v-if="alreadyTyped">{{ summary }}</span
-        ><TypeWriterText :text="summary" :active="typingActive" @done="$emit('typing-done')" />"
+        ><TypeWriterText
+          v-else
+          :text="summary"
+          :active="typingActive"
+          @done="$emit('typing-done')"
+        />"
       </p>
     </template>
 

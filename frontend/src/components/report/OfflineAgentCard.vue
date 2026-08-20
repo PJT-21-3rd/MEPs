@@ -1,8 +1,5 @@
 <script setup>
-import { Phone, MapPin, RefreshCcw } from '@lucide/vue';
-
-// #29 - 리포트 조회 후 해당 지역 공인중개사 안내 영역 표시
-// 목업 데이터 기반 (실제 매칭 로직/API는 범위 밖)
+import { Phone, MapPin, X } from '@lucide/vue';
 
 defineProps({
   dongName: {
@@ -16,7 +13,7 @@ defineProps({
   },
 });
 
-defineEmits(['consult', 'refresh']);
+defineEmits(['consult', 'close']);
 </script>
 
 <template>
@@ -29,10 +26,10 @@ defineEmits(['consult', 'refresh']);
       <button
         type="button"
         class="text-text-sub hover:text-text-main"
-        aria-label="다른 전문가 보기"
-        @click="$emit('refresh')"
+        aria-label="카드 닫기"
+        @click="$emit('close')"
       >
-        <RefreshCcw class="w-4 h-4" />
+        <X class="w-4 h-4" />
       </button>
     </div>
 

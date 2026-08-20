@@ -113,9 +113,13 @@ export async function fetchReportData(buildingId) {
 
       // 특약 카드(#25/#32 진단 카드)용: 팩터별 RIDER 하나만 뽑아 detail.insurance로 병합
       Object.keys(result.insuranceRidersByFactor).forEach((key) => {
-        const rider = result.insuranceRidersByFactor[key].find((i) => i.coverageType === 'RIDER');
-        if (rider && result.dangerItems[key]) {
-          result.dangerItems[key].detail = { insurance: rider };
+        const items = result.insuranceRidersByFactor[key];
+        // RIDER(특약)를 우선으로, 없으면 BASE(보통약관)로 대체
+        const insurance =
+          items.find((i) => i.coverageType === 'RIDER') ??
+          items.find((i) => i.coverageType === 'BASE');
+        if (insurance && result.dangerItems[key]) {
+          result.dangerItems[key].detail = { insurance };
         }
       });
     } catch (err) {

@@ -64,13 +64,15 @@ const BUSINESS_INSURANCE_APPLY_URL =
 // 배너 클릭 시 필터링된 items로 config를 구성해 uiStore에 위임
 async function handleOpenInsurance(type) {
   if (type === 'flood') {
-    // 진단 등급(CAUTION 여부)과 무관하게 항상 침수 관련 특약/상품을 직접 조회
     let items = [];
-    try {
-      const riders = await fetchInsuranceRidersByFactor('FLOOD');
-      items = riders.filter((item) => item.coverageType === 'PRODUCT');
-    } catch (err) {
-      console.warn('[AiReportPanelWithModals] 풍수해보험 상품 조회 실패', err);
+    // 침수이력 항목이 주의(warning) 등급일 때만 특약/상품 조회
+    if (reportData.value?.dangerItems?.flood?.status === 'warning') {
+      try {
+        const riders = await fetchInsuranceRidersByFactor('FLOOD');
+        items = riders.filter((item) => item.coverageType === 'PRODUCT');
+      } catch (err) {
+        console.warn('[AiReportPanelWithModals] 풍수해보험 상품 조회 실패', err);
+      }
     }
     uiStore.openInsuranceModal({
       highlight: '풍수해보험',

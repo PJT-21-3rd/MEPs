@@ -35,7 +35,7 @@ defineEmits(['close', 'submit']);
       @click.self="$emit('close')"
     >
       <div
-        class="w-[760px] h-[944px] max-h-[90vh] bg-white rounded-[24px] overflow-hidden flex flex-col"
+        class="w-[660px] h-[844px] max-h-[90vh] bg-white rounded-[24px] overflow-hidden flex flex-col"
       >
         <!-- 헤더 -->
         <div class="bg-secondary px-8 py-5 flex items-center gap-2.5">
@@ -76,7 +76,7 @@ defineEmits(['close', 'submit']);
                   <span class="text-[16px] font-regular text-text-main">{{ item.name }}</span>
                   <span
                     v-if="item.badge"
-                    class="px-2 py-0.5 rounded-full text-[12px] font-regular bg-status-danger text-white"
+                    class="px-2 py-0.5 rounded-full text-[12px] font-regular bg-grade-danger text-status-danger"
                   >
                     {{ item.badge }}
                   </span>
