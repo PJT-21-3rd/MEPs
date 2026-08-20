@@ -5,7 +5,7 @@ defineEmits(['action']);
 </script>
 
 <template>
-  <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] z-20 bg-white">
+  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] z-20 bg-transparent">
     <button
       @click="$emit('action')"
       class="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary py-4 text-[16px] text-white transition-transform hover:scale-[1.01] active:scale-95"
