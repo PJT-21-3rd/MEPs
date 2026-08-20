@@ -40,12 +40,12 @@ function goSignup() {
 
 <template>
   <div>
-    <!-- 아이디 -->
-    <label class="text-[13px] font-medium">아이디</label>
+    <!-- 아이디(이메일) -->
+    <label class="text-[13px] font-medium">이메일</label>
     <input
       v-model="email"
       type="text"
-      placeholder="아이디를 입력하세요"
+      placeholder="example@example.com"
       class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
     />
 
