@@ -21,7 +21,7 @@ defineEmits(['close', 'view-detail', 'find-branch', 'open-app']);
       @click.self="$emit('close')"
     >
       <div
-        class="w-[760px] h-[944px] max-h-[90vh] bg-white rounded-[24px] overflow-hidden flex flex-col"
+        class="w-[660px] h-[844px] max-h-[90vh] bg-white rounded-[24px] overflow-hidden flex flex-col"
       >
         <!-- 헤더 -->
         <div class="bg-secondary px-8 py-5 flex items-center gap-2.5">
