@@ -79,42 +79,42 @@ class SinkholeScoreServiceTest {
 
     @Test
     void 근거리_사고도_5년이_지나면_양호로_승급한다() {
-        // 법정 공동조사 주기 경과 = 출구: w = 1.0 × 0.6 → 70 + round(30 × 0.27^0.6) = 84
+        // 법정 공동조사 주기 경과 = 출구: w = 1.0 × 0.7 → 70 + round(30 × 0.27^0.7) = 82
         SinkholeScoreResult result = sinkholeScoreService.calculateScore(
                 List.of(incident("20200101", 50.0)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(84);
+        assertThat(result.getScore()).isEqualTo(82);
         assertThat(result.getGrade()).isEqualTo(SafetyGrade.GOOD);
     }
 
     @Test
     void 중거리_최근_사고_1건이면_양호_구간이다() {
-        // w = 0.5 × 1.0 → 70 + round(30 × 0.27^0.5) = 86 — 근거리·과거(84)보다 위 (거리 우위)
+        // w = 0.65 × 1.0 → 70 + round(30 × 0.27^0.65) = 83 — 근거리·과거(82)보다 위 (거리 우위)
         SinkholeScoreResult result = sinkholeScoreService.calculateScore(
                 List.of(incident("20260101", 250.0)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(86);
+        assertThat(result.getScore()).isEqualTo(83);
         assertThat(result.getGrade()).isEqualTo(SafetyGrade.GOOD);
     }
 
     @Test
-    void 중거리_과거_사고_1건이면_안전_커트라인에_걸린다() {
-        // w = 0.5 × 0.6 = 0.3 → 30 × 0.27^0.3 = 20.25 → 정확히 90점 안전 턱걸이.
-        // 상수 튜닝 시 안전↔양호가 뒤집히기 쉬운 민감 지점이라 회귀 가드로 고정한다
+    void 중거리_과거_사고_1건이면_양호_구간이다() {
+        // w = 0.65 × 0.7 = 0.455 → 87. 간접 신호 1건만으로는 안전이 나오지 않게 된
+        // 2026-08-20 가중치 상향의 의도된 효과 (이전 값 0.5×0.6에서는 90 안전 턱걸이)
         SinkholeScoreResult result = sinkholeScoreService.calculateScore(
                 List.of(incident("20200101", 250.0)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(90);
-        assertThat(result.getGrade()).isEqualTo(SafetyGrade.SAFE);
+        assertThat(result.getScore()).isEqualTo(87);
+        assertThat(result.getGrade()).isEqualTo(SafetyGrade.GOOD);
     }
 
     @Test
     void 원거리_과거_사고_1건이면_감점이_거의_없다() {
-        // 300~500m는 위험 근거가 없는 표시 범위: w = 0.2 × 0.6 = 0.12 → 96
+        // 300~500m는 위험 근거가 없는 표시 범위: w = 0.3 × 0.7 = 0.21 → 93
         SinkholeScoreResult result = sinkholeScoreService.calculateScore(
                 List.of(incident("20190301", 499.0)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(96);
+        assertThat(result.getScore()).isEqualTo(93);
         assertThat(result.getGrade()).isEqualTo(SafetyGrade.SAFE);
         assertThat(result.isSubsidenceHistory()).isTrue();
     }
@@ -130,19 +130,19 @@ class SinkholeScoreServiceTest {
 
     @Test
     void 경계값_정확히_500m는_원거리_구간에_포함된다() {
-        // w = 0.2 × 1.0 → 70 + round(30 × 0.27^0.2) = 93
+        // w = 0.3 × 1.0 → 70 + round(30 × 0.27^0.3) = 90
         SinkholeScoreResult result = sinkholeScoreService.calculateScore(
                 List.of(incident("20260101", 500.0)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(93);
+        assertThat(result.getScore()).isEqualTo(90);
     }
 
     @Test
     void 경계_직후는_다음_구간_가중치로_떨어진다() {
-        // 100m 초과 → 0.5, 5년 하루 초과 → 0.6 → w = 0.3 → 90점
+        // 100m 초과 → 0.65, 5년 하루 초과 → 0.7 → w = 0.455 → 87점
         SinkholeScoreResult result = sinkholeScoreService.calculateScore(
                 List.of(incident("20210731", 100.1)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(90);
+        assertThat(result.getScore()).isEqualTo(87);
     }
 }

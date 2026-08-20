@@ -39,12 +39,12 @@ class FloodScoreServiceTest {
     }
 
     @Test
-    void 최고등급_과거_이력_1건이면_78점_주의다() {
-        // 기준선(old, ×1.0): w = 1.0(grade5) × 1.0 → 70 + round(30 × 0.27) = 78
+    void 최고등급_과거_이력_1건이면_75점_주의다() {
+        // 기준선(old, ×1.0): w = 1.4(grade5) × 1.0 → 70 + round(30 × 0.27^1.4) = 75
         FloodScoreResultDto result = floodScoreService.calculateScore(
                 List.of(incident("2020", 5)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(78);
+        assertThat(result.getScore()).isEqualTo(75);
         assertThat(result.getGrade()).isEqualTo(SafetyGrade.CAUTION);
         assertThat(result.isFloodHistory()).isTrue();
         assertThat(result.getIncidentCount()).isEqualTo(1);
@@ -52,19 +52,19 @@ class FloodScoreServiceTest {
 
     @Test
     void 최고등급_최근_이력은_소폭_가산되어_과거_이력보다_점수가_낮다() {
-        // recency는 보조 가중치(×1.1)라 절벽 없이 소폭만 차이난다: old=78, recent=77
+        // recency는 보조 가중치(×1.1)라 절벽 없이 소폭만 차이난다: old=75, recent=74
         int old = floodScoreService.calculateScore(List.of(incident("2020", 5)), BASE_DATE).getScore();
         int recent = floodScoreService.calculateScore(List.of(incident("2026", 5)), BASE_DATE).getScore();
 
-        assertThat(old).isEqualTo(78);
-        assertThat(recent).isEqualTo(77);
+        assertThat(old).isEqualTo(75);
+        assertThat(recent).isEqualTo(74);
         assertThat(recent).isLessThan(old);
         assertThat(old - recent).isLessThanOrEqualTo(2); // 절벽 현상 없음 확인
     }
 
     @Test
     void 최고등급_최근_이력은_연도가_늘수록_점수가_단조_감소한다() {
-        // Σw = 1.1 → 77, Σw = 2.2 → 72, Σw = 3.3 → 70 (마진이 곱으로 깎여 건수가 구분된다)
+        // Σw = 1.54 → 74, Σw = 3.08 → 71, Σw = 4.62 → 70 (마진이 곱으로 깎여 건수가 구분된다)
         FloodIncidentDto y2026 = incident("2026", 5);
         FloodIncidentDto y2025 = incident("2025", 5);
         FloodIncidentDto y2024 = incident("2024", 5);
@@ -73,8 +73,8 @@ class FloodScoreServiceTest {
         int two = floodScoreService.calculateScore(List.of(y2026, y2025), BASE_DATE).getScore();
         int three = floodScoreService.calculateScore(List.of(y2026, y2025, y2024), BASE_DATE).getScore();
 
-        assertThat(one).isEqualTo(77);
-        assertThat(two).isEqualTo(72);
+        assertThat(one).isEqualTo(74);
+        assertThat(two).isEqualTo(71);
         assertThat(three).isEqualTo(70);
         assertThat(one).isGreaterThan(two);
         assertThat(two).isGreaterThanOrEqualTo(three);
@@ -94,49 +94,51 @@ class FloodScoreServiceTest {
     }
 
     @Test
-    void 최저등급_최근_이력_1건이면_안전_구간이다() {
-        // 2026-08 기준 building_flood_map의 유일한 실사례 조합: w = 0.2 × 1.1 → 92
+    void 최저등급_최근_이력_1건이면_양호_구간이다() {
+        // 2026-08 기준 building_flood_map의 최다 실사례 조합: w = 0.5 × 1.1 → 85.
+        // 침수 이력이 있으면 안전 등급이 나오지 않는다는 정책 라인의 회귀 가드
         FloodScoreResultDto result = floodScoreService.calculateScore(
                 List.of(incident("2022", 1)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(92);
-        assertThat(result.getGrade()).isEqualTo(SafetyGrade.SAFE);
+        assertThat(result.getScore()).isEqualTo(85);
+        assertThat(result.getGrade()).isEqualTo(SafetyGrade.GOOD);
         assertThat(result.isFloodHistory()).isTrue();
     }
 
     @Test
     void 등급이_높을수록_같은_최근성에서_점수가_더_낮다() {
+        // 1등급만 양호(85), 2등급부터 주의(79 이하) — 등급별 감점 라인의 회귀 가드
         int grade1 = floodScoreService.calculateScore(List.of(incident("2026", 1)), BASE_DATE).getScore();
         int grade2 = floodScoreService.calculateScore(List.of(incident("2026", 2)), BASE_DATE).getScore();
         int grade3 = floodScoreService.calculateScore(List.of(incident("2026", 3)), BASE_DATE).getScore();
         int grade4 = floodScoreService.calculateScore(List.of(incident("2026", 4)), BASE_DATE).getScore();
         int grade5 = floodScoreService.calculateScore(List.of(incident("2026", 5)), BASE_DATE).getScore();
 
-        assertThat(grade1).isEqualTo(92);
-        assertThat(grade2).isEqualTo(87);
-        assertThat(grade3).isEqualTo(83);
-        assertThat(grade4).isEqualTo(79);
-        assertThat(grade5).isEqualTo(77);
+        assertThat(grade1).isEqualTo(85);
+        assertThat(grade2).isEqualTo(79);
+        assertThat(grade3).isEqualTo(77);
+        assertThat(grade4).isEqualTo(75);
+        assertThat(grade5).isEqualTo(74);
         assertThat(grade1).isGreaterThan(grade2).isGreaterThan(grade3);
         assertThat(grade3).isGreaterThan(grade4).isGreaterThan(grade5);
     }
 
     @Test
     void 경계값_정확히_5년_전_연도는_최근으로_취급된다() {
-        // baseDate 2026년, RECENT_CYCLE_YEARS=5 → 2021년은 recent(경계 포함) → w=1.1 → 77점
+        // baseDate 2026년, RECENT_CYCLE_YEARS=5 → 2021년은 recent(경계 포함) → w = 1.54 → 74점
         FloodScoreResultDto result = floodScoreService.calculateScore(
                 List.of(incident("2021", 5)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(77);
+        assertThat(result.getScore()).isEqualTo(74);
     }
 
     @Test
     void 경계_바로_이전_연도는_과거로_취급되어_기준선_점수를_받는다() {
-        // 2020년은 5년 초과 → old(기준선) → w=1.0 → 78점
+        // 2020년은 5년 초과 → old(기준선) → w = 1.4 → 75점
         FloodScoreResultDto result = floodScoreService.calculateScore(
                 List.of(incident("2020", 5)), BASE_DATE);
 
-        assertThat(result.getScore()).isEqualTo(78);
+        assertThat(result.getScore()).isEqualTo(75);
     }
 
     @Test
