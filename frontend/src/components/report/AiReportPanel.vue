@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
-import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
+// import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
+// import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
 import ReportBanners from './ReportBanners.vue';
-import OfflineAgentCard from './OfflineAgentCard.vue';
 import DetailedReportSummary from './DetailedReportSummary.vue';
 import DetailedReportDisclaimer from './DetailedReportDisclaimer.vue';
 import { GRADE_META } from '@/constants/reportConstants.js';
@@ -66,16 +65,6 @@ const gradeMeta = computed(() => {
 const floodOverlapNotice = computed(() => {
   if (reportData.value?.dangerItems?.flood?.status === 'warning') {
     return '침수이력 추천 특약의 "풍수해 특약"과 보장이 중복돼요';
-  }
-  return '';
-});
-// #29: 브리핑 레벨(동/구)에 따라 공인중개사 카드에 표시할 지역명 결정
-const locationName = computed(() => {
-  if (uiStore.briefingLevel === 'dong') {
-    return uiStore.currentBriefing?.hjdName ?? '';
-  }
-  if (uiStore.briefingLevel === 'gu') {
-    return uiStore.currentBriefing?.sggName ?? '';
   }
   return '';
 });
@@ -201,26 +190,23 @@ const dummyItems = {
 
 // #29: 리포트 패널 스크롤이 바닥에 닿으면 공인중개사 카드를 지도 위에 노출
 const scrollContainer = ref(null);
-const showAgentCard = ref(false);
+// const showAgentCard = ref(false);
 
 function handleScroll() {
   const el = scrollContainer.value;
   if (!el) return;
 
-  if (showAgentCard.value) return;
+  if (currentView.value !== 'summary') return; // 기본 리포트(summary)일 때만 동작
+
+  if (uiStore.showAgentCard) return;
 
   const isScrollable = el.scrollHeight > el.clientHeight;
   const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
 
   if (isScrollable && isNearBottom) {
-    showAgentCard.value = true;
+    uiStore.setAgentCardVisible(true);
   }
 }
-const mockAgent = {
-  name: '김민준',
-  company: 'KB부동산개발법인(주)',
-  phone: '010-9876-5432',
-};
 </script>
 
 <template>
@@ -281,7 +267,7 @@ const mockAgent = {
     <ReportSkeleton v-if="isLoading" />
 
     <!-- summary 뷰 -->
-    <div v-else-if="currentView === 'summary'" class="flex-1 flex flex-col gap-5 px-5 py-2">
+    <div v-else-if="currentView === 'summary'" class="flex-1 flex flex-col gap-5 px-5 pt-2 pb-8">
       <div class="flex flex-col gap-2">
         <ScoreGauge :score="reportData.score" :grade="reportData.grade" />
         <AiBriefingCard
@@ -306,12 +292,12 @@ const mockAgent = {
 
         <button
           type="button"
-          class="w-full py-4 rounded-2xl bg-button-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2"
+          class="w-full py-4 rounded-2xl bg-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2 -mb-4"
           @click="openDetail"
         >
-          <FileText class="w-4 h-4 shrink-0" />
+          <FileText class="w-4 h-4 text-secondary shrink-0" />
           <span>4대 근거 전체 상세 진단 리포트 보기</span>
-          <ChevronRight class="w-4 h-4 shrink-0" />
+          <ChevronRight class="w-4 h-4 text-white shrink-0" />
         </button>
 
         <FloodInsuranceBanner
@@ -388,22 +374,5 @@ const mockAgent = {
         </div>
       </Transition>
     </div>
-
-    <!-- #29: 공인중개사 안내 카드 (지도 영역 위 fixed 배치, 좌표는 임시값) -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-4"
-    >
-      <OfflineAgentCard
-        v-if="showAgentCard && authStore.isLoggedIn"
-        class="fixed bottom-150 right-5 z-20"
-        :dong-name="locationName"
-        :agent="mockAgent"
-      />
-    </Transition>
   </div>
 </template>

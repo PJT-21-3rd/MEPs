@@ -29,6 +29,24 @@
 
       <MapResearch />
       <MapControls />
+
+      <!-- #29: 공인중개사 안내 카드 (지도 영역 기준 상대 배치) -->
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 translate-y-4"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-4"
+      >
+        <OfflineAgentCard
+          v-if="uiStore.showAgentCard && authStore.isLoggedIn"
+          class="absolute bottom-5 right-75 z-20 w-[320px]"
+          :dong-name="uiStore.agentDongName"
+          :agent="mockAgent"
+          @close="uiStore.setAgentCardVisible(false)"
+        />
+      </Transition>
     </main>
   </div>
 </template>
@@ -42,7 +60,17 @@ import QuickNavigation from '@/components/map/QuickNavigation.vue';
 import ScreenRoadView from '@/components/map/ScreenRoadView.vue';
 import SearchBar from '@/components/map/SearchBar.vue';
 import AiReportPanelWithModals from '@/components/report/AiReportPanelWithModals.vue';
+import OfflineAgentCard from '@/components/report/OfflineAgentCard.vue'; //추가
 import { useUiStore } from '@/stores/uiStore';
+import { useAuthStore } from '@/stores/authStore'; //추가
 
 const uiStore = useUiStore();
+const authStore = useAuthStore(); //추가
+
+//공인중개사 카드 mock
+const mockAgent = {
+  name: '김민준',
+  company: 'KB부동산개발법인(주)',
+  phone: '010-9876-5432',
+};
 </script>
