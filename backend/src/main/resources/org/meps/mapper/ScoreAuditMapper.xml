@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.safetyreport.audit.mapper.ScoreAuditMapper">
+
+    <!--
+      건물 원천 사실 키셋 페이지 조회.
+      center는 SRID 4326 지리 좌표라 ST_Latitude/ST_Longitude로 축순서 혼동 없이 추출한다.
+    -->
+    <select id="findBuildingFactsPage" resultType="org.meps.safetyreport.audit.dto.AuditBuildingFactsDto">
+        SELECT bd_mgt_sn,
+               use_apr_day,
+               strct_cd_nm,
+               viol_bd_yn,
+               ugrnd_flr,
+               road_side_code_nm,
+               hjd_cd,
+               ST_Latitude(center)  AS lat,
+               ST_Longitude(center) AS lng
+        FROM buildings
+        WHERE bd_mgt_sn &gt; #{lastId}
+        ORDER BY bd_mgt_sn
+        LIMIT #{limit}
+    </select>
+
+    <select id="findAllStations" resultType="org.meps.safetyreport.audit.dto.AuditStationDto">
+        SELECT ST_Latitude(geom)  AS lat,
+               ST_Longitude(geom) AS lng
+        FROM fire_station
+    </select>
+
+    <!-- FireMapper.findDongAvgFireCnt와 같은 집계를 전 행정동에 대해 한 번에 수행 -->
+    <select id="findDongFireAverages" resultType="org.meps.safetyreport.audit.dto.AuditDongFireAvgDto">
+        SELECT hjd_cd,
+               AVG(cnt) AS avgCnt
+        FROM fire
+        WHERE year BETWEEN #{fromYear} AND #{toYear}
+        GROUP BY hjd_cd
+    </select>
+
+    <!-- SinkholeMapper.findIncidentsByBuilding과 같은 조인·거리 계산을 전 건물에 대해 수행 -->
+    <select id="findAllSinkIncidents" resultType="org.meps.safetyreport.audit.dto.AuditSinkIncidentDto">
+        SELECT m.bd_mgt_sn,
+               s.sago_date,
+               ST_Distance_Sphere(b.center, s.geom) AS distanceM
+        FROM building_sinkhole_map m
+        JOIN sinkhole s  ON s.sago_no = m.sago_no
+        JOIN buildings b ON b.bd_mgt_sn = m.bd_mgt_sn
+    </select>
+
+    <!-- FloodMapper.findIncidentsByBuilding과 같은 연도 단위 집계를 전 건물에 대해 수행 -->
+    <select id="findAllFloodIncidents" resultType="org.meps.safetyreport.audit.dto.AuditFloodIncidentDto">
+        SELECT m.bd_mgt_sn,
+               f.year       AS year,
+               MAX(f.grade) AS grade
+        FROM building_flood_map m
+        JOIN flood f ON f.sn = m.sn
+        GROUP BY m.bd_mgt_sn, f.year
+    </select>
+
+    <delete id="deleteAllAuditRows">
+        DELETE FROM safety_score_audit
+    </delete>
+
+    <insert id="insertAuditRows">
+        INSERT INTO safety_score_audit (
+            bd_mgt_sn, total_score, struct_score, fire_score, sink_score, flood_score,
+            use_apr_day, strct_cd_nm, viol_bd_yn, ugrnd_flr, road_side_code_nm,
+            station_dist_m, dong_fire_avg, dong_fire_quartile, sink_cnt, flood_cnt
+        ) VALUES
+        <foreach collection="rows" item="row" separator=",">
+            (#{row.bdMgtSn}, #{row.totalScore}, #{row.structScore}, #{row.fireScore},
+             #{row.sinkScore}, #{row.floodScore},
+             #{row.useAprDay,jdbcType=CHAR}, #{row.strctCdNm,jdbcType=VARCHAR},
+             #{row.violBdYn,jdbcType=CHAR}, #{row.ugrndFlr,jdbcType=SMALLINT},
+             #{row.roadSideCodeNm,jdbcType=VARCHAR}, #{row.stationDistM,jdbcType=DOUBLE},
+             #{row.dongFireAvg,jdbcType=DOUBLE}, #{row.dongFireQuartile,jdbcType=TINYINT},
+             #{row.sinkCnt}, #{row.floodCnt})
+        </foreach>
+    </insert>
+
+</mapper>

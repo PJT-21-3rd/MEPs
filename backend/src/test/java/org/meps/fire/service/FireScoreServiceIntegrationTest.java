@@ -27,8 +27,8 @@ class FireScoreServiceIntegrationTest {
     void 조적조_진입불가_건물은_근거_데이터와_함께_감점된_점수를_반환한다() {
         FireScoreResult result = fireScoreService.getFireScore(BRICK_NARROW_BUILDING);
 
-        // 벽돌(4) + 세로(불)(12) = 최소 16 감점 → 84점 이하, 하한 70
-        assertThat(result.getScore()).isBetween(70, 84);
+        // 벽돌(7) + 세로(불)(18) = 최소 25 감점 → 75점 이하, 하한 70
+        assertThat(result.getScore()).isBetween(70, 75);
         assertThat(result.getStrctCdNm()).isEqualTo("벽돌구조");
         assertThat(result.getRoadSideCodeNm()).isEqualTo("세로한면(불)");
         assertThat(result.getNearestStationNm()).isNotBlank();

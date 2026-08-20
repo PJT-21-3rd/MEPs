@@ -33,3 +33,17 @@ tasks.register('runBuilding', JavaExec) {
     mainClass = 'collectors.buildings.BuildingCollector'
     jvmArgs = ['-Xmx768m']
 }
+
+tasks.register('runSinkholeMap', JavaExec) {
+    group = 'application'
+    description = 'building_sinkhole_map 재적재 (전량 삭제 후 재생성)'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'collectors.sinkhole.BuildingSinkholeMapLoader'
+}
+
+tasks.register('runFloodMap', JavaExec) {
+    group = 'application'
+    description = 'building_flood_map 재적재 (전량 삭제 후 재생성)'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'collectors.flood.BuildingFloodMapLoader'
+}
