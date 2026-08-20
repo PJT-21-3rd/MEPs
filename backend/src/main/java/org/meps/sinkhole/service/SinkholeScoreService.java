@@ -21,6 +21,8 @@ import java.util.List;
  *   500m = 상세 리포트 명세의 사실 표시 반경 — 위험 반경이 아니므로 가중치 최소,
  *   5년 = 지하안전법 GPR 공동조사 주기 — 경과 시 주의→양호 승급의 출구,
  *   RISK_DECAY 0.27 = "근거리·최근 1건 = 78점(주의 구간 상단)" 정책 앵커에서 역산
+ * - 중·원거리와 과거 가중치는 2026-08-20 전수조사(건물 매핑 복구본) 분포 기준으로 상향 보정 —
+ *   간접 신호도 복수 사고가 누적되면 주의에 도달하도록 한다(중거리 최근 2건 = 75점)
  */
 @Service
 @RequiredArgsConstructor
@@ -35,12 +37,12 @@ public class SinkholeScoreService {
     public static final double DIST_NEAR_M = 100.0;
     public static final double DIST_MID_M = 300.0;
     private static final double W_DIST_NEAR = 1.0; // 직접 영향권
-    private static final double W_DIST_MID = 0.5; // 간접 신호(동일 노후 관로망·공사 영향권 공유 개연성)
-    private static final double W_DIST_FAR = 0.2; // 표시 범위(매핑 배치가 500m로 컷하므로 그 외 = 300~500m)
+    private static final double W_DIST_MID = 0.65; // 간접 신호(동일 노후 관로망·공사 영향권 공유 개연성)
+    private static final double W_DIST_FAR = 0.3; // 표시 범위(매핑 배치가 500m로 컷하므로 그 외 = 300~500m)
 
     private static final int SURVEY_CYCLE_YEARS = 5; // 법정 GPR 공동조사 주기
     private static final double W_RECENT = 1.0;
-    private static final double W_OLD = 0.6;
+    private static final double W_OLD = 0.7;
 
     private final SinkholeMapper sinkholeMapper;
 

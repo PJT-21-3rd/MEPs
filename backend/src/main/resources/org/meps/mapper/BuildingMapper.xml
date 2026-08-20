@@ -62,6 +62,7 @@
         <result property="footprint"   column="footprint"/>
         <result property="parcelGeom"  column="parcelGeom"/>
         <result property="floors"      column="floors"/>
+        <result property="savedCnt"    column="savedCnt"/>
 
         <association property="land" javaType="org.meps.building.dto.BuildingLandDto">
             <result property="lndcgrCodeNm"   column="lndcgrCodeNm"/>
@@ -107,7 +108,7 @@
                ho_cnt            AS hoCnt,
                use_apr_day       AS useAprDay,
                viol_bd_yn        AS violBdYn,
-
+               saved_cnt AS savedCnt,
                floor_info        AS floors
         FROM buildings
         WHERE bd_mgt_sn = #{buildingId}
@@ -199,7 +200,7 @@
                ho_cnt            AS hoCnt,
                use_apr_day       AS useAprDay,
                viol_bd_yn        AS violBdYn,
-
+               saved_cnt AS savedCnt,
                floor_info        AS floors
         FROM buildings
         WHERE ST_Contains(footprint,

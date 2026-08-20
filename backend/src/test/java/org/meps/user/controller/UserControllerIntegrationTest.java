@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
@@ -202,5 +203,39 @@ class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(refreshBody(refreshToken)))
                 .andExpect(status().isNoContent());
+    }
+
+    // ---------- 잘못된 요청 형식 ----------
+
+    @Test
+    @DisplayName("요청 본문 없이 로그아웃 → 400")
+    void logout_noBody() throws Exception {
+        mockMvc.perform(post("/api/users/logout")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("깨진 JSON으로 재발급 → 400")
+    void refresh_malformedJson() throws Exception {
+        mockMvc.perform(post("/api/users/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ refreshToken: }"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Content-Type 없이 로그아웃 → 415")
+    void logout_noContentType() throws Exception {
+        mockMvc.perform(post("/api/users/logout")
+                        .content("{\"refreshToken\":\"x\"}"))
+                .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    @DisplayName("GET으로 로그아웃 → 405")
+    void logout_wrongMethod() throws Exception {
+        mockMvc.perform(get("/api/users/logout"))
+                .andExpect(status().isMethodNotAllowed());
     }
 }
