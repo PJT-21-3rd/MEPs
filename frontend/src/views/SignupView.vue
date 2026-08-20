@@ -205,54 +205,58 @@ function goHome() {
         안전 진단 점수 및 근거 설명은 회원가입 후 확인하실 수 있습니다.
       </p>
 
-      <!-- 이메일 -->
-      <label class="text-[13px] font-medium">이메일</label>
-      <input
-        v-model="email"
-        type="email"
-        placeholder="example@example.com"
-        class="w-full px-3 py-2.5 mt-1 mb-1 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-      />
-      <p v-if="emailError" class="text-[12px] text-status-danger mt-1">{{ emailError }}</p>
+      <form @submit.prevent="handleSignup">
+        <!-- 이메일 -->
+        <label class="text-[13px] font-medium">이메일</label>
+        <input
+          v-model="email"
+          type="email"
+          placeholder="example@example.com"
+          class="w-full px-3 py-2.5 mt-1 mb-1 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+        />
+        <p v-if="emailError" class="text-[12px] text-status-danger mt-1 mb-1">{{ emailError }}</p>
 
-      <!-- 비밀번호 -->
-      <label class="text-[13px] font-medium">비밀번호</label>
-      <input
-        v-model="password"
-        type="password"
-        placeholder="비밀번호를 입력하세요"
-        class="w-full px-3 py-2.5 mt-1 mb-1 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-      />
-      <p
-        class="text-[12px] mt-1 mb-3"
-        :class="passwordError ? 'text-status-danger' : 'text-text-sub'"
-      >
-        {{ passwordError || '8~20자, 영문·숫자·특수문자 포함' }}
-      </p>
-      <!-- 비밀번호 확인 -->
-      <label class="text-[13px] font-medium">비밀번호 확인</label>
-      <input
-        v-model="passwordConfirm"
-        type="password"
-        placeholder="비밀번호를 한번 더 입력하세요"
-        class="w-full px-3 py-2.5 mt-1 mb-5 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-      />
-      <p v-if="confirmError" class="text-[12px] text-status-danger mt-1">{{ confirmError }}</p>
+        <!-- 비밀번호 -->
+        <label class="text-[13px] font-medium">비밀번호</label>
+        <input
+          v-model="password"
+          type="password"
+          placeholder="비밀번호를 입력하세요"
+          class="w-full px-3 py-2.5 mt-1 mb-1 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+        />
+        <p
+          class="text-[12px] mt-1 mb-3"
+          :class="passwordError ? 'text-status-danger' : 'text-text-sub'"
+        >
+          {{ passwordError || '8~20자, 영문·숫자·특수문자 포함' }}
+        </p>
+        <!-- 비밀번호 확인 -->
+        <label class="text-[13px] font-medium">비밀번호 확인</label>
+        <input
+          v-model="passwordConfirm"
+          type="password"
+          placeholder="비밀번호를 한번 더 입력하세요"
+          class="w-full px-3 py-2.5 mt-1 mb-1 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+        />
+        <p v-if="confirmError" class="text-[12px] text-status-danger mt-1">{{ confirmError }}</p>
 
-      <!-- 에러 메시지 -->
-      <p v-if="errorMessage" class="text-[13px] text-status-danger mb-3">
-        {{ errorMessage }}
-      </p>
+        <!-- 에러 메시지 -->
+        <p v-if="errorMessage" class="text-[13px] text-status-danger">
+          {{ errorMessage }}
+        </p>
 
-      <!-- 회원가입 버튼 -->
-      <button @click="handleSignup" class="w-full py-3 bg-primary text-white font-bold rounded-lg">
-        회원가입
-      </button>
+        <!-- 회원가입 버튼 -->
+        <button type="submit" class="w-full mt-3 py-3 bg-primary text-white font-bold rounded-lg">
+          회원가입
+        </button>
+      </form>
 
       <!-- 로그인 링크 -->
       <p class="text-center text-[13px] text-text-sub mt-4">
         이미 계정이 있으신가요?
-        <button @click="goLogin" class="text-primary font-medium underline">로그인</button>
+        <button type="button" @click="goLogin" class="text-primary font-medium underline">
+          로그인
+        </button>
       </p>
     </div>
   </div>

@@ -40,38 +40,41 @@ function goSignup() {
 
 <template>
   <div>
-    <!-- 아이디(이메일) -->
-    <label class="text-[13px] font-medium">이메일</label>
-    <input
-      v-model="email"
-      type="text"
-      placeholder="example@example.com"
-      class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-    />
+    <form @submit.prevent="handleLogin">
+      <!-- 아이디(이메일) -->
+      <label class="text-[13px] font-medium">이메일</label>
+      <input
+        v-model="email"
+        type="text"
+        placeholder="example@example.com"
+        class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+      />
 
-    <!-- 비밀번호 -->
-    <label class="text-[13px] font-medium">비밀번호</label>
-    <input
-      v-model="password"
-      type="password"
-      placeholder="비밀번호를 입력하세요"
-      class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
-    />
+      <!-- 비밀번호 -->
+      <label class="text-[13px] font-medium">비밀번호</label>
+      <input
+        v-model="password"
+        type="password"
+        placeholder="비밀번호를 입력하세요"
+        class="w-full px-3 py-2.5 mt-1 mb-3 bg-surface-gray border border-surface-gray rounded-lg text-[14px] outline-none focus:border-primary"
+      />
 
-    <!-- 에러 메시지 -->
-    <p v-if="errorMessage" class="text-[13px] text-status-danger mb-3">
-      {{ errorMessage }}
-    </p>
+      <!-- 에러 메시지 -->
+      <p v-if="errorMessage" class="text-[13px] text-status-danger mb-3">
+        {{ errorMessage }}
+      </p>
 
-    <!-- 로그인 버튼 -->
-    <button @click="handleLogin" class="w-full py-3 bg-primary text-white font-bold rounded-lg">
-      로그인
-    </button>
-
+      <!-- 로그인 버튼 -->
+      <button type="submit" class="w-full py-3 bg-primary text-white font-bold rounded-lg">
+        로그인
+      </button>
+    </form>
     <!-- 회원가입 링크 -->
     <p class="text-center text-[13px] text-text-sub mt-4">
       아직 회원이 아니신가요?
-      <button @click="goSignup" class="text-primary font-medium underline">회원가입</button>
+      <button type="button" @click="goSignup" class="text-primary font-medium underline">
+        회원가입
+      </button>
     </p>
   </div>
 </template>
