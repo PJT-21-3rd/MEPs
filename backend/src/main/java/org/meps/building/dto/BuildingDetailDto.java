@@ -43,4 +43,5 @@ public class BuildingDetailDto {
 
     // ---- 찜 정보 ----
     private boolean saved;
+    private Integer savedCnt;
 }

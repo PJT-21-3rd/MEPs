@@ -487,4 +487,26 @@ class BuildingControllerIntegrationTest {
         assertNotNull(savedBuilding);
         assertTrue(savedBuilding.get("saved").asBoolean());
     }
+
+    @Test
+    @DisplayName("상세 조회 응답에 찜 개수가 포함된다")
+    void detail_containsSavedCnt() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"savedCnt\""));
+    }
+
+    @Test
+    @DisplayName("좌표 조회 응답에 찜 개수가 포함된다")
+    void detailAt_containsSavedCnt() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"savedCnt\""));
+    }
 }
