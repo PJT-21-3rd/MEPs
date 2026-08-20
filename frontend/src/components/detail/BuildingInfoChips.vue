@@ -21,7 +21,8 @@ const totAreaStr = computed(() => formatArea(props.buildingData?.totArea));
 
     <div class="flex items-center justify-end">
       <span class="text-[12px] text-text-sub flex items-center gap-1">
-        <Heart :size="12" class="fill-status-like text-status-like" /> 0 명이 저장함
+        <Heart :size="12" class="fill-status-like text-status-like" />
+        {{ buildingData.savedCnt }} 명이 저장함
       </span>
     </div>
   </div>
