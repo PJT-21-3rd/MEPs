@@ -23,6 +23,7 @@ export const useUiStore = defineStore('ui', () => {
   const isZoomRequired = ref(false);
   const recentBuildings = ref([]); // 최근 본 매물
   const showAgentCard = ref(false); // 공인중개사 카드 노출 여부 //추가
+
   // #29: 브리핑 레벨(동/구)에 따라 항상 최신 지역명을 계산
   // briefingLevel/currentBriefing이 바뀌면 자동으로 갱신됨
   const agentDongName = computed(() => {
@@ -211,6 +212,8 @@ export const useUiStore = defineStore('ui', () => {
     preventMapMove,
     isZoomRequired,
     recentBuildings,
+    showAgentCard,
+    agentDongName,
     setBuildingsLoading,
     addRecentBuilding,
     openBuildingDetail,
@@ -228,8 +231,6 @@ export const useUiStore = defineStore('ui', () => {
     setSort,
     setBriefingData,
     setBuildingsData,
-    showAgentCard, // 추가
-    agentDongName, // 추가
-    setAgentCardVisible, // 추가
+    setAgentCardVisible,
   };
 });
