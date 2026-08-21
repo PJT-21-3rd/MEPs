@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-// import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
-// import MandatoryInsuranceSection from './MandatoryInsuranceSection.vue';
+import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
 import ReportBanners from './ReportBanners.vue';
 import DetailedReportSummary from './DetailedReportSummary.vue';
 import DetailedReportDisclaimer from './DetailedReportDisclaimer.vue';
@@ -64,7 +63,7 @@ const gradeMeta = computed(() => {
 
 const floodOverlapNotice = computed(() => {
   if (reportData.value?.dangerItems?.flood?.status === 'warning') {
-    return '침수이력 추천 특약의 "풍수해 특약"과 보장이 중복돼요';
+    return '침수이력 추천 특약의 "풍수재손해"와 보장이 중복돼요';
   }
   return '';
 });
@@ -292,7 +291,8 @@ function handleScroll() {
 
         <button
           type="button"
-          class="w-full py-4 rounded-2xl bg-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2 -mb-4"
+          class="w-full py-4 rounded-2xl bg-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2"
+          :class="reportData.dangerItems?.flood?.status === 'warning' ? '' : '-mb-1'"
           @click="openDetail"
         >
           <FileText class="w-4 h-4 text-secondary shrink-0" />
@@ -301,13 +301,10 @@ function handleScroll() {
         </button>
 
         <FloodInsuranceBanner
+          v-if="reportData.dangerItems?.flood?.status === 'warning'"
           :flood-overlap-notice="floodOverlapNotice"
+          class="-mb-2"
           @open-insurance="(type) => $emit('open-insurance', type)"
-        />
-
-        <MandatoryInsuranceSection
-          :disaster-liability="reportData.disasterLiability"
-          :fire-liability="reportData.fireLiability"
         />
 
         <ReportBanners

@@ -1,5 +1,5 @@
 <script setup>
-import { ChevronRight, ShieldCheck } from '@lucide/vue';
+import { WavesHorizontal, ChevronRight } from '@lucide/vue';
 
 // #27에서 분리: 풍수해보험 배너만 담당 (의무보험 섹션이 그 아래 끼어야 해서 분리)
 defineProps({
@@ -19,7 +19,7 @@ defineEmits(['open-insurance']);
       @click="$emit('open-insurance', 'flood')"
     >
       <span class="w-9 h-9 shrink-0 rounded-[10px] bg-white flex items-center justify-center">
-        <ShieldCheck class="w-[18px] h-[18px] text-secondary" />
+        <WavesHorizontal class="w-[18px] h-[18px] text-secondary" />
       </span>
       <span class="flex-1 flex flex-col gap-0.5">
         <span class="text-[15px] font-bold text-primary">소상공인 풍수해보험</span>

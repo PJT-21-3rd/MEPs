@@ -8,7 +8,7 @@ defineEmits(['open-insurance', 'business', 'open-loan']);
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-3">
     <p class="text-base font-bold text-text-main">맞춤 금융상품 추천받기</p>
     <!-- 사업장 종합보험 배너 -->
     <button
