@@ -1,5 +1,6 @@
 package org.meps.safetyreport.service;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.meps.common.llm.LlmCallFailedException;
 import org.meps.common.llm.OpenAiClient;
@@ -111,6 +112,30 @@ class BasicBriefingServiceTest {
         assertThatThrownBy(() -> serviceWith(withoutSource).generate(input()))
                 .isInstanceOf(LlmCallFailedException.class)
                 .hasMessageContaining("행정동 표기 누락");
+    }
+
+    @Test
+    @DisplayName("안전/양호 등급 문장에 경고 표현이 있으면 예외다")
+    void generate_warningWordInSafeOrGoodSentence_throwsException() {
+        String withWarnWord = VALID_JSON.replace(
+                "전반적으로 양호하나 화재 항목에서 확인이 필요한 조건이 있는 건물입니다.",
+                "전반적으로 양호하나 화재 항목이 다소 우려되는 건물입니다.");
+
+        assertThatThrownBy(() -> serviceWith(withWarnWord).generate(input()))
+                .isInstanceOf(LlmCallFailedException.class)
+                .hasMessageContaining("등급-어조 불일치");
+    }
+
+    @Test
+    @DisplayName("주의 등급 문장에 안심 표현이 있으면 예외다")
+    void generate_reassureWordInCautionSentence_throwsException() {
+        String withReassureWord = VALID_JSON.replace(
+                "목구조에 소방차 진입이 어려운 접면 조건이 확인되는 건물입니다.",
+                "목구조지만 비교적 안정적인 접면 조건이 확인되는 건물입니다.");
+
+        assertThatThrownBy(() -> serviceWith(withReassureWord).generate(input()))
+                .isInstanceOf(LlmCallFailedException.class)
+                .hasMessageContaining("등급-어조 불일치");
     }
 
     @Test
