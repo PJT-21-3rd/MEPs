@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { ArrowLeft, Scale, FolderHeart, Heart } from '@lucide/vue';
 import FavoriteCard from '@/components/mypage/FavoriteCard.vue';
 import { useRouter } from 'vue-router';
+import SidebarHeader from '../layout/SidebarHeader.vue';
 
 const props = defineProps({
   buildings: Array,
@@ -31,31 +32,37 @@ function goBack() {
 </script>
 
 <template>
-  <aside class="w-[350px] shrink-0 flex flex-col h-full pt-4 px-4">
-    <div class="shrink-0">
-      <header class="flex items-start gap-2 mb-4">
-        <ArrowLeft :size="22" class="mt-0.5 cursor-pointer" @click="goBack" />
+  <aside class="w-[350px] shrink-0 flex flex-col h-full">
+    <SidebarHeader />
+    <div class="px-4">
+      <header class="flex items-center gap-3 pb-4 pt-2">
+        <button
+          class="flex items-center gap-1 rounded-full px-2 py-1.5 text-[15px] text-text-main hover:bg-surface-base transition-colors"
+          @click="goBack"
+          aria-label="뒤로가기"
+        >
+          <ArrowLeft :size="20" />
+        </button>
         <div>
-          <h1 class="flex items-center gap-1 text-lg font-bold m-0">
-            마이페이지
-            <FolderHeart :size="17" />
-          </h1>
-          <p class="text-[13px] text-text-sub mt-0.5">찜한 매물 {{ buildings.length }}개</p>
+          <p className="text-[19px] tracking-tight flex items-center">
+            마이페이지&nbsp;<FolderHeart :size="17" />
+          </p>
+          <p className="text-[13px] text-text-sub">찜한 매물 {{ buildings.length }}개</p>
         </div>
       </header>
 
-      <p
+      <div
         v-if="buildings.length > 0"
-        class="flex items-center gap-2 text-[15px] text-primary mt-8 mb-2"
+        class="flex items-center gap-1.5 px-2 pb-3 text-[13px] text-primary"
       >
         <Scale :size="18" />
-        {{ guideText }}
-      </p>
+        <span>{{ guideText }}</span>
+      </div>
     </div>
 
     <ul
       v-if="buildings.length > 0"
-      class="list-none p-0 m-0 flex flex-col gap-2.5 flex-1 overflow-y-auto"
+      class="list-none px-4 m-0 flex flex-col gap-2.5 flex-1 overflow-y-auto"
     >
       <FavoriteCard
         v-for="building in buildings"
