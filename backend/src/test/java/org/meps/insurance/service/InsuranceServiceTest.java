@@ -25,9 +25,9 @@ class InsuranceServiceTest {
 
         assertThat(items).hasSize(2);
         assertThat(items.get(0).getFactorCode()).isEqualTo("FLOOD");
-        assertThat(items.get(0).getName()).isEqualTo("풍수재손해");
+        assertThat(items.get(0).getName()).isEqualTo("[보험 특약] 풍수재손해");
         assertThat(items.get(0).getCoverageType()).isEqualTo("RIDER");
-        assertThat(items.get(1).getName()).isEqualTo("풍수해·지진재해보험(VI)");
+        assertThat(items.get(1).getName()).isEqualTo("소상공인 풍수해·지진재해보험(Ⅵ)");
         assertThat(items.get(1).getCoverageType()).isEqualTo("PRODUCT");
     }
 
@@ -39,7 +39,7 @@ class InsuranceServiceTest {
 
         assertThat(items).hasSize(1);
         assertThat(items.get(0).getFactorCode()).isEqualTo("FIRE");
-        assertThat(items.get(0).getName()).isEqualTo("화재손해");
+        assertThat(items.get(0).getName()).isEqualTo("[보험 기본보장] 화재손해");
         assertThat(items.get(0).getCoverageType()).isEqualTo("BASE");
         assertThat(items.get(0).getCoverageSummary()).isNotBlank();
     }
@@ -72,7 +72,7 @@ class InsuranceServiceTest {
         List<InsuranceItemDto> items = insuranceService
                 .getInsuranceDetails(List.of("FLOOD,FLOOD,FLOOD", "FLOOD", "FLOOD")).getItems();
 
-        assertThat(items).hasSize(2); // 풍수재손해특약, 풍수해·지진재해보험(VI)
+        assertThat(items).hasSize(2); // 풍수재손해 특약, 소상공인 풍수해·지진재해보험(Ⅵ)
     }
 
     @Test
