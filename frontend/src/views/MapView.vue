@@ -3,7 +3,7 @@
     <MainSidebar />
     <div
       v-if="uiStore.isReportOpen"
-      class="absolute top-0 bottom-0 left-[400px] z-20 w-[400px] bg-white shadow-2xl border-l border-surface-base flex flex-col"
+      class="absolute top-0 bottom-0 left-[400px] z-999 w-[400px] bg-white shadow-2xl border-l border-surface-base flex flex-col"
     >
       <AiReportPanelWithModals :building-id="uiStore.selectedBuildingId" />
     </div>
