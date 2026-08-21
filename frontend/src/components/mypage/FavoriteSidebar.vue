@@ -10,7 +10,7 @@ const props = defineProps({
   selectedIds: Array,
 });
 
-const emit = defineEmits(['toggle']);
+const emit = defineEmits(['toggle', 'unlike']);
 
 const guideText = computed(() => {
   const count = props.selectedIds.length;
@@ -27,7 +27,11 @@ function selectOrder(id) {
 const router = useRouter();
 
 function goBack() {
-  router.push('/');
+  if (window.history.state && window.history.state.back) {
+    router.back();
+  } else {
+    router.push('/');
+  }
 }
 </script>
 
