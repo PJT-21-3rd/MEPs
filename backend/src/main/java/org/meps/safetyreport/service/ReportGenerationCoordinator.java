@@ -11,14 +11,18 @@ import org.meps.safetyreport.dto.BasicBriefingDto;
  */
 public interface ReportGenerationCoordinator {
 
-    /** 생성 권한 선점. true면 호출자가 리더 — 반드시 complete 또는 release로 끝내야 한다 */
+    /** 생성 권한 선점. true면 호출자가 리더 — 반드시 complete 또는 completeFallback으로 끝내야 한다 */
     boolean tryClaim(String buildingId);
 
-    /** 리더 전용: 브리핑 저장 + 완료 전이 (구현체가 원자성 보장) */
+    /** 리더 전용: LLM이 생성한 브리핑 저장 + 완료 전이 (구현체가 원자성 보장) */
     void complete(String buildingId, String aiModelNm, BasicBriefingDto briefs);
 
-    /** 리더 전용: 생성 실패 시 권한 반납 — 다음 요청이 재시도 가능해진다 */
-    void release(String buildingId);
+    /**
+     * 리더 전용: LLM 생성 실패 시 등급별 폴백 템플릿을 저장하고 완료 전이.
+     * release처럼 클레임만 반납하고 끝내지 않는 이유 — 폴백도 저장해야 다음 요청이 바로
+     * 응답받고, 재시도는 tryClaim의 쿨다운 조건(FALLBACK + 1시간 경과)이 별도로 연다
+     */
+    void completeFallback(String buildingId, String aiModelNm, BasicBriefingDto briefs);
 
     /** 클레임 탈락자 전용: 리더의 결과를 기다렸다가 반환. 시간 내 미완성이면 null */
     BasicBriefingDto awaitResult(String buildingId);
