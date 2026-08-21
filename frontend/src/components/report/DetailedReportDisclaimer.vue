@@ -1,5 +1,15 @@
 <script setup>
+import { computed } from 'vue';
+
 // #32 - 상세 리포트 하단 면책 안내 문구
+
+const today = computed(() => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  return `${year}. ${month}. ${day}.`;
+});
 </script>
 
 <template>
@@ -8,6 +18,6 @@
     분석했습니다.
   </p>
   <p class="text-[12px] text-text-disabled text-center leading-relaxed px-2">
-    분석 기준일: 2026. 7. 21.
+    분석 기준일: {{ today }}
   </p>
 </template>
