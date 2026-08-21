@@ -1,0 +1,375 @@
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue';
+import FloodInsuranceBanner from './FloodInsuranceBanner.vue';
+import ReportBanners from './ReportBanners.vue';
+import DetailedReportSummary from './DetailedReportSummary.vue';
+import DetailedReportDisclaimer from './DetailedReportDisclaimer.vue';
+import { GRADE_META } from '@/constants/reportConstants.js';
+import ScoreGauge from './ScoreGauge.vue';
+import AiBriefingCard from './AiBriefingCard.vue';
+import DiagnosticFactorList from './DiagnosticFactorList.vue';
+import { fetchReportData, fetchDetailedReportData } from '@/api/reportApi';
+import { X, ArrowLeft, ChevronRight, FileText, Zap } from '@lucide/vue';
+import { useUiStore } from '@/stores/uiStore.js';
+import { useAuthStore } from '@/stores/authStore';
+import ReportSkeleton from './ReportSkeleton.vue';
+import DetailedReportSkeleton from './DetailedReportSkeleton.vue';
+
+const authStore = useAuthStore();
+
+const props = defineProps({
+  buildingId: {
+    type: [String, Number],
+    required: true,
+  },
+  buildingName: {
+    type: String,
+    default: '',
+  },
+  initialReportData: {
+    type: Object,
+    default: null,
+  },
+  initialDetailReportData: {
+    type: Object,
+    default: null,
+  },
+  forceLoading: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits(['close', 'open-insurance', 'open-loan', 'report-loaded']);
+const uiStore = useUiStore();
+
+const currentView = ref('summary');
+const isLoading = ref(true);
+const reportData = ref(null);
+const typingStage = ref(0); //0=브리핑, 1~4=구조/화재/지반침하/침수, 5=완료
+
+function advanceTyping() {
+  typingStage.value += 1;
+}
+// #32: 상세 리포트는 summary와 별도 API라, 상세보기 클릭 시점에 지연 로딩
+const detailReportData = ref(null);
+const isDetailLoading = ref(false);
+const detailHasError = ref(false);
+
+const gradeMeta = computed(() => {
+  if (!reportData.value) return null;
+  return GRADE_META[reportData.value.grade];
+});
+
+const floodOverlapNotice = computed(() => {
+  if (reportData.value?.dangerItems?.flood?.status === 'warning') {
+    return '침수이력 추천 특약의 "풍수재손해"와 보장이 중복돼요';
+  }
+  return '';
+});
+
+// basic 응답(status/summary)과 상세 응답(aiReport)을 병합해서 -> mergedDetailItems
+// DiagnosticFactorList(detail 모드)에 넘길 최종 데이터
+const mergedDetailItems = computed(() => {
+  if (!reportData.value || !detailReportData.value) return null;
+  const merged = {};
+  Object.keys(reportData.value.dangerItems).forEach((key) => {
+    merged[key] = {
+      ...reportData.value.dangerItems[key],
+      aiReport: detailReportData.value.dangerItems[key]?.aiReport ?? '',
+    };
+  });
+  return merged;
+});
+
+async function loadReport() {
+  if (props.forceLoading) {
+    isLoading.value = true;
+    currentView.value = 'summary';
+    return;
+  }
+
+  if (props.initialReportData) {
+    reportData.value = props.initialReportData;
+    currentView.value = 'summary';
+    isLoading.value = false;
+    emit('report-loaded', reportData.value);
+    return;
+  }
+
+  isLoading.value = true;
+  currentView.value = 'summary';
+
+  const MIN_LOADING_MS = 900;
+  const startedAt = Date.now();
+
+  try {
+    reportData.value = await fetchReportData(props.buildingId);
+    emit('report-loaded', reportData.value);
+    typingStage.value = 0; //새 리포트 로드마다 타이핑 처음부터 시작
+    const elapsed = Date.now() - startedAt;
+    const remaining = MIN_LOADING_MS - elapsed;
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+    isLoading.value = false;
+  } catch (err) {
+    console.error('[AiReportPanel] 리포트 조회 실패:', err);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function loadDetailReport() {
+  if (detailReportData.value) return; // 이미 로드했으면 재조회 안 함
+
+  if (props.initialDetailReportData) {
+    detailReportData.value = props.initialDetailReportData;
+    return;
+  }
+
+  isDetailLoading.value = true;
+  detailHasError.value = false;
+
+  const MIN_DETAIL_LOADING_MS = 1500;
+  const startedAt = Date.now();
+
+  try {
+    detailReportData.value = await fetchDetailedReportData(props.buildingId);
+    const elapsed = Date.now() - startedAt;
+    const remaining = MIN_DETAIL_LOADING_MS - elapsed;
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+  } catch (err) {
+    console.warn('[AiReportPanel] 상세 리포트 조회 실패', err);
+    detailHasError.value = true;
+  } finally {
+    isDetailLoading.value = false;
+  }
+}
+
+onMounted(loadReport);
+watch(
+  () => props.buildingId,
+  () => {
+    detailReportData.value = null; // 다른 건물이면 상세 리포트도 다시 불러와야 함
+    loadReport();
+  },
+);
+watch(
+  () => authStore.isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) {
+      detailReportData.value = null;
+      loadReport();
+    }
+  },
+);
+
+function openDetail() {
+  currentView.value = 'detail';
+  loadDetailReport();
+}
+
+function backToSummary() {
+  currentView.value = 'summary';
+}
+
+function handleClose() {
+  emit('close');
+  uiStore.closeReport();
+}
+const dummyItems = {
+  structure: { status: 'safe', summary: '구조 안정성 진단 결과입니다.' },
+  fire: { status: 'good', summary: '화재 안전성 진단 결과입니다.' },
+  sinkhole: { status: 'warning', summary: '지반 침하 이력 진단 결과입니다.' },
+  flood: { status: 'safe', summary: '침수 이력 진단 결과입니다.' },
+};
+
+// #29: 리포트 패널 스크롤이 바닥에 닿으면 공인중개사 카드를 지도 위에 노출
+const scrollContainer = ref(null);
+// const showAgentCard = ref(false);
+
+function handleScroll() {
+  const el = scrollContainer.value;
+  if (!el) return;
+
+  if (currentView.value !== 'summary') return; // 기본 리포트(summary)일 때만 동작
+
+  if (uiStore.showAgentCard) return;
+
+  const isScrollable = el.scrollHeight > el.clientHeight;
+  const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+
+  if (isScrollable && isNearBottom) {
+    uiStore.setAgentCardVisible(true);
+  }
+}
+</script>
+
+<template>
+  <div
+    ref="scrollContainer"
+    class="w-full h-full bg-white flex flex-col"
+    :class="authStore.isLoggedIn ? 'overflow-y-auto' : 'overflow-hidden'"
+    @scroll="handleScroll"
+  >
+    <div class="flex items-center gap-4 px-4 py-4.5 border-b border-surface-gray">
+      <button
+        v-if="currentView === 'detail'"
+        type="button"
+        class="text-text-sub hover:text-text-main"
+        aria-label="이전 리포트로 돌아가기"
+        @click="backToSummary"
+      >
+        <arrow-left class="w-4 h-4" />
+      </button>
+
+      <p
+        v-if="currentView === 'summary'"
+        class="flex-1 flex items-center gap-1.5 text-[17px] font-Regular text-text-main"
+      >
+        <Zap class="w-4 h-4 text-secondary shrink-0" />
+        AI 안심 진단 리포트
+      </p>
+
+      <div v-else class="flex-1 flex items-center justify-between gap-2">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[13px] text-text-sub">{{ buildingName }}</span>
+          <span class="text-[16px] font-regular text-text-main"
+            >4대 근거 전체 상세 진단 리포트</span
+          >
+        </div>
+
+        <span
+          v-if="gradeMeta"
+          class="px-3 py-1 rounded-full text-xs font-semibold shrink-0"
+          :class="[gradeMeta.badgeBg, gradeMeta.text]"
+        >
+          {{ gradeMeta.label }} · {{ reportData.score }}점
+        </span>
+      </div>
+
+      <button
+        v-if="currentView === 'summary'"
+        type="button"
+        class="text-text-sub hover:text-text-main"
+        aria-label="리포트 패널 닫기"
+        @click="handleClose"
+      >
+        <x class="w-4 h-4" />
+      </button>
+    </div>
+
+    <!-- 로딩 중 -->
+    <ReportSkeleton v-if="isLoading" />
+
+    <!-- summary 뷰 -->
+    <div v-else-if="currentView === 'summary'" class="flex-1 flex flex-col gap-5 px-5 pt-2 pb-8">
+      <div class="flex flex-col gap-2">
+        <ScoreGauge :score="reportData.score" :grade="reportData.grade" />
+        <AiBriefingCard
+          :loading="false"
+          :briefing="reportData.overallBriefing"
+          :typing-active="typingStage === 0"
+          :already-typed="typingStage > 0"
+          @typing-done="advanceTyping"
+        />
+      </div>
+
+      <!-- 로그인 -->
+      <template v-if="authStore.isLoggedIn">
+        <!-- 기본 리포트일 때  -->
+        <DiagnosticFactorList
+          v-if="reportData.hasDetail"
+          :items="reportData.dangerItems"
+          mode="summary"
+          :typing-stage="typingStage"
+          @typing-done="advanceTyping"
+        />
+
+        <button
+          type="button"
+          class="w-full py-4 rounded-2xl bg-primary text-white text-sm font-semibold flex flex-row items-center justify-center gap-2"
+          :class="reportData.dangerItems?.flood?.status === 'warning' ? '' : '-mb-1'"
+          @click="openDetail"
+        >
+          <FileText class="w-4 h-4 text-secondary shrink-0" />
+          <span>4대 근거 전체 상세 진단 리포트 보기</span>
+          <ChevronRight class="w-4 h-4 text-white shrink-0" />
+        </button>
+
+        <FloodInsuranceBanner
+          v-if="reportData.dangerItems?.flood?.status === 'warning'"
+          :flood-overlap-notice="floodOverlapNotice"
+          class="-mb-2"
+          @open-insurance="(type) => $emit('open-insurance', type)"
+        />
+
+        <ReportBanners
+          @open-insurance="(type) => $emit('open-insurance', type)"
+          @open-loan="$emit('open-loan')"
+        />
+      </template>
+
+      <!-- 비로그인 -->
+
+      <div v-else class="relative">
+        <!-- 더미 상세 (블러) -->
+        <div class="blur-sm pointer-events-none select-none">
+          <DiagnosticFactorList :items="dummyItems" mode="summary" />
+        </div>
+
+        <!-- 로그인 유도 오버레이 -->
+        <div class="absolute inset-0 flex flex-col items-center justify-start pt-8 gap-3">
+          <p class="text-[14px] text-text-sub">로그인하고 상세 진단 확인하기</p>
+          <button
+            @click="authStore.openLoginModal()"
+            class="px-6 py-2.5 bg-primary text-white font-bold rounded-lg"
+          >
+            로그인
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- detail 뷰 -->
+    <div v-if="currentView === 'detail'" class="flex-1 flex flex-col gap-5 px-1 pb-2 pt-5">
+      <DetailedReportSkeleton v-if="isDetailLoading" />
+
+      <div
+        v-else-if="detailHasError"
+        class="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-text-sub"
+      >
+        <p>상세 리포트를 불러오지 못했어요. 다시 시도해주세요.</p>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold"
+          @click="loadDetailReport"
+        >
+          다시 시도
+        </button>
+      </div>
+
+      <Transition
+        enter-active-class="transition duration-[900ms] ease-out"
+        enter-from-class="opacity-0 translate-y-6"
+        enter-to-class="opacity-100 translate-y-0"
+      >
+        <div v-if="mergedDetailItems" class="flex flex-col gap-5">
+          <DetailedReportSummary
+            :grade="reportData.grade"
+            :ai-report="detailReportData.overallAiReport"
+          />
+          <div class="mt-2">
+            <DiagnosticFactorList :items="mergedDetailItems" mode="detail" />
+          </div>
+          <div class="mt-5">
+            <DetailedReportDisclaimer />
+          </div>
+        </div>
+      </Transition>
+    </div>
+  </div>
+</template>

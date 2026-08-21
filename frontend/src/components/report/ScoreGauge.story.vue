@@ -1,5 +1,5 @@
 <script setup>
-import ScoreGauge from './ScoreGauge.vue'
+import ScoreGauge from './ScoreGauge.vue';
 </script>
 
 <template>
@@ -14,6 +14,10 @@ import ScoreGauge from './ScoreGauge.vue'
 
     <Variant title="주의 등급 (72점)">
       <ScoreGauge :score="72" />
+    </Variant>
+
+    <Variant title="게이지만 (라벨 숨김)">
+      <ScoreGauge :score="92" :showLabel="false" />
     </Variant>
   </Story>
 </template>
