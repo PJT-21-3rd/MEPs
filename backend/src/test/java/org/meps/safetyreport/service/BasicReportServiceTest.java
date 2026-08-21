@@ -1,15 +1,18 @@
 package org.meps.safetyreport.service;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.meps.fire.dto.FireScoreInput;
 import org.meps.fire.dto.FireScoreResult;
 import org.meps.flood.dto.FloodIncidentDto;
 import org.meps.flood.dto.FloodScoreResultDto;
+import org.meps.safetyreport.dto.SafetyReportRowDto;
 import org.meps.sinkhole.dto.SinkholeIncidentDto;
 import org.meps.sinkhole.dto.SinkholeScoreResult;
 import org.meps.structure.dto.StructuralFactorDto;
 import org.meps.structure.dto.StructuralStabilityScoreResultDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,5 +125,38 @@ class BasicReportServiceTest {
 
         assertThat(BasicReportService.buildFloodFacts(flood))
                 .isEqualTo("최근 침수 이력: 2건 / 최근 침수: 2022년(5등급, 호우)");
+    }
+
+    @Test
+    @DisplayName("폴백이 아니면 쿨다운 만료 여부와 무관하게 재시도 대상이 아니다")
+    void isFallbackCooldownExpired_notFallback_isFalse() {
+        SafetyReportRowDto row = SafetyReportRowDto.builder()
+                .briefSource("LLM")
+                .generatedAt(LocalDateTime.now().minusDays(1))
+                .build();
+
+        assertThat(BasicReportService.isFallbackCooldownExpired(row)).isFalse();
+    }
+
+    @Test
+    @DisplayName("폴백이어도 쿨다운(1시간) 이내면 재시도 대상이 아니다")
+    void isFallbackCooldownExpired_withinCooldown_isFalse() {
+        SafetyReportRowDto row = SafetyReportRowDto.builder()
+                .briefSource("FALLBACK")
+                .generatedAt(LocalDateTime.now().minusMinutes(30))
+                .build();
+
+        assertThat(BasicReportService.isFallbackCooldownExpired(row)).isFalse();
+    }
+
+    @Test
+    @DisplayName("폴백이고 쿨다운(1시간)이 지났으면 재시도 대상이다")
+    void isFallbackCooldownExpired_pastCooldown_isTrue() {
+        SafetyReportRowDto row = SafetyReportRowDto.builder()
+                .briefSource("FALLBACK")
+                .generatedAt(LocalDateTime.now().minusHours(2))
+                .build();
+
+        assertThat(BasicReportService.isFallbackCooldownExpired(row)).isTrue();
     }
 }

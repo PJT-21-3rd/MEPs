@@ -34,12 +34,12 @@ class SingleFlightBriefGeneratorTest {
         assertThat(briefingService.generateCallCount.get()).isEqualTo(1);
         assertThat(coordinator.completedBriefs).isSameAs(result);
         assertThat(coordinator.completedModelNm).isEqualTo("stub-model");
-        assertThat(coordinator.releaseCallCount).isZero();
+        assertThat(coordinator.completeFallbackCallCount).isZero();
     }
 
     @Test
-    @DisplayName("LLM 실패 시 클레임을 반납하고 폴백을 반환하며 저장하지 않는다")
-    void llmFailureReleasesClaimAndFallsBack() {
+    @DisplayName("LLM 실패 시 폴백을 FALLBACK 출처로 저장하고 반환한다")
+    void llmFailureSavesFallbackAndReturnsIt() {
         FakeCoordinator coordinator = new FakeCoordinator();
         coordinator.claimResult = true;
         StubBriefingService briefingService = new StubBriefingService();
@@ -49,7 +49,9 @@ class SingleFlightBriefGeneratorTest {
         BasicBriefingDto result = generator.generateOnce(BUILDING_ID, input);
 
         assertThat(result.getTotalBrief()).isEqualTo("폴백 브리핑");
-        assertThat(coordinator.releaseCallCount).isEqualTo(1);
+        assertThat(coordinator.completeFallbackCallCount).isEqualTo(1);
+        assertThat(coordinator.fallbackCompletedBriefs).isSameAs(result);
+        assertThat(coordinator.fallbackCompletedModelNm).isEqualTo("stub-model");
         assertThat(coordinator.completedBriefs).isNull();
     }
 
@@ -127,6 +129,52 @@ class SingleFlightBriefGeneratorTest {
         assertThat(briefingService.generateCallCount.get()).isEqualTo(2);
     }
 
+    @Test
+    @DisplayName("백그라운드 재생성은 클레임에 성공하면 생성해서 complete로 저장한다")
+    void regenerateInBackground_claimSucceeds_generatesAndCompletes() {
+        FakeCoordinator coordinator = new FakeCoordinator();
+        coordinator.claimResult = true;
+        StubBriefingService briefingService = new StubBriefingService();
+        SingleFlightBriefGenerator generator = new SingleFlightBriefGenerator(coordinator, briefingService);
+
+        generator.regenerateInBackground(BUILDING_ID, input);
+
+        assertThat(briefingService.generateCallCount.get()).isEqualTo(1);
+        assertThat(coordinator.completedBriefs.getTotalBrief()).isEqualTo("생성된 브리핑");
+        assertThat(coordinator.completeFallbackCallCount).isZero();
+    }
+
+    @Test
+    @DisplayName("백그라운드 재생성도 실패하면 폴백을 다시 저장한다")
+    void regenerateInBackground_generateFails_savesFallbackAgain() {
+        FakeCoordinator coordinator = new FakeCoordinator();
+        coordinator.claimResult = true;
+        StubBriefingService briefingService = new StubBriefingService();
+        briefingService.failOnGenerate = true;
+        SingleFlightBriefGenerator generator = new SingleFlightBriefGenerator(coordinator, briefingService);
+
+        generator.regenerateInBackground(BUILDING_ID, input);
+
+        assertThat(coordinator.completeFallbackCallCount).isEqualTo(1);
+        assertThat(coordinator.fallbackCompletedBriefs.getTotalBrief()).isEqualTo("폴백 브리핑");
+        assertThat(coordinator.completedBriefs).isNull();
+    }
+
+    @Test
+    @DisplayName("백그라운드 재생성은 클레임에 실패하면(쿨다운 미경과 등) 아무것도 안 하고 끝난다")
+    void regenerateInBackground_claimFails_doesNothing() {
+        FakeCoordinator coordinator = new FakeCoordinator();
+        coordinator.claimResult = false;
+        StubBriefingService briefingService = new StubBriefingService();
+        SingleFlightBriefGenerator generator = new SingleFlightBriefGenerator(coordinator, briefingService);
+
+        generator.regenerateInBackground(BUILDING_ID, input);
+
+        assertThat(briefingService.generateCallCount.get()).isZero();
+        assertThat(coordinator.completedBriefs).isNull();
+        assertThat(coordinator.completeFallbackCallCount).isZero();
+    }
+
     private static void waitUntilWaiting(Thread thread) throws InterruptedException {
         long deadline = System.currentTimeMillis() + 3000;
         while (thread.getState() != Thread.State.WAITING && thread.getState() != Thread.State.TIMED_WAITING) {
@@ -143,7 +191,9 @@ class SingleFlightBriefGeneratorTest {
         private BasicBriefingDto awaitResultValue;
         private BasicBriefingDto completedBriefs;
         private String completedModelNm;
-        private int releaseCallCount;
+        private BasicBriefingDto fallbackCompletedBriefs;
+        private String fallbackCompletedModelNm;
+        private int completeFallbackCallCount;
 
         @Override
         public boolean tryClaim(String buildingId) {
@@ -157,8 +207,10 @@ class SingleFlightBriefGeneratorTest {
         }
 
         @Override
-        public void release(String buildingId) {
-            releaseCallCount++;
+        public void completeFallback(String buildingId, String aiModelNm, BasicBriefingDto briefs) {
+            completeFallbackCallCount++;
+            fallbackCompletedModelNm = aiModelNm;
+            fallbackCompletedBriefs = briefs;
         }
 
         @Override

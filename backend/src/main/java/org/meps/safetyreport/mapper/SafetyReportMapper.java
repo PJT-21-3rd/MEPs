@@ -26,11 +26,16 @@ public interface SafetyReportMapper {
             @Param("structScore") int structScore
     );
 
-    /** 브리핑 저장 + brief_status DONE 전이를 한 문장으로 수행 (원자적) */
+    /**
+     * 브리핑 저장 + brief_status DONE 전이를 한 문장으로 수행 (원자적).
+     * source는 "LLM" 또는 "FALLBACK" — 어느 쪽이든 저장은 성공이고, 재시도 필요 여부는
+     * tryClaimBriefGeneration이 source/generated_at을 보고 별도로 판단한다
+     */
     void updateBriefs(
             @Param("bdMgtSn") String bdMgtSn,
             @Param("aiModelNm") String aiModelNm,
-            @Param("briefs") BasicBriefingDto briefs
+            @Param("briefs") BasicBriefingDto briefs,
+            @Param("source") String source
     );
 
     /**
@@ -38,11 +43,6 @@ public interface SafetyReportMapper {
      * 1을 받은 호출자만 리더다 (SELECT 후 UPDATE 분리 금지)
      */
     int tryClaimBriefGeneration(
-            @Param("bdMgtSn") String bdMgtSn
-    );
-
-    /** 리더의 생성 실패 시 클레임 반납 — brief_status를 NULL로 되돌려 다음 요청의 재시도를 연다 */
-    void releaseBriefClaim(
             @Param("bdMgtSn") String bdMgtSn
     );
 

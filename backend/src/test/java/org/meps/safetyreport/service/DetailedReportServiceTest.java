@@ -477,18 +477,13 @@ class DetailedReportServiceTest {
         }
 
         @Override
-        public void updateBriefs(String bdMgtSn, String aiModelNm, BasicBriefingDto briefs) {
+        public void updateBriefs(String bdMgtSn, String aiModelNm, BasicBriefingDto briefs, String source) {
             throw new UnsupportedOperationException("DetailedReportService는 updateBriefs를 호출하지 않는다");
         }
 
         @Override
         public int tryClaimBriefGeneration(String bdMgtSn) {
             throw new UnsupportedOperationException("DetailedReportService는 tryClaimBriefGeneration을 호출하지 않는다");
-        }
-
-        @Override
-        public void releaseBriefClaim(String bdMgtSn) {
-            throw new UnsupportedOperationException("DetailedReportService는 releaseBriefClaim을 호출하지 않는다");
         }
 
         @Override

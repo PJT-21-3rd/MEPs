@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.meps.common.llm.LlmCallFailedException;
 import org.meps.safetyreport.dto.BasicBriefingDto;
 import org.meps.safetyreport.dto.BriefingInput;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
@@ -34,8 +35,8 @@ public class SingleFlightBriefGenerator {
     private final BasicBriefingService basicBriefingService;
 
     /**
-     * 저장된 브리핑이 없을 때의 생성 경로 전체를 감싼다. 폴백을 반환한 경우에도 DB에는 저장하지
-     * 않으므로 brief NULL 유지가 다음 요청의 재시도 트리거가 된다
+     * 저장된 브리핑이 없을 때의 생성 경로 전체를 감싼다. 폴백도 등급-source 표시("FALLBACK")와 함께
+     * 생성 재시도는 BasicReportService가 쿨다운 경과를 보고 regenerateInBackground로 별도로 트리거한다
      */
     public BasicBriefingDto generateOnce(String buildingId, BriefingInput input) {
         // 맵 등록은 빈 Future만 — 등록 함수 안에서 LLM을 호출하면 해시 버킷 락을 장기 점유한다
@@ -78,12 +79,13 @@ public class SingleFlightBriefGenerator {
         } catch (LlmCallFailedException e) {
             log.warn("AI 브리핑 생성 실패(소요={}ms), 템플릿 폴백 응답. buildingId={}",
                     System.currentTimeMillis() - startMillis, buildingId, e);
-            coordinator.release(buildingId);
-            return basicBriefingService.fallback(input);
+            BasicBriefingDto fallback = basicBriefingService.fallback(input);
+            coordinator.completeFallback(buildingId, basicBriefingService.getModelName(), fallback);
+            return fallback;
         }
     }
 
-    /** 대기자: 리더의 결과에 편승. 타임아웃·인터럽트·리더 이상 종료 시 폴백 */
+    /** 대기자: 리더의 결과에 편승. 타임아웃·인터럽트·리더 이상 종료 시 폴백(저장은 리더만 한다) */
     private BasicBriefingDto awaitLeader(String buildingId,
                                          CompletableFuture<BasicBriefingDto> future, BriefingInput input) {
         try {
@@ -97,6 +99,30 @@ public class SingleFlightBriefGenerator {
         } catch (Exception e) {
             log.warn("브리핑 리더 이상 종료, 템플릿 폴백 응답. buildingId={}", buildingId, e);
             return basicBriefingService.fallback(input);
+        }
+    }
+
+    /**
+     * 폴백으로 채워진 건물의 백그라운드 재시도
+     * JVM 안 중복 트리거는 신경 쓰지 않는다: coordinator.tryClaim의 원자적 UPDATE가 동시에
+     * 여러 번 걸려도 단 하나만 리더가 되고 나머지는 즉시 반환되어, 중복 OpenAI 호출로 이어지지 않는다
+     */
+    @Async("detailedReportExecutor")
+    public void regenerateInBackground(String buildingId, BriefingInput input) {
+        if (!coordinator.tryClaim(buildingId)) {
+            return;
+        }
+        long startMillis = System.currentTimeMillis();
+        try {
+            BasicBriefingDto briefs = basicBriefingService.generate(input);
+            log.info("AI 브리핑 백그라운드 재생성 성공. buildingId={}, model={}, 소요={}ms",
+                    buildingId, basicBriefingService.getModelName(), System.currentTimeMillis() - startMillis);
+            coordinator.complete(buildingId, basicBriefingService.getModelName(), briefs);
+        } catch (LlmCallFailedException e) {
+            log.warn("AI 브리핑 백그라운드 재생성도 실패(소요={}ms), 폴백 유지. buildingId={}",
+                    System.currentTimeMillis() - startMillis, buildingId, e);
+            coordinator.completeFallback(buildingId, basicBriefingService.getModelName(),
+                    basicBriefingService.fallback(input));
         }
     }
 }

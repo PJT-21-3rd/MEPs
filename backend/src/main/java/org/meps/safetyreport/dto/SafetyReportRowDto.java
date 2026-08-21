@@ -2,7 +2,11 @@ package org.meps.safetyreport.dto;
 
 import lombok.*;
 
-/** building_safety_report 저장 행 (기본 리포트가 쓰는 컬럼만). brief는 LLM 실패 시 NULL일 수 있다 */
+import java.time.LocalDateTime;
+
+/**
+ * building_safety_report 저장 행 (기본 리포트가 쓰는 컬럼만)
+ */
 @Builder
 @Setter @Getter
 @ToString
@@ -26,6 +30,8 @@ public class SafetyReportRowDto {
     private String sinkReport;
     private String fireReport;
     private String structReport;
+    private String briefSource;  /** "LLM" 또는 "FALLBACK". 점수 변경으로 무효화되면 NULL */
+    private LocalDateTime generatedAt;
 
     /**
      * brief 5개 컬럼이 모두 채워진 경우, 브리핑 생성이 끝났다고 판단.
@@ -39,6 +45,11 @@ public class SafetyReportRowDto {
                 && fireBrief != null
                 && sinkBrief != null
                 && floodBrief != null;
+    }
+
+    /** 지금 저장된 브리핑이 실제 생성이 아니라 등급별 고정 템플릿인지 */
+    public boolean isFallback() {
+        return "FALLBACK".equals(briefSource);
     }
 
     public BasicBriefingDto toBriefingDto() {
