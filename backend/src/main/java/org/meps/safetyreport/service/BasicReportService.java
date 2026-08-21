@@ -21,6 +21,8 @@ import org.meps.structure.dto.StructuralStabilityScoreResultDto;
 import org.meps.structure.service.StructuralStabilityScoreService;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +32,9 @@ import java.util.List;
  *
  * 재사용 판단: 점수는 배치 원천에서 결정론적으로 나오므로 "재산출 점수 == 저장 점수"가
  * 곧 입력 불변 판정. 불일치면 upsert가 브리핑을 함께 무효화해 재생성을 유도한다.
- * 폴백 브리핑은 DB에 저장하지 않는다 — brief NULL 유지가 다음 요청의 재시도 트리거.
+ * 폴백 브리핑도 brief_source="FALLBACK"으로 저장되어 다음 요청은 즉시 재사용한다 —
+ * 매 요청마다 재시도하던 이전 방식은 실패하기 쉬운 건물에서 반복 비용을 유발했다.
+ * 대신 FALLBACK_RETRY_COOLDOWN이 지나면 백그라운드로 재시도를 트리거한다(현재 요청은 안 막음).
  * 저장된 브리핑이 없을 때의 생성은 SingleFlightBriefGenerator가 감싸 중복 LLM 호출을 막는다
  * (인스턴스 안은 JVM single-flight, 인스턴스 간은 brief_status 컬럼 클레임)
  */
@@ -39,6 +43,8 @@ import java.util.List;
 public class BasicReportService {
 
     private static final String NO_FACTS = BriefingInput.NO_FACTS;
+
+    private static final Duration FALLBACK_RETRY_COOLDOWN = Duration.ofHours(1);
 
     private final FireScoreService fireScoreService;
     private final SinkholeScoreService sinkholeScoreService;
@@ -92,11 +98,22 @@ public class BasicReportService {
         }
 
         if (!scoreChanged && row.hasAllBriefs()) {
+            if (isFallbackCooldownExpired(row)) {
+                // 실제 재클레임 가능 여부(쿨다운)는 tryClaimBriefGeneration이 DB에서 다시 판정하므로
+                // 여기서 만료로 보여도 동시 요청끼리 중복 생성으로 이어지지 않는다
+                singleFlightBriefGenerator.regenerateInBackground(buildingId, input);
+            }
             return buildResponse(totalScore, loggedIn, input, row.toBriefingDto());
         }
 
         BasicBriefingDto briefs = singleFlightBriefGenerator.generateOnce(buildingId, input);
         return buildResponse(totalScore, loggedIn, input, briefs);
+    }
+
+    static boolean isFallbackCooldownExpired(SafetyReportRowDto row) {
+        return row.isFallback()
+                && row.getGeneratedAt() != null
+                && row.getGeneratedAt().isBefore(LocalDateTime.now().minus(FALLBACK_RETRY_COOLDOWN));
     }
 
     /** factors 순서 고정: 구조 → 화재 → 지반침하 → 침수 */

@@ -73,6 +73,32 @@ class MysqlReportGenerationCoordinatorTest {
         assertThat(mapper.findCallCount).isEqualTo(MysqlReportGenerationCoordinator.POLL_MAX_ATTEMPTS);
     }
 
+    @Test
+    @DisplayName("complete는 mapper.updateBriefs를 source=LLM으로 호출한다")
+    void completeCallsUpdateBriefsWithLlmSource() {
+        FakeMapper mapper = new FakeMapper();
+        MysqlReportGenerationCoordinator coordinator = new MysqlReportGenerationCoordinator(mapper, 1L);
+        BasicBriefingDto briefs = BasicBriefingDto.builder().totalBrief("종합").build();
+
+        coordinator.complete(BUILDING_ID, "model-a", briefs);
+
+        assertThat(mapper.lastUpdateSource).isEqualTo("LLM");
+        assertThat(mapper.lastUpdateBriefs).isSameAs(briefs);
+    }
+
+    @Test
+    @DisplayName("completeFallback은 mapper.updateBriefs를 source=FALLBACK으로 호출한다")
+    void completeFallbackCallsUpdateBriefsWithFallbackSource() {
+        FakeMapper mapper = new FakeMapper();
+        MysqlReportGenerationCoordinator coordinator = new MysqlReportGenerationCoordinator(mapper, 1L);
+        BasicBriefingDto briefs = BasicBriefingDto.builder().totalBrief("폴백").build();
+
+        coordinator.completeFallback(BUILDING_ID, "model-a", briefs);
+
+        assertThat(mapper.lastUpdateSource).isEqualTo("FALLBACK");
+        assertThat(mapper.lastUpdateBriefs).isSameAs(briefs);
+    }
+
     private static SafetyReportRowDto rowWithAllBriefs() {
         return SafetyReportRowDto.builder()
                 .bdMgtSn(BUILDING_ID)
@@ -90,6 +116,8 @@ class MysqlReportGenerationCoordinatorTest {
         private SafetyReportRowDto row;
         private int rowAvailableFromCall = 1; // 이 회차 조회부터 row를 돌려준다
         private int findCallCount;
+        private String lastUpdateSource;
+        private BasicBriefingDto lastUpdateBriefs;
 
         @Override
         public SafetyReportRowDto findByBdMgtSn(String bdMgtSn) {
@@ -106,11 +134,9 @@ class MysqlReportGenerationCoordinatorTest {
         }
 
         @Override
-        public void releaseBriefClaim(String bdMgtSn) {
-        }
-
-        @Override
-        public void updateBriefs(String bdMgtSn, String aiModelNm, BasicBriefingDto briefs) {
+        public void updateBriefs(String bdMgtSn, String aiModelNm, BasicBriefingDto briefs, String source) {
+            lastUpdateSource = source;
+            lastUpdateBriefs = briefs;
         }
 
         @Override

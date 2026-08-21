@@ -35,9 +35,18 @@ public class BasicBriefingService {
             "- 모든 값은 친근한 존댓말 \"~해요/~있어요\"체 1~2문장(40~80자)",
             "- 각 항목은 그 항목 라인의 사실만 요약하고, 수치는 어림값으로: 404m → \"약 400m\", 19.3건 → \"약 19건\"",
             "- 입력에 없는 수치·사실을 만들지 않음",
-            "- overall: 수치·기관명 없이 주목할 점 1~2개만 요약한 한 문장. 결론·안심 문구는 시스템이 붙이므로 쓰지 않음",
+            "- overall: 수치·기관명 없이 주목할 점 1~2개만 요약한 한 문장. 결론·안심 문구는 시스템이 붙이므로 쓰지 않음."
+                    + " 같은 사실을 다른 표현으로 반복하지 않음(예: \"화재 건수가 높은 편이고 많아요\"처럼 같은 내용을 두 번 말하지 않음)."
+                    + " 주목할 점은 각 항목 사실이 듣기에 부정적인 정도가 아니라, 등급이 가장 낮은(주의에 가장 가까운) 항목을"
+                    + " 우선 선택함 (예: [구조] 양호, [화재] 안전이면 화재가 아니라 구조를 우선 언급)",
             "- 화재 건수는 건물이 아닌 행정동 통계 — 언급할 때 반드시 \"행정동\"을 붙여 서술 (예: \"행정동의 화재 건수가\")",
             "- 사고 이력·차량 통행 불가 접면 등 불리한 사실은 절대 생략하지 말고 유리한 사실보다 먼저 언급",
+            "- 어조는 반드시 그 문장이 속한 항목([종합]/[구조]/[화재]/[지반침하]/[침수]) 라인에 표시된 등급을 따른다."
+                    + " 등급이 안전·양호이면 그 항목에 불리한 사실이 있어도 \"위험\", \"우려\", \"불안\", \"취약\", \"위협\","
+                    + " \"주의가 필요\", \"조심\", \"걱정\" 같은 경고 표현을 쓰지 않고 사실만 담담히 서술한다"
+                    + " (예: \"화재 건수가 많은 편이에요\"는 되지만 \"화재 건수가 많아 우려돼요\"는 안 됨)."
+                    + " 등급이 주의이면 \"안심\", \"양호한 편\", \"안전한 편\", \"문제없\", \"안정적\", \"견고\", \"튼튼\" 같은"
+                    + " 안심 표현을 쓰지 않는다 (예: \"벽돌구조로 비교적 안정적이에요\"는 안 되고 \"벽돌구조로 노후화 확인이 필요해요\"처럼 씀)",
             "",
             "예시 입력:",
             "[종합] 등급: 양호",
@@ -50,6 +59,36 @@ public class BasicBriefingService {
             "{\"overall\":\"근처 지반침하 이력은 없지만, 소방차 진입이 어려운 좁은 도로 접면을 가지고 있어요.\","
                     + "\"structure\":\"철근콘크리트 구조로 안정적이에요.\","
                     + "\"fire\":\"소방차 진입이 어려운 좁은 도로에 접해 있어요. 가까운 소방서는 약 400m 거리라 골든타임 내 출동은 가능해요.\","
+                    + "\"sinkhole\":\"반경 500m 내 지반침하 사고 이력이 없어요.\","
+                    + "\"flood\":\"저지대가 아니며 최근 5년간 침수 이력이 없어요.\"}",
+            "",
+
+            "예시 입력 2:",
+            "[종합] 등급: 주의",
+            "[구조] 등급: 주의 / 주구조: 벽돌구조 / 사용승인: 1988년",
+            "[화재] 등급: 안전 / 주구조: 벽돌구조 / 도로접면: 광대한면(폭 25m 이상 도로 접함) / 최근접 소방서: 종로소방서 300m(골든타임 내) / 행정동 최근 3년 평균 화재: 5.0건(서울 행정동 중 하위 25%, 적은 편)",
+            "[지반침하] 등급: 안전 / 반경 500m 내 지반침하 사고 이력: 없음",
+            "[침수] 등급: 안전 / 저지대 여부: 해당 없음 / 최근 5년 침수 이력: 없음",
+            "",
+            "예시 출력 2:",
+            "{\"overall\":\"구조 항목에서 노후화 확인이 필요한 점을 제외하면 화재·지반침하·침수는 특이 사항이 없어요.\","
+                    + "\"structure\":\"벽돌구조이고 사용승인은 1988년으로, 노후화 여부를 확인해 볼 필요가 있어요.\","
+                    + "\"fire\":\"광대한 도로에 접해 있고 행정동 화재 건수도 적은 편이에요. 가까운 소방서는 약 300m 거리라 골든타임 내 출동이 가능해요.\","
+                    + "\"sinkhole\":\"반경 500m 내 지반침하 사고 이력이 없어요.\","
+                    + "\"flood\":\"저지대가 아니며 최근 5년간 침수 이력이 없어요.\"}",
+            "",
+
+            "예시 입력 3:",
+            "[종합] 등급: 안전",
+            "[구조] 등급: 양호 / 주구조: 철근콘크리트구조 / 사용승인: 1969년",
+            "[화재] 등급: 안전 / 주구조: 철근콘크리트구조 / 도로접면: 세로한면(가)(폭 8m 미만 도로 접함) / 최근접 소방서: 회현119안전센터 540m(골든타임 내) / 행정동 최근 3년 평균 화재: 18.3건(서울 행정동 중 상위 25%, 많은 편)",
+            "[지반침하] 등급: 안전 / 반경 500m 내 지반침하 사고 이력: 없음",
+            "[침수] 등급: 안전 / 저지대 여부: 해당 없음 / 최근 5년 침수 이력: 없음",
+            "",
+            "예시 출력 3:",
+            "{\"overall\":\"구조 항목이 1969년에 사용승인된 건물이라 노후화 여부를 확인해 볼 필요가 있어요.\","
+                    + "\"structure\":\"철근콘크리트구조이고 사용승인일은 1969년으로, 노후화 여부를 확인해 볼 필요가 있어요.\","
+                    + "\"fire\":\"행정동의 화재 건수가 상위 25%로 많은 편이에요. 도로접면은 폭 8m 미만으로 좁고, 가까운 소방서는 약 540m로 골든타임 내 출동이 가능해요.\","
                     + "\"sinkhole\":\"반경 500m 내 지반침하 사고 이력이 없어요.\","
                     + "\"flood\":\"저지대가 아니며 최근 5년간 침수 이력이 없어요.\"}");
 
@@ -78,13 +117,14 @@ public class BasicBriefingService {
 
         String overall = root.path("overall").asText(null);
         validateSentence("overall", overall);
+        BriefingToneValidator.check("overall", overall, input.getTotalGrade());
 
         return BasicBriefingDto.builder()
                 .totalBrief(overall + " " + closingPhrase(input))
-                .structBrief(factorSentence("structure", "구조", input.getStructFacts(), root))
-                .fireBrief(factorSentence("fire", "화재", input.getFireFacts(), root))
-                .sinkBrief(factorSentence("sinkhole", "지반침하", input.getSinkFacts(), root))
-                .floodBrief(factorSentence("flood", "침수", input.getFloodFacts(), root))
+                .structBrief(factorSentence("structure", "구조", input.getStructFacts(), root, input.getStructGrade()))
+                .fireBrief(factorSentence("fire", "화재", input.getFireFacts(), root, input.getFireGrade()))
+                .sinkBrief(factorSentence("sinkhole", "지반침하", input.getSinkFacts(), root, input.getSinkGrade()))
+                .floodBrief(factorSentence("flood", "침수", input.getFloodFacts(), root, input.getFloodGrade()))
                 .build();
     }
 
@@ -93,12 +133,13 @@ public class BasicBriefingService {
      * 다른 항목의 사실이 섞여 들어오는 환각을 코드 레벨에서 차단한다 (실측: 구조 결측 시
      * 예시 출력의 "철근콘크리트"를 끌어와 모순 문장을 생성)
      */
-    private String factorSentence(String key, String label, String facts, JsonNode root) {
+    private String factorSentence(String key, String label, String facts, JsonNode root, SafetyGrade grade) {
         if (BriefingInput.NO_FACTS.equals(facts)) {
             return label + " 관련 정보는 아직 확인되지 않았어요.";
         }
         String sentence = root.path(key).asText(null);
         validateSentence(key, sentence);
+        BriefingToneValidator.check(key, sentence, grade);
         return sentence;
     }
 
@@ -153,16 +194,6 @@ public class BasicBriefingService {
                 .build();
     }
 
-//    /** 룰 엔진 결과를 사실 나열로 조립 */
-//    String buildUserPrompt(BriefingInput input) {
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("[종합] 등급: ").append(input.getTotalGrade().getLabel()).append('\n');
-//        sb.append(factorLine("구조", input.getStructGrade(), input.getStructFacts())).append('\n');
-//        sb.append(factorLine("화재", input.getFireGrade(), input.getFireFacts())).append('\n');
-//        sb.append(factorLine("지반침하", input.getSinkGrade(), input.getSinkFacts())).append('\n');
-//        sb.append(factorLine("침수", input.getFloodGrade(), input.getFloodFacts()));
-//        return sb.toString();
-//    }
 
     /**
      * 정보 없음 팩터는 등급 없이 보낸다 — "등급: 안전 / 정보 없음"으로 주면 모델이

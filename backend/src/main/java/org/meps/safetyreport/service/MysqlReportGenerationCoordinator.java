@@ -45,12 +45,12 @@ public class MysqlReportGenerationCoordinator implements ReportGenerationCoordin
 
     @Override
     public void complete(String buildingId, String aiModelNm, BasicBriefingDto briefs) {
-        safetyReportMapper.updateBriefs(buildingId, aiModelNm, briefs);
+        safetyReportMapper.updateBriefs(buildingId, aiModelNm, briefs, "LLM");
     }
 
     @Override
-    public void release(String buildingId) {
-        safetyReportMapper.releaseBriefClaim(buildingId);
+    public void completeFallback(String buildingId, String aiModelNm, BasicBriefingDto briefs) {
+        safetyReportMapper.updateBriefs(buildingId, aiModelNm, briefs, "FALLBACK");
     }
 
     /**

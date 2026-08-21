@@ -22,7 +22,9 @@
                flood_report,
                sink_report,
                fire_report,
-               struct_report
+               struct_report,
+               brief_source,
+               generated_at
         FROM building_safety_report
         WHERE bd_mgt_sn = #{bdMgtSn}
     </select>
@@ -51,10 +53,14 @@
             fire_report   = NULL,
             struct_report = NULL,
             brief_status  = NULL,
+            brief_source  = NULL,
             generation_started_at = NULL
     </insert>
 
-    <!-- 저장과 DONE 전이를 한 문장으로 — 저장만 되고 상태가 남는 중간 상태를 없앤다 -->
+    <!--
+        source: 'LLM'(정상 생성) 또는 'FALLBACK'(등급별 고정 템플릿) — 둘 다 brief_status는 DONE으로 끝난다.
+        재시도가 필요한지는 brief_source/generated_at을 보는 tryClaimBriefGeneration의 몫이라 동시성 로직과는 분리된다
+    -->
     <update id="updateBriefs">
         UPDATE building_safety_report
         SET ai_model_nm  = #{aiModelNm},
@@ -64,6 +70,7 @@
             fire_brief   = #{briefs.fireBrief},
             struct_brief = #{briefs.structBrief},
             brief_status = 'DONE',
+            brief_source = #{source},
             generation_started_at = NULL
         WHERE bd_mgt_sn = #{bdMgtSn}
     </update>
@@ -71,7 +78,8 @@
     <!--
         브리핑 생성 권한 클레임: InnoDB 행 락 위에서 affected rows = 1을 받은 요청만 리더.
         GENERATING 30초 초과 조건은 리더 인스턴스 사망 시 재클레임을 여는 스테일 타임아웃
-        (기본 브리핑 LLM read timeout 5초 대비 충분한 여유)
+        (기본 브리핑 LLM read timeout 5초 대비 충분한 여유).
+        마지막 조건(FALLBACK + 1시간 경과)은 폴백으로 채워진 행을 백그라운드 재생성이 다시 시도할 수 있게 여는 쿨다운
     -->
     <update id="tryClaimBriefGeneration">
         UPDATE building_safety_report
@@ -80,15 +88,9 @@
           AND (brief_status IS NULL
                OR (brief_status = 'DONE' AND total_brief IS NULL)
                OR (brief_status = 'GENERATING'
-                   AND generation_started_at &lt; NOW() - INTERVAL 30 SECOND))
-    </update>
-
-    <!-- GENERATING 조건: 스테일 타임아웃 후 다른 리더가 재클레임한 상태를 덮어쓰지 않게 -->
-    <update id="releaseBriefClaim">
-        UPDATE building_safety_report
-        SET brief_status = NULL, generation_started_at = NULL
-        WHERE bd_mgt_sn = #{bdMgtSn}
-          AND brief_status = 'GENERATING'
+                   AND generation_started_at &lt; NOW() - INTERVAL 30 SECOND)
+               OR (brief_status = 'DONE' AND brief_source = 'FALLBACK'
+                   AND generated_at &lt; NOW() - INTERVAL 1 HOUR))
     </update>
 
     <update id="updateReports">
