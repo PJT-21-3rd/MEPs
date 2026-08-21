@@ -82,10 +82,14 @@
     </template>
 
     <template v-else>
-      <div class="flex flex-col items-center justify-center h-40 gap-2 text-center">
-        <span class="text-[40px]">🏢</span>
-        <p class="text-[14px] text-text-sub">
-          {{ activeTab === 'recent' ? '최근 본 매물이 없습니다.' : '해당하는 매물이 없습니다.' }}
+      <div class="flex flex-col items-center justify-center h-45 gap-3 text-center">
+        <div
+          class="bg-surface-blue rounded-full flex justify-center items-center w-16 h-16 text-primary"
+        >
+          <component :is="emptyStateIcon" :size="30" :stroke-width="2" class="mb-1" />
+        </div>
+        <p class="text-[14px] text-text-sub whitespace-pre-line leading-relaxed">
+          {{ emptyStateMessage }}
         </p>
       </div>
     </template>
@@ -97,7 +101,7 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUiStore } from '@/stores/uiStore.js';
 import { getSavedList } from '@/api/saved.js';
-import { Check, ChevronDown } from '@lucide/vue';
+import { Check, ChevronDown, ZoomIn, MapPinHouse } from '@lucide/vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
 import BuildingCard from './BuildingCard.vue';
 import BuildingCardSkeleton from './BuildingCardSkeleton.vue';
@@ -150,6 +154,22 @@ watch(activeTab, async (newTab) => {
       uiStore.setBuildingsLoading(false);
     }
   }
+});
+
+const emptyStateMessage = computed(() => {
+  if (activeTab.value === 'recent') {
+    return '최근 본 매물이 없어요.\n지도를 탐색하며 상가를 찾아보세요.';
+  }
+  if (activeTab.value === 'scrapped') {
+    return '아직 찜한 매물이 없어요.\n관심 있는 상가를 하트로 저장해보세요.';
+  }
+  if (activeTab.value === 'nearby' && uiStore.isZoomRequired) {
+    return '지도를 더 확대하면\n주변 상가를 볼 수 있어요.';
+  }
+  return '현재 위치에 매물이 없어요.\n지도를 드래그해 다른 지역을 확인해보세요.';
+});
+const emptyStateIcon = computed(() => {
+  return activeTab.value === 'nearby' && uiStore.isZoomRequired ? ZoomIn : MapPinHouse;
 });
 
 // 매물 리스트 분기
