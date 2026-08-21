@@ -14,6 +14,7 @@
           v-if="buildingDetail"
           :building-id="buildingDetail.buildingId"
           :initial-saved="buildingDetail.saved"
+          @change="handleSaveChange"
         />
         <button
           @click="handleShare"
@@ -101,6 +102,15 @@ const handleBack = () => {
   const query = { ...router.currentRoute.value.query };
   delete query.buildingId;
   router.push({ query: {} });
+};
+
+const handleSaveChange = (newSavedState) => {
+  if (uiStore.currentBuildingDetail) {
+    // 프론트엔드 데이터를 즉시 변경합니다.
+    uiStore.currentBuildingDetail.saved = newSavedState;
+    // 찜 상태가 true가 되면 +1, false가 되면 -1
+    uiStore.currentBuildingDetail.savedCnt += newSavedState ? 1 : -1;
+  }
 };
 
 const handleShare = async () => {
