@@ -30,13 +30,13 @@ const landRows = [
 
 // 건축물 정보
 const buildingRows = [
-  { label: '건물이름', get: (b) => b.building.bldNm || '건물명 없음' },
+  { label: '건물이름', get: (b) => b.building.bldNm || '-' },
   { label: '주용도', get: (b) => b.building.mainPurpsNm },
   { label: '주구조', get: (b) => b.building.detail.strctCdNm },
   { label: '높이', get: (b) => `${b.building.detail.heit}m` },
   {
     label: '지상/지하',
-    get: (b) => `지상 ${formatFloor(b.building.detail.grndFlr, b.building.detail.ugrndFlr)}`,
+    get: (b) => `${formatFloor(b.building.detail.grndFlr, b.building.detail.ugrndFlr)}`,
   },
   { label: '대지면적', get: (b) => `${formatArea(b.building.platArea)}` },
   {

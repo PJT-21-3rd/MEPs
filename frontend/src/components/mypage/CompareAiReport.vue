@@ -35,7 +35,7 @@ function toDiagnosis(factors) {
 
 <template>
   <div v-if="isActive('report')" class="mt-4">
-    <h4 class="flex items-center gap-1.5 text-[17px] text-primary mb-1">
+    <h4 class="flex items-center gap-1.5 text-[17px] text-primary mb-1 font-bold">
       <Sparkles :size="17" />
       AI 안전진단
     </h4>

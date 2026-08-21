@@ -57,15 +57,15 @@ function goToDetail() {
       {{ order }}
     </span>
 
-    <div class="flex-1 min-w-0 pr-6">
+    <div class="flex-1 min-w-0 pr-3">
       <div class="flex items-center gap-1 min-w-0">
-        <span class="text-[13px] truncate" :title="building.roadAddr">
+        <span class="text-[15px] tracking-tight truncate" :title="building.roadAddr">
           {{ formatShortAddress(building.jibunAddr, building.roadAddr, building.bldNm) }}
         </span>
         <!-- 진단됨: 등급 배지 -->
         <span
           v-if="building.safetyGrade"
-          class="shrink-0 text-[13px] px-[7px] py-0.5 rounded"
+          class="shrink-0 text-[12px] px-[7px] py-0.5 rounded"
           :class="[gradeMeta(building.safetyGrade).badgeBg, gradeMeta(building.safetyGrade).text]"
         >
           {{ gradeMeta(building.safetyGrade).label }}

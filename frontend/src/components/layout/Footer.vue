@@ -9,7 +9,7 @@
     <div class="mb-4 space-y-1 leading-relaxed">
       <div class="text-center gap-1 flex-wrap">
         <span class="font-bold">데이터 출처: </span>
-        <span>국토교통부, 소방청, VWorld,</span>
+        <span>국토교통부, 행정안전부, 서울시,</span>
 
         <a
           href="https://www.ncloud.com/product/applicationService/NAVERAPIHUB"
