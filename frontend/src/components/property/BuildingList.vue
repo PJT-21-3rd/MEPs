@@ -113,8 +113,8 @@ const TABS = [
 const activeTab = ref('nearby');
 
 const SORT_OPTIONS = [
-  { label: '랭킹순', value: 'POPULAR' },
-  { label: '최신순', value: 'LATEST' },
+  { label: '인기순', value: 'POPULAR' },
+  { label: '승인일순', value: 'LATEST' },
   { label: '면적순', value: 'AREA' },
 ];
 
