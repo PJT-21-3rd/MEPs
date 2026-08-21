@@ -17,7 +17,9 @@ const hasBuildingName = computed(() => {
     </h2>
     <div class="mt-1.5 space-y-1">
       <div class="flex items-center gap-1.5">
-        <span class="rounded bg-surface-gray px-1.5 py-0.5 text-[12px] text-text-secondary">
+        <span
+          class="shrink-0 rounded bg-surface-gray px-1.5 py-0.5 text-[12px] text-text-secondary"
+        >
           지번
         </span>
         <p class="text-text-secondary" :class="hasBuildingName ? 'text-[15px]' : 'text-[20px] '">
@@ -25,7 +27,7 @@ const hasBuildingName = computed(() => {
         </p>
       </div>
       <div class="flex items-center gap-1.5">
-        <span class="rounded bg-surface-gray px-1.5 py-0.5 text-[12px] text-text-sub">
+        <span class="shrink-0 rounded bg-surface-gray px-1.5 py-0.5 text-[12px] text-text-sub">
           도로명
         </span>
         <p class="text-text-sub" :class="hasBuildingName ? 'text-[14px]' : 'text-[15px]'">

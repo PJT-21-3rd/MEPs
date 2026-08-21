@@ -35,7 +35,7 @@ function toDiagnosis(factors) {
 
 <template>
   <div v-if="isActive('report')" class="mt-4">
-    <h4 class="flex items-center gap-1.5 text-[17px] font-bold text-primary mb-1">
+    <h4 class="flex items-center gap-1.5 text-[17px] text-primary mb-1">
       <Sparkles :size="17" />
       AI 안전진단
     </h4>
@@ -49,8 +49,8 @@ function toDiagnosis(factors) {
         <div class="-mx-4 -mt-4 px-3 py-2.5 bg-surface-gray flex items-center justify-between">
           <!-- 왼쪽: 아이콘+건물명-->
           <div class="flex items-center gap-1.5">
-            <Sparkles :size="15" class="text-secondary" />
-            <span class="text-[14px] font-semibold">{{
+            <Sparkles :size="14" class="text-secondary" />
+            <span class="text-[14px] tracking-tight">{{
               item.building.bldNm || '건물명 없음'
             }}</span>
           </div>

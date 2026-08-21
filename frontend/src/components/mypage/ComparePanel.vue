@@ -56,9 +56,9 @@ function isActive(key) {
     <!-- 제목 + 섹션 표시 개수 + 섹션 토글 -->
     <div class="pb-4 border-b border-surface-gray px-6">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="flex items-center gap-2 text-base font-bold">
-          <Scale :size="18" class="text-primary" />
-          찜한 매물 비교
+        <h2 class="flex items-center gap-2 text-base">
+          <Scale :size="20" class="text-primary" />
+          <p class="text-[20px] tracking-tight">찜한 매물 비교</p>
         </h2>
         <span class="text-[13px] text-text-sub">
           {{ activeSections.length }}/{{ sections.length }}개 섹션 표시
