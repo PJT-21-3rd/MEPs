@@ -1,6 +1,6 @@
 <template>
   <header class="flex items-center justify-between p-6 pb-3">
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 cursor-pointer" @click="handleHomeClick">
       <div class="bg-surface-gray rounded-xl">
         <img src="@/assets/images/MEPS_LOGO.png" alt="meps_logo" class="w-10 h-10 object-contain" />
       </div>
@@ -10,6 +10,7 @@
 
     <div class="flex items-center gap-1 text-text-sub">
       <button
+        v-if="!isMyPage"
         @click="handleMyPageClick"
         class="p-2.5 rounded-full hover:bg-surface-gray hover:text-text-main/70"
         aria-label="마이페이지"
@@ -47,8 +48,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { FolderHeart, UserRound } from '@lucide/vue';
 import ProfileDropdown from '../auth/ProfileDropdown.vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
@@ -58,6 +59,7 @@ import { deleteAccount } from '@/api/auth.js';
 import { logoutApi } from '@/api/auth.js';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const toastStore = useToastStore();
 
@@ -67,6 +69,13 @@ const profileRef = ref(null);
 useClickOutside(profileRef, () => {
   isProfileOpen.value = false;
 });
+
+const isMyPage = computed(() => route.path === '/mypage');
+const handleHomeClick = () => {
+  if (route.path !== '/') {
+    router.push('/');
+  }
+};
 
 const handleMyPageClick = () => {
   if (!authStore.isLoggedIn) {

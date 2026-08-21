@@ -1,5 +1,5 @@
 <template>
-  <div class="w-screen h-screen overflow-hidden">
+  <div class="w-screen h-screen overflow-hidden min-w-[880px]">
     <RouterView />
     <ToastContainer />
     <LoginModal v-if="authStore.isLoginModalOpen" @close="authStore.closeLoginModal" />
