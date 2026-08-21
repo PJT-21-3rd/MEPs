@@ -1,26 +1,12 @@
 <template>
-  <div class="absolute bottom-10 right-6 z-20 flex flex-col gap-2" ref="controlsContainer">
-    <MapControlButton title="내 위치" @click="mapStore.moveToMyLocation">
-      <Navigation size="18px" />
+  <div class="absolute top-20 right-6 z-20 flex flex-col gap-2" ref="controlsContainer">
+    <MapControlButton
+      title="로드뷰"
+      :active="mapStore.isRoadViewMode"
+      @click="mapStore.toggleRoadViewMode"
+    >
+      <Webcam size="18px" />
     </MapControlButton>
-
-    <div class="overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-black/5">
-      <button
-        @click="mapStore.zoomIn"
-        class="flex h-10 w-10 items-center justify-center hover:bg-neutral-50"
-        title="확대"
-      >
-        <Plus size="18px" />
-      </button>
-      <div class="mx-auto h-px w-6 bg-neutral-200" />
-      <button
-        @click="mapStore.zoomOut"
-        class="flex h-10 w-10 items-center justify-center hover:bg-neutral-50"
-        title="축소"
-      >
-        <Minus size="18px" />
-      </button>
-    </div>
 
     <div class="relative flex items-center justify-end">
       <Transition
@@ -60,12 +46,26 @@
       </MapControlButton>
     </div>
 
-    <MapControlButton
-      title="로드뷰"
-      :active="mapStore.isRoadViewMode"
-      @click="mapStore.toggleRoadViewMode"
-    >
-      <Webcam size="18px" />
+    <div class="overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-black/5">
+      <button
+        @click="mapStore.zoomIn"
+        class="flex h-10 w-10 items-center justify-center hover:bg-neutral-50"
+        title="확대"
+      >
+        <Plus size="18px" />
+      </button>
+      <div class="mx-auto h-px w-6 bg-neutral-200" />
+      <button
+        @click="mapStore.zoomOut"
+        class="flex h-10 w-10 items-center justify-center hover:bg-neutral-50"
+        title="축소"
+      >
+        <Minus size="18px" />
+      </button>
+    </div>
+
+    <MapControlButton title="내 위치" @click="mapStore.moveToMyLocation">
+      <Navigation size="18px" />
     </MapControlButton>
   </div>
 </template>

@@ -8,6 +8,24 @@
       <AiReportPanelWithModals :building-id="uiStore.selectedBuildingId" />
     </div>
 
+    <!-- #29: 공인중개사 안내 카드 (지도 영역 기준 상대 배치) -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-4"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-4"
+    >
+      <OfflineAgentCard
+        v-if="uiStore.showAgentCard && authStore.isLoggedIn"
+        class="absolute bottom-8 left-[815px] z-20 w-[320px]"
+        :dong-name="uiStore.agentDongName"
+        :agent="mockAgent"
+        @close="uiStore.setAgentCardVisible(false)"
+      />
+    </Transition>
+
     <main class="relative h-full flex-1 overflow-hidden">
       <Transition
         enter-active-class="transition-opacity duration-300 ease-out"
@@ -27,26 +45,8 @@
       </div>
       <div v-else><QuickNavigation /></div>
 
-      <MapResearch />
+      <MapResearch v-if="!uiStore.isReportOpen" />
       <MapControls />
-
-      <!-- #29: 공인중개사 안내 카드 (지도 영역 기준 상대 배치) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 translate-y-4"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 translate-y-4"
-      >
-        <OfflineAgentCard
-          v-if="uiStore.showAgentCard && authStore.isLoggedIn"
-          class="absolute bottom-5 right-75 z-20 w-[320px]"
-          :dong-name="uiStore.agentDongName"
-          :agent="mockAgent"
-          @close="uiStore.setAgentCardVisible(false)"
-        />
-      </Transition>
     </main>
   </div>
 </template>
