@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { fetchBuildingDetail, fetchBuildingDetailByCoord } from '@/api/building';
+import { getSavedList } from '@/api/saved';
 
 export const useUiStore = defineStore('ui', () => {
   const searchQuery = ref(''); // 검색어
@@ -15,17 +16,17 @@ export const useUiStore = defineStore('ui', () => {
   const loanModalConfig = ref(null); // 대출 모달 설정
   const currentBriefing = ref(null); // 브리핑 데이터
   const briefingLevel = ref('dong');
-  const currentSort = ref('POPULAR'); // 정렬
+  const currentSort = ref('LATEST'); // 정렬
   const currentBuildings = ref([]); // 현재 화면의 건물 배열
   const currentBuildingDetail = ref(null); // 현재 건물 상세 데이터
   const isDetailLoading = ref(false);
   const preventMapMove = ref(false);
   const isZoomRequired = ref(false);
   const recentBuildings = ref([]); // 최근 본 매물
+  const savedBuildings = ref([]); // 찜 매물
   const showAgentCard = ref(false); // 공인중개사 카드 노출 여부 //추가
+  const RECENT_KEY = 'meps_recent_buildings';
 
-  // #29: 브리핑 레벨(동/구)에 따라 항상 최신 지역명을 계산
-  // briefingLevel/currentBriefing이 바뀌면 자동으로 갱신됨
   const agentDongName = computed(() => {
     if (briefingLevel.value === 'dong') {
       return currentBriefing.value?.hjdName ?? '';
@@ -35,7 +36,6 @@ export const useUiStore = defineStore('ui', () => {
     }
     return '';
   });
-  const RECENT_KEY = 'meps_recent_buildings';
 
   const setBuildingsLoading = (status) => {
     isBuildingsLoading.value = status;
@@ -66,12 +66,12 @@ export const useUiStore = defineStore('ui', () => {
       jibunAddr: buildingData.jibunAddr,
       roadAddr: buildingData.roadAddr,
       mainPurpsNm: buildingData.mainPurpsNm,
-      archArea: buildingData.archArea,
+      archArea: buildingData.detail?.archArea,
       grndFlr: buildingData.detail?.grndFlr,
       ugrndFlr: buildingData.detail?.ugrndFlr,
       useAprDay: buildingData.detail?.useAprDay,
-      lat: buildingData.lat,
-      lng: buildingData.lng,
+      lat: buildingData.center?.coordinates[1],
+      lng: buildingData.center?.coordinates[0],
     };
     console.log(summaryBuilding);
 
@@ -87,6 +87,17 @@ export const useUiStore = defineStore('ui', () => {
     localStorage.setItem(RECENT_KEY, JSON.stringify(list));
   };
   loadRecentBuildings();
+
+  // 찜 목록 가져오기
+  const loadSavedBuildings = async () => {
+    try {
+      const data = await getSavedList();
+      savedBuildings.value = data;
+    } catch (error) {
+      console.log('찜 목록 조회 실패:', error);
+      savedBuildings.value = [];
+    }
+  };
 
   // 상세화면 여닫
   const openBuildingDetail = async (buildingId) => {
@@ -212,10 +223,12 @@ export const useUiStore = defineStore('ui', () => {
     preventMapMove,
     isZoomRequired,
     recentBuildings,
+    savedBuildings,
     showAgentCard,
     agentDongName,
     setBuildingsLoading,
     addRecentBuilding,
+    loadSavedBuildings,
     openBuildingDetail,
     openBuildingDetailByCoord,
     closeBuildingDetail,

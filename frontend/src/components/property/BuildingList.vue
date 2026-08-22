@@ -100,7 +100,6 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUiStore } from '@/stores/uiStore.js';
-import { getSavedList } from '@/api/saved.js';
 import { Check, ChevronDown, ZoomIn, MapPinHouse } from '@lucide/vue';
 import { useClickOutside } from '@/hooks/useClickOutside.js';
 import BuildingCard from './BuildingCard.vue';
@@ -124,11 +123,10 @@ const SORT_OPTIONS = [
 
 const isSortOpen = ref(false);
 const sortDropdownRef = ref(null);
-const savedBuildings = ref([]);
 
 const currentSortLabel = computed(() => {
   const found = SORT_OPTIONS.find((o) => o.value === uiStore.currentSort);
-  return found ? found.label : '랭킹순';
+  return found ? found.label : '승인일순';
 });
 
 const selectSort = (val) => {
@@ -144,12 +142,9 @@ useClickOutside(sortDropdownRef, () => {
 watch(activeTab, async (newTab) => {
   if (newTab === 'scrapped') {
     uiStore.setBuildingsLoading(true);
-
     try {
-      savedBuildings.value = await getSavedList();
-    } catch (error) {
-      console.error('찜한 목록을 불러오지 못했습니다.', error);
-      savedBuildings.value = [];
+      // 🌟 API 직접 호출 대신, 스토어의 액션 호출
+      await uiStore.loadSavedBuildings();
     } finally {
       uiStore.setBuildingsLoading(false);
     }
@@ -175,7 +170,7 @@ const emptyStateIcon = computed(() => {
 // 매물 리스트 분기
 const displayBuildings = computed(() => {
   if (activeTab.value === 'recent') return uiStore.recentBuildings;
-  if (activeTab.value === 'scrapped') return savedBuildings.value;
+  if (activeTab.value === 'scrapped') return uiStore.savedBuildings;
   return uiStore.currentBuildings || [];
 });
 
