@@ -8,7 +8,7 @@
       <AiReportPanelWithModals :building-id="uiStore.selectedBuildingId" />
     </div>
 
-    <!-- #29: 공인중개사 안내 카드 (지도 영역 기준 상대 배치) -->
+    <!-- #29: 공인중개사 안내 카드 -->
     <Transition
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="opacity-0 translate-y-4"
@@ -19,7 +19,8 @@
     >
       <OfflineAgentCard
         v-if="uiStore.showAgentCard && authStore.isLoggedIn"
-        class="absolute bottom-8 left-[815px] z-20 w-[320px]"
+        class="absolute bottom-8 z-20 w-[320px] transition-all duration-300 ease-in-out"
+        :class="uiStore.isReportOpen ? 'left-[815px]' : 'left-[calc(100%-344px)]'"
         :dong-name="uiStore.agentDongName"
         :agent="mockAgent"
         @close="uiStore.setAgentCardVisible(false)"
