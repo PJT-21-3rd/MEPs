@@ -38,7 +38,7 @@
     </template>
 
     <template v-else>
-      <div class="relative flex-1 overflow-y-auto">
+      <div ref="scrollRef" class="relative flex-1 overflow-y-auto">
         <!-- 로드뷰 -->
         <div class="px-4">
           <RoadViewImage :lat="roadViewLat" :lng="roadViewLng" />
@@ -83,6 +83,7 @@ const router = useRouter();
 const uiStore = useUiStore();
 const toastStore = useToastStore();
 
+const scrollRef = ref(null);
 const sentinelRef = ref(null);
 const infoStuck = ref(false);
 const infoPanelRef = ref(null);
@@ -122,7 +123,7 @@ const roadViewLng = computed(() => {
 });
 
 const handleGenerateReport = () => {
-  console.log('AI 리포트 패널 열기!');
+  // console.log('AI 리포트 패널 열기!');
   uiStore.openReport();
 };
 
@@ -137,7 +138,6 @@ const handleBack = () => {
 
 const handleSaveChange = (newSavedState) => {
   if (uiStore.currentBuildingDetail) {
-    // 프론트엔드 데이터를 즉시 변경합니다.
     uiStore.currentBuildingDetail.saved = newSavedState;
     // 찜 상태가 true가 되면 +1, false가 되면 -1
     uiStore.currentBuildingDetail.savedCnt += newSavedState ? 1 : -1;
@@ -154,7 +154,6 @@ const handleShare = async () => {
 
   try {
     // TODO: 모바일 환경 등 Web Share API를 지원하는 경우 (네이티브 공유창 띄우기)
-
     await navigator.clipboard.writeText(window.location.href);
     toastStore.showToast('링크가 클립보드에 복사되었습니다.');
   } catch (error) {
@@ -169,17 +168,21 @@ const handleShare = async () => {
   }
 };
 
-watch(sentinelRef, (newEl) => {
-  if (newEl) {
+watch([sentinelRef, scrollRef], ([newSentinel, newScroll]) => {
+  if (newSentinel && newScroll) {
     if (observer) observer.disconnect();
 
     observer = new IntersectionObserver(
       ([entry]) => {
         infoStuck.value = !entry.isIntersecting;
       },
-      { threshold: 0 },
+      {
+        root: newScroll,
+        threshold: 0,
+        rootMargin: '-1px 0px 0px 0px',
+      },
     );
-    observer.observe(newEl);
+    observer.observe(newSentinel);
   }
 });
 
