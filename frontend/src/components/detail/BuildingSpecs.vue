@@ -19,7 +19,7 @@
   </div>
 
   <!-- 본문 -->
-  <div v-if="buildingData" class="px-5 pb-40 pt-2">
+  <div v-if="buildingData" class="px-5 pb-50 pt-2">
     <!-- 토지 -->
     <section ref="sectionLand" id="section-land" class="scroll-mt-14 py-3">
       <div class="mb-2 flex items-center gap-2">
@@ -40,7 +40,7 @@
     <section ref="sectionBuilding" id="section-building" class="scroll-mt-14 py-3">
       <div class="mb-2 flex items-center gap-2">
         <Building :size="17" class="text-text-sub" />
-        <p class="text-[16px] text-text-main">건물 정보</p>
+        <p class="text-[16px] text-text-main">건축물 정보</p>
       </div>
       <InfoRow label="건물이름" :value="buildingData.bldNm || '-'" />
       <InfoRow label="주용도" :value="buildingData.mainPurpsNm" />
@@ -126,21 +126,39 @@ const sectionFloor = ref(null);
 
 let observer = null;
 
+const isClickScrolling = ref(false);
+let scrollTimeout = null;
+
+const visibleSections = ref({
+  land: false,
+  building: false,
+  floor: false,
+});
+
 onMounted(() => {
+  const scrollBox = sectionLand.value?.closest('.overflow-y-auto');
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const tabId = entry.target.id.replace('section-', '');
-          activeTab.value = tabId;
-        }
+        const tabId = entry.target.id.replace('section-', '');
+        visibleSections.value[tabId] = entry.isIntersecting;
       });
+
+      if (isClickScrolling.value) return;
+
+      const orderedSections = ['land', 'building', 'floor'];
+      for (const id of orderedSections) {
+        if (visibleSections.value[id]) {
+          activeTab.value = id;
+          break;
+        }
+      }
     },
     {
-      rootMargin: '-80px 0px -70% 0px',
+      root: scrollBox,
+      rootMargin: '-130px 0px -50% 0px',
     },
   );
-
   if (sectionLand.value) observer.observe(sectionLand.value);
   if (sectionBuilding.value) observer.observe(sectionBuilding.value);
   if (sectionFloor.value) observer.observe(sectionFloor.value);
@@ -148,6 +166,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (observer) observer.disconnect();
+  if (scrollTimeout) clearTimeout(scrollTimeout);
 });
 
 const scrollToSection = (tabId) => {
@@ -158,12 +177,20 @@ const scrollToSection = (tabId) => {
     const scrollContainer = target.closest('.overflow-y-auto');
 
     if (scrollContainer) {
-      const targetPosition = target.offsetTop - 55;
+      activeTab.value = tabId;
+      isClickScrolling.value = true;
+
+      const targetPosition = target.offsetTop - 125;
 
       scrollContainer.scrollTo({
         top: targetPosition,
         behavior: 'smooth',
       });
+
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isClickScrolling.value = false;
+      }, 800);
     }
   }
 };
