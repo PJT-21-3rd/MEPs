@@ -43,16 +43,21 @@
         <div class="px-4">
           <RoadViewImage :lat="roadViewLat" :lng="roadViewLng" />
         </div>
+        <div ref="sentinelRef" class="h-px" />
         <!-- 인포 -->
-        <div class="px-5 pt-4">
-          <BuildingInfoPannel :buildingData="buildingDetail" />
-        </div>
+        <BuildingInfoPannel
+          ref="infoPanelRef"
+          :buildingData="buildingDetail"
+          :is-stuck="infoStuck"
+        />
         <!-- 칩 -->
-        <div class="px-5">
-          <BuildingInfoChips :buildingData="buildingDetail" />
-        </div>
+        <BuildingInfoChips :buildingData="buildingDetail" />
         <!-- 탭 + 토지/건물 -->
-        <BuildingSpecs :buildingData="buildingDetail" />
+        <BuildingSpecs
+          :buildingData="buildingDetail"
+          :is-stuck="infoStuck"
+          :header-height="headerHeight"
+        />
       </div>
       <!-- 리포트 생성 버튼 -->
       <ReportCTAButton v-if="buildingDetail" @action="handleGenerateReport" />
@@ -61,7 +66,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToastStore } from '@/stores/toastStore';
 import { useUiStore } from '@/stores/uiStore.js';
@@ -77,6 +82,32 @@ import BuildingDetailSkeleton from './BuildingDetailSkeleton.vue';
 const router = useRouter();
 const uiStore = useUiStore();
 const toastStore = useToastStore();
+
+const sentinelRef = ref(null);
+const infoStuck = ref(false);
+const infoPanelRef = ref(null);
+const headerHeight = ref(0);
+let observer = null;
+let resizeObserver = null;
+
+// 건물명/주소 div height 측정
+const setupResizeObserver = () => {
+  if (resizeObserver) resizeObserver.disconnect();
+
+  const el = infoPanelRef.value?.$el;
+  if (!el) return;
+
+  resizeObserver = new ResizeObserver((entries) => {
+    for (let entry of entries) {
+      headerHeight.value = entry.target.getBoundingClientRect().height;
+    }
+  });
+  resizeObserver.observe(el);
+};
+
+watch(infoPanelRef, () => {
+  setupResizeObserver();
+});
 
 // 건물 상세 데이터
 const buildingDetail = computed(() => uiStore.currentBuildingDetail);
@@ -137,4 +168,23 @@ const handleShare = async () => {
     }
   }
 };
+
+watch(sentinelRef, (newEl) => {
+  if (newEl) {
+    if (observer) observer.disconnect();
+
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        infoStuck.value = !entry.isIntersecting;
+      },
+      { threshold: 0 },
+    );
+    observer.observe(newEl);
+  }
+});
+
+onUnmounted(() => {
+  if (observer) observer.disconnect();
+  if (resizeObserver) resizeObserver.disconnect();
+});
 </script>

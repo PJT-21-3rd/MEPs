@@ -1,6 +1,7 @@
 <template>
   <div
-    class="sticky top-0 z-10 flex gap-1 border-b border-surface-gray bg-white/95 px-5 backdrop-blur"
+    class="sticky z-10 flex gap-1 border-b border-surface-gray bg-white/95 px-5 backdrop-blur"
+    :style="{ top: `${headerHeight}px` }"
   >
     <button
       v-for="tab in TABS"
@@ -108,6 +109,8 @@ import FeedbackBanner from '../common/FeedbackBanner.vue';
 
 const props = defineProps({
   buildingData: { type: Object, default: () => null },
+  isStuck: { type: Boolean, default: false },
+  headerHeight: { type: Number, default: 0 },
 });
 
 const TABS = [
