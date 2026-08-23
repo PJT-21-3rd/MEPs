@@ -1,12 +1,12 @@
 <template>
   <div
-    class="relative inline-flex flex-col items-start transition-transform duration-200"
+    class="relative inline-flex flex-col items-start transition-all duration-200 ease-out origin-bottom cursor-pointer hover:scale-110 hover:-translate-y-1 hover:z-50"
     :class="theme.shadow"
   >
     <div
       v-if="isSaved || isRecent"
       class="absolute -top-2 -right-2 z-20 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white shadow-sm ring-1"
-      :class="isSaved ? 'ring-status-like' : 'ring-blue-300'"
+      :class="isSaved ? 'ring-status-like' : 'ring-button-primary'"
     >
       <Heart v-if="isSaved" :size="10" class="fill-status-like text-status-like" />
       <Clock v-else-if="isRecent" :size="10" class="text-button-primary" />
