@@ -83,6 +83,8 @@
                b.bld_nm      AS bldNm,
                b.road_addr   AS roadAddr,
                b.jibun_addr  AS jibunAddr,
+               ST_Latitude(b.center)  AS lat,
+               ST_Longitude(b.center) AS lng,
                r.total_score AS safetyScore,
                b.main_purps  AS mainPurpsNm,
                b.grnd_flr    AS grndFlr,
