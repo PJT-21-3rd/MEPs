@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 배포(Docker) 전용 설정. Dockerfile이 /usr/local/tomcat/conf/로 복사하고
+     -Dlog4j2.configurationFile로 지정한다. 로컬은 src/main/resources/log4j2.xml을 쓴다.
+     로거를 추가하면 두 파일 모두에 반영해야 한다. -->
+<Configuration status="WARN">
+    <Appenders>
+        <Console
+                name="Console"
+                target="SYSTEM_OUT">
+            <PatternLayout
+                    charset="UTF-8"
+                    pattern="%d{HH:mm:ss.SSS} %-5level [%logger{36}] %msg%n"
+            />
+        </Console>
+
+        <RollingFile
+                name="File"
+                fileName="/app/logs/meps.log"
+                filePattern="/app/logs/meps-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout
+                    charset="UTF-8"
+                    pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger{36}] %msg%n"
+            />
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" />
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="/app/logs">
+                    <IfFileName glob="meps-*.log.gz" />
+                    <IfLastModified age="14d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Logger
+                name="org.meps"
+                level="${env:APP_LOG_LEVEL:-info}"
+                additivity="false">
+
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="File" />
+        </Logger>
+
+        <Logger
+                name="org.springframework"
+                level="info"
+                additivity="false">
+
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="File" />
+
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="File" />
+        </Root>
+    </Loggers>
+</Configuration>

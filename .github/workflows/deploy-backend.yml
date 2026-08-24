@@ -50,5 +50,6 @@ jobs:
               --restart unless-stopped \
               -p 8080:8080 \
               -v /home/ubuntu/deploy/config:/config:ro \
+              -v /home/ubuntu/deploy/logs:/app/logs \
               ${{ env.IMAGE }}:latest
             docker image prune -f
