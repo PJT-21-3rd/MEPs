@@ -12,6 +12,7 @@ import { ref, onMounted, watch, createVNode, render } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapStore } from '@/stores/mapStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useToastStore } from '@/stores/toastStore';
 import { fetchHjdBriefing, fetchSggBriefing } from '@/api/aiBrief';
 import { fetchNearbyBuildings } from '@/api/building';
@@ -22,6 +23,7 @@ const router = useRouter();
 const mapContainer = ref(null);
 const mapStore = useMapStore();
 const uiStore = useUiStore();
+const authStore = useAuthStore();
 const toastStore = useToastStore();
 
 let timeOut = null; // 재검색 타이머
@@ -101,14 +103,36 @@ const drawMarkers = (buildings) => {
   currentMarkers.forEach((marker) => marker.setMap(null));
   currentMarkers = [];
 
-  buildings.forEach((building) => {
+  const allBuildingsMap = new Map();
+
+  buildings.forEach((b) => allBuildingsMap.set(b.buildingId, b)); // api 응답 주변 매물 추가
+  if (uiStore.recentBuildings) {
+    uiStore.recentBuildings.forEach((b) => allBuildingsMap.set(b.buildingId, b));
+  } // 최근 본 매물 추가
+  if (uiStore.savedBuildings) {
+    uiStore.savedBuildings.forEach((b) => allBuildingsMap.set(b.buildingId, b));
+  } // 찜한 매물
+
+  const uniqueBuildings = Array.from(allBuildingsMap.values()); // 중복제거
+
+  uniqueBuildings.forEach((building) => {
     const purposeText = building.mainPurpsNm || '상가';
     const areaText = building.archArea ? `${Math.round(building.archArea)}m²` : '-';
     // const isSelected = uiStore.selectedBuildingId === building.buildingId; // 현재 선택된 건물인가
+
+    // 찜한 매물 및 최근 본 매물 여부 판별
+    const isSavedBuilding =
+      building.saved ===
+      (true || uiStore.savedBuildings?.some((b) => b.buildingId === building.buildingId) || false);
+    const isRecentBuilding =
+      uiStore.recentBuildings?.some((b) => b.buildingId === building.buildingId) || false;
+
     const container = document.createElement('div');
     const vnode = createVNode(BuildingMarker, {
       purpose: purposeText,
       area: areaText,
+      isSaved: isSavedBuilding,
+      isRecent: isRecentBuilding,
       // isSelected: isSelected
     });
 
@@ -122,8 +146,13 @@ const drawMarkers = (buildings) => {
         content: container.firstElementChild,
         anchor: new window.naver.maps.Point(0, 42),
       },
-      zIndex: uiStore.selectedBuildingId === building.buildingId ? 100 : 10,
+      zIndex:
+        uiStore.selectedBuildingId ===
+        (building.buildingId ? 100 : isSavedBuilding ? 50 : isRecentBuilding ? 40 : 10),
     });
+
+    marker.buildingId = building.buildingId;
+    marker.setVisible(String(uiStore.selectedBuildingId) !== building.buildingId);
 
     window.naver.maps.Event.addListener(marker, 'click', () => {
       uiStore.openBuildingDetail(building.buildingId);
@@ -152,18 +181,23 @@ const updateHjdBriefing = async (lat, lng, zoom) => {
           const hjdCode8Digits = originalCode.substring(0, 8);
           const sggCode = originalCode.substring(0, 5);
 
-          if (zoom < 15) {
-            const briefingData = await fetchSggBriefing(sggCode);
-            if (briefingData) {
-              uiStore.setBriefingData(briefingData, 'gu');
-              console.log(`[구 단위] ${briefingData.sggName} 브리핑 업데이트`);
+          try {
+            if (zoom < 15) {
+              const briefingData = await fetchSggBriefing(sggCode);
+              if (briefingData) {
+                uiStore.setBriefingData(briefingData, 'gu');
+                //console.log(`[구 단위] ${briefingData.sggName} 브리핑 업데이트`);
+              }
+            } else {
+              const briefingData = await fetchHjdBriefing(hjdCode8Digits);
+              if (briefingData) {
+                uiStore.setBriefingData(briefingData, 'dong');
+                //console.log(`[동 단위] ${briefingData.hjdName} 브리핑 업데이트`);
+              }
             }
-          } else {
-            const briefingData = await fetchHjdBriefing(hjdCode8Digits);
-            if (briefingData) {
-              uiStore.setBriefingData(briefingData, 'dong');
-              console.log(`[동 단위] ${briefingData.hjdName} 브리핑 업데이트`);
-            }
+          } catch (apiError) {
+            console.log('해당 지역의 브리핑 데이터가 없습니다 (404)');
+            uiStore.setBriefingData(null, 'dong');
           }
         }
       },
@@ -286,6 +320,32 @@ watch(
   { deep: true },
 );
 
+// 찜/최근 본 매물 리스트 변경
+watch(
+  () => [uiStore.savedBuildings, uiStore.recentBuildings],
+  () => {
+    if (!uiStore.isZoomRequired) {
+      drawMarkers(uiStore.currentBuildings || []);
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => uiStore.selectedBuildingId,
+  (newId) => {
+    const selectedIdStr = newId ? String(newId) : null;
+
+    currentMarkers.forEach((marker) => {
+      if (marker.buildingId === selectedIdStr) {
+        marker.setVisible(false); // 선택된 건물 마커 숨기기
+      } else {
+        marker.setVisible(true); // 나머지 마커 표시
+      }
+    });
+  },
+);
+
 // 선택된 건물 변경시 (추후)
 // watch(
 //   () => uiStore.selectedBuildingId,
@@ -301,6 +361,10 @@ onMounted(() => {
   if (!window.naver || !window.naver.maps) {
     console.error('네이버 지도 API를 불러올 수 없습니다.');
     return;
+  }
+
+  if (authStore.isLoggedIn && typeof uiStore.loadSavedBuildings === 'function') {
+    uiStore.loadSavedBuildings();
   }
 
   const queryLat = parseFloat(route.query.lat);

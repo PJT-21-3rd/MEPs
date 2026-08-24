@@ -138,7 +138,7 @@ function goHome() {
         </div>
         <span class="font-bold">MEPS 이용약관</span>
       </div>
-      <p class="text-[13px] text-text-sub mb-5">
+      <p class="text-[13px] text-text-sub mb-3 mt-2">
         안전 진단 점수 및 근거 설명은 회원가입 후 확인하실 수 있습니다.
       </p>
 
@@ -201,7 +201,7 @@ function goHome() {
         </div>
         <span class="font-bold">MEPS 회원가입</span>
       </div>
-      <p class="text-[13px] text-text-sub mb-5">
+      <p class="text-[13px] text-text-sub mb-3 mt-2">
         안전 진단 점수 및 근거 설명은 회원가입 후 확인하실 수 있습니다.
       </p>
 

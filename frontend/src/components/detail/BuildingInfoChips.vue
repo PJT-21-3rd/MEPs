@@ -13,7 +13,7 @@ const totAreaStr = computed(() => formatArea(props.buildingData?.totArea));
 </script>
 
 <template>
-  <div class="mt-4">
+  <div class="px-5 mt-4">
     <div class="flex gap-2">
       <InfoChip label="대지면적" :value="platAreaStr" />
       <InfoChip label="연면적" :value="totAreaStr" />
