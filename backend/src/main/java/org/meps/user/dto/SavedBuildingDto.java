@@ -12,6 +12,8 @@ public class SavedBuildingDto {
     private String bldNm;
     private String roadAddr;
     private String jibunAddr;
+    private Double lat;
+    private Double lng;
     private Integer safetyScore;
     private String safetyGrade;
     private String mainPurpsNm;
