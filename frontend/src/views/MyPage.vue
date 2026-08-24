@@ -32,6 +32,14 @@ function toggleSelect(buildingId) {
   }
 }
 
+function handleDiagnosed({ buildingId, safetyScore, safetyGrade }) {
+  const building = buildings.value.find((b) => b.buildingId === buildingId);
+  if (building) {
+    building.safetyScore = safetyScore;
+    building.safetyGrade = safetyGrade;
+  }
+}
+
 async function removeFavorite(id) {
   try {
     await removeSaved(id);
@@ -54,6 +62,7 @@ async function removeFavorite(id) {
       :selectedIds="selectedIds"
       @toggle="toggleSelect"
       @unlike="removeFavorite"
+      @diagnosed="handleDiagnosed"
     />
 
     <ComparePanel :selectedIds="selectedIds" />

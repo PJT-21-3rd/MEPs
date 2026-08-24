@@ -1,24 +1,26 @@
 <script setup>
-import { computed } from 'vue';
-import { Heart } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import { Heart, Loader2 } from '@lucide/vue';
 import { GRADE_META, getGradeByStatusCode } from '@/constants/reportConstants';
-import { useRouter } from 'vue-router';
+import { fetchReportData } from '@/api/reportApi';
+import { useToastStore } from '@/stores/toastStore';
 import { formatShortAddress } from '@/utils/formatters';
-
 const props = defineProps({
   building: Object,
   order: Number,
 });
 
-const emit = defineEmits(['toggle', 'unlike']);
+const emit = defineEmits(['toggle', 'unlike', 'diagnosed']);
 
-const router = useRouter();
+const toastStore = useToastStore();
+const isDiagnosing = ref(false);
 
 const isDiagnosed = computed(() => props.building.safetyScore !== null);
 
-function gradeMeta(safetyGrade) {
-  if (!safetyGrade) return null;
-  return GRADE_META[getGradeByStatusCode(safetyGrade)];
+function gradeMeta(grade) {
+  if (!grade) return null;
+  const key = GRADE_META[grade] ? grade : getGradeByStatusCode(grade);
+  return GRADE_META[key];
 }
 
 function handleClick() {
@@ -26,8 +28,21 @@ function handleClick() {
   emit('toggle');
 }
 
-function goToDetail() {
-  router.push({ path: '/', query: { buildingId: props.building.buildingId } });
+async function handleDiagnose() {
+  isDiagnosing.value = true;
+  try {
+    const report = await fetchReportData(props.building.buildingId);
+    emit('diagnosed', {
+      buildingId: props.building.buildingId,
+      safetyScore: report.score,
+      safetyGrade: report.grade,
+    });
+  } catch (error) {
+    console.error('진단 조회 실패:', error);
+    toastStore.showToast('진단에 실패했어요. 잠시 후 다시 시도해주세요.');
+  } finally {
+    isDiagnosing.value = false;
+  }
 }
 </script>
 
@@ -82,9 +97,13 @@ function goToDetail() {
       >
         {{ building.safetyScore }}
       </span>
+      <span v-else-if="isDiagnosing" class="flex items-center gap-1 text-[13px] text-text-sub">
+        <Loader2 :size="14" class="animate-spin" />
+        진단 중
+      </span>
       <button
         v-else
-        @click.stop="goToDetail"
+        @click.stop="handleDiagnose"
         class="shrink-0 text-[14px] px-[7px] py-1 rounded bg-surface-gray text-primary cursor-pointer hover:bg-surface-blue transition-colors"
       >
         진단하기

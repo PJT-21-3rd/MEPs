@@ -10,7 +10,7 @@ const props = defineProps({
   selectedIds: Array,
 });
 
-const emit = defineEmits(['toggle', 'unlike']);
+const emit = defineEmits(['toggle', 'unlike', 'diagnosed']);
 
 const guideText = computed(() => {
   const count = props.selectedIds.length;
@@ -75,6 +75,7 @@ function goBack() {
         :order="selectOrder(building.buildingId)"
         @toggle="emit('toggle', building.buildingId)"
         @unlike="emit('unlike', $event)"
+        @diagnosed="emit('diagnosed', $event)"
       />
     </ul>
     <!-- 찜 목록 없으면 (빈 상태) -->
