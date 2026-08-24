@@ -96,6 +96,7 @@
                  JOIN buildings b ON b.bd_mgt_sn = s.bd_mgt_sn
                  LEFT JOIN building_safety_report r ON r.bd_mgt_sn = s.bd_mgt_sn
         WHERE s.user_id = #{userId}
+          AND b.biz_eligible = TRUE
         ORDER BY s.created_at DESC
     </select>
 
