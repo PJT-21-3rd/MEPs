@@ -155,8 +155,11 @@ const buildingRows = [
           </table>
 
           <!-- floors 없으면 정보 없음 -->
-          <div v-else class="py-8 text-center text-[13px] text-text-sub">
-            등록된 층별 현황이 없어요
+          <div
+            v-if="!building.building.floors || building.building.floors.length === 0"
+            class="py-6 text-center text-[12px] text-text-sub"
+          >
+            층별 정보가 없습니다
           </div>
         </div>
       </div>
