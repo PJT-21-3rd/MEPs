@@ -14,8 +14,8 @@ const hasBuildingName = computed(() => {
 <template>
   <div
     v-if="buildingData"
-    class="px-5 sticky top-0 z-20 bg-white transition-all duration-200"
-    :class="isStuck ? 'py-2' : 'pt-4'"
+    class="px-5 sticky top-0 z-20 bg-transparent transition-all duration-200"
+    :class="isStuck ? 'bg-white py-2' : 'pt-4'"
   >
     <h2 v-if="hasBuildingName" class="mt-1 text-[20px] leading-tight tracking-tight text-text-main">
       {{ buildingData.bldNm }}
