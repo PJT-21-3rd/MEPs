@@ -14,6 +14,7 @@ public class SavedBuildingDto {
     private String jibunAddr;
     private Double lat;
     private Double lng;
+    private Double archArea;
     private Integer safetyScore;
     private String safetyGrade;
     private String mainPurpsNm;
