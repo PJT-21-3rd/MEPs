@@ -20,7 +20,7 @@ function goToDetail(buildingId) {
       v-for="item in buildings"
       :key="item.building.buildingId"
       @click="goToDetail(item.building.buildingId)"
-      class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm cursor-pointer"
+      class="flex-1 min-w-0 bg-white rounded-2xl border border-surface-gray overflow-hidden shadow-sm cursor-pointer hover:bg-surface-blue hover: transition-colors"
     >
       <RoadViewImage
         :lat="item.building.center?.coordinates?.[1]"
