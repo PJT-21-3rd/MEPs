@@ -14,6 +14,7 @@ public class BuildingFloodMapLoader {
             JOIN buildings b
               ON b.bjd_cd LIKE CONCAT(f.sgg_cd, '%')
              AND ST_Intersects(f.geom, b.footprint)
+            WHERE b.biz_eligible = TRUE
             """;
 
     private static final String INSERT_SQL = """
@@ -23,6 +24,7 @@ public class BuildingFloodMapLoader {
             JOIN buildings b
               ON b.bjd_cd LIKE CONCAT(f.sgg_cd, '%')
              AND ST_Intersects(f.geom, b.footprint)
+            WHERE b.biz_eligible = TRUE
             """;
 
     public static void main(String[] args) throws Exception {

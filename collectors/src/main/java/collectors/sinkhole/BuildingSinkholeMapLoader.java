@@ -35,6 +35,7 @@ public class BuildingSinkholeMapLoader {
                   ON MBRContains(ST_GeomFromText(?, 4326), b.center)
                 WHERE s.sago_no = ?
                   AND ST_Distance_Sphere(b.center, s.geom) <= ?
+                  AND b.biz_eligible = TRUE
                 """;
 
         try (Connection conn = Db.connect()) {
