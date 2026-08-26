@@ -23,7 +23,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/maps-api/, ''),
       },
       '/api': {
-        target: 'http://13.209.21.145:8080',
+        target: 'https://api.meps-api.store',
         changeOrigin: true,
       },
     },
