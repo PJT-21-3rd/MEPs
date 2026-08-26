@@ -15,7 +15,7 @@ function handleSignup() {
 
 <template>
   <!-- 배경 어둡게 (오버레이) -->
-  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-1000">
     <!-- 모달 카드 -->
     <div class="bg-white rounded-2xl p-6 w-[360px]" @click.stop>
       <!-- 헤더 -->
@@ -28,9 +28,9 @@ function handleSignup() {
         </div>
         <button @click="emit('close')"><X :size="20" class="text-text-sub" /></button>
       </div>
-      <!-- 안전 진단 점수 및 근거 설명은 로그인 후 확인하실 수 있습니다. -->
-      <p class="text-[13px] text-text-sub mb-5">
-        안전 진단 점수 및 근거 설명은 로그인 후 확인하실 수 있습니다.
+
+      <p class="text-[13px] text-text-sub mb-3 mt-2">
+        안전 진단 점수 및 근거 설명은 로그인 후 확인하실 수 있어요
       </p>
       <!-- 로그인 폼 (공통) -->
       <LoginForm @signup="handleSignup" @success="emit('close')" />

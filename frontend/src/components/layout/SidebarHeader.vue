@@ -72,9 +72,7 @@ useClickOutside(profileRef, () => {
 
 const isMyPage = computed(() => route.path === '/mypage');
 const handleHomeClick = () => {
-  if (route.path !== '/') {
-    router.push('/');
-  }
+  router.push('/');
 };
 
 const handleMyPageClick = () => {

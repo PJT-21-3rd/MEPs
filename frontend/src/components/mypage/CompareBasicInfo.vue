@@ -26,7 +26,7 @@ function goToDetail(buildingId) {
         :lat="item.building.center?.coordinates?.[1]"
         :lng="item.building.center?.coordinates?.[0]"
       />
-      <div class="p-4">
+      <div class="pb-3">
         <BuildingInfoPannel :buildingData="item.building" />
       </div>
     </div>

@@ -30,7 +30,7 @@ defineEmits(['close', 'submit']);
 <template>
   <Teleport to="body">
     <div
-      class="fixed inset-0 z-40 flex items-center justify-center"
+      class="fixed inset-0 z-1000 flex items-center justify-center"
       style="background-color: rgba(245, 245, 245, 0.95)"
       @click.self="$emit('close')"
     >

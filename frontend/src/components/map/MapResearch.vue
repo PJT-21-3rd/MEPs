@@ -10,7 +10,7 @@
     <button
       v-if="mapStore.isMapMoved"
       @click="handleReSearch"
-      class="absolute z-20 overflow-hidden bottom-17 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 rounded-xl bg-primary px-5 py-3 shadow-[0_4px_16px_rgba(0,0,0,0.15)]"
+      class="absolute z-10 overflow-hidden bottom-17 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 rounded-xl bg-primary px-5 py-3 shadow-[0_4px_16px_rgba(0,0,0,0.15)]"
     >
       <RotateCw :size="18" class="text-white" />
       <span class="text-[15px] font-semibold text-white">현 지도에서 검색</span>

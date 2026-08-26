@@ -11,6 +11,7 @@ const props = defineProps({
   initialSaved: { type: Boolean, default: false },
   hoverClass: { type: String, default: 'hover:bg-surface-base' },
 });
+const emit = defineEmits(['change']);
 
 const authStore = useAuthStore();
 const isSaved = ref(props.initialSaved);
@@ -38,12 +39,14 @@ async function handleClick() {
       await addSaved(props.buildingId);
       isSaved.value = true;
     }
+    emit('change', isSaved.value);
   } catch (error) {
     const status = error.response?.status;
     if (status === 401) {
       toastStore.showToast('로그인이 필요합니다.');
     } else if (status === 409) {
       isSaved.value = true;
+      emit('change', isSaved.value);
     } else if (status === 404) {
       console.error('존재하지 않는 건물이거나 처리할 수 없습니다:', error);
     } else {
