@@ -1,0 +1,512 @@
+package org.meps.building.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.meps.config.RootConfig;
+import org.meps.config.ServletConfig;
+import org.meps.user.dto.UserDto;
+import org.meps.user.jwt.JwtProvider;
+import org.meps.user.mapper.UserMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.ContextHierarchy;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(SpringExtension.class)
+@WebAppConfiguration
+@ContextHierarchy({
+        @ContextConfiguration(classes = RootConfig.class),
+        @ContextConfiguration(classes = ServletConfig.class)
+})
+@Transactional
+class BuildingControllerIntegrationTest {
+
+    @Autowired
+    private WebApplicationContext context;
+    @Autowired
+    private JwtProvider jwtProvider;
+    @Autowired
+    private UserMapper userMapper;
+
+    private MockMvc mockMvc;
+    private String token;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+
+        UserDto user = UserDto.builder()
+                .email("test-" + System.nanoTime() + "@meps.local")
+                .password("encoded")
+                .build();
+        userMapper.insertUser(user);
+        token = jwtProvider.createToken(user.getUserId());
+    }
+
+    private String bearer() {
+        return "Bearer " + token;
+    }
+
+    @Test
+    void 정상_요청은_200을_반환한다() throws Exception {
+        // 광진구 자양동·구의동 일대 (데이터 존재 영역)
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("건물 목록 응답에 거리·연면적 필드가 포함되지 않는다")
+    void nearby_response_does_not_contain_distance_and_area_fields() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertFalse(body.contains("\"distanceM\""));
+        assertFalse(body.contains("\"totArea\""));
+    }
+
+    @Test
+    @DisplayName("건물 목록 응답에 건축면적 필드가 포함된다")
+    void nearby_response_contains_arch_area_field() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"archArea\""));
+    }
+
+    @Test
+    @DisplayName("sort 파라미터로 찜많은순을 지정해도 200을 반환한다")
+    void nearby_with_popular_sort_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "POPULAR"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("sort 파라미터로 최신순을 지정해도 200을 반환한다")
+    void nearby_with_latest_sort_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "LATEST"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("sort 파라미터로 면적순을 지정해도 200을 반환한다")
+    void nearby_with_area_sort_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "AREA"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("정의되지 않은 sort 값은 400을 반환한다")
+    void nearby_with_invalid_sort_returns_bad_request() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17")
+                        .param("sort", "WRONG"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("줌이 부족해도 200을 반환한다")
+    void insufficient_zoom_still_returns_ok() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "13"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 좌표_범위_오류는_400을_반환한다() throws Exception {
+        // sw와 ne를 뒤바꾼 요청
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5450").param("swLng", "127.1000")
+                        .param("neLat", "37.5250").param("neLng", "127.0550")
+                        .param("zoom", "17"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 필수_파라미터가_누락되면_400을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "37.5250"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 파라미터_타입이_잘못되면_400을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", "abc").param("swLng", "127.0550")
+                        .param("neLat", "37.5450").param("neLng", "127.1000")
+                        .param("zoom", "17"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 상세조회_정상_요청은_200을_반환한다() throws Exception {
+        // 동인빌딩 (광진구 중곡동)
+        mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180054000039"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 상세조회_도로명주소가_없는_건물도_200을_반환한다() throws Exception {
+        // 아차산관리사무소 — 건축물대장에 도로명주소 미등재 (결측 필드는 null)
+        mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 상세조회_buildingId_형식이_잘못되면_400을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/{buildingId}", "abc"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 상세조회_존재하지_않는_buildingId는_404를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/{buildingId}", "9999999999999999999999999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 상세조회_응답에_건물폴리곤이_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"footprint\""));
+        assertTrue(body.contains("MultiPolygon"));
+    }
+
+    @Test
+    void 상세조회_응답에_필지폴리곤이_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180088000054"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"parcelGeom\""));
+    }
+
+    @Test
+    void 상세조회_응답에_층별현황이_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1168010100106010003000001"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"floors\""));
+        assertTrue(body.contains("flrNoNm"));
+    }
+
+    // ---- 좌표 기반 상세 조회 ----
+
+    @Test
+    void 좌표조회_건물이_있는_좌표는_200을_반환한다() throws Exception {
+        // 아차산관리사무소 (광진구 중곡동)
+        mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 좌표조회_건물이_없는_좌표는_404를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.53")
+                        .param("lng", "127.07"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 좌표조회_파라미터가_누락되면_400을_반환한다() throws Exception {
+        mockMvc.perform(get("/api/buildings/poinr")
+                        .param("lat", "37.562335"))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    void 상세조회_응답에_토지정보가_포함된다() throws Exception {
+        // 이수빌딩 (강남구 역삼동)
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1168010100106010003000001"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"land\""));
+        assertTrue(body.contains("lndcgrCodeNm"));
+        assertTrue(body.contains("pblntfPclnd"));
+    }
+
+    @Test
+    void 좌표조회_응답에도_토지정보가_포함된다() throws Exception {
+        mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 상세조회_응답에_면적정보가_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510300105990008024604"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"platArea\""));
+        assertTrue(body.contains("\"totArea\""));
+    }
+
+    @Test
+    void 좌표조회_응답에도_면적정보가_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.5329003")
+                        .param("lng", "127.0918808"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"platArea\""));
+        assertTrue(body.contains("\"totArea\""));
+    }
+
+    @Test
+    void 상세조회_응답에_건축물정보가_포함된다() throws Exception {
+        // 삼환엘리트빌 (광진구 중곡동)
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180078020441"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertTrue(body.contains("\"detail\""));
+        assertTrue(body.contains("strctCdNm"));
+        assertTrue(body.contains("useAprDay"));
+    }
+
+    @Test
+    void 좌표조회_응답에_건축물정보가_포함된다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.5639438")
+                        .param("lng", "127.08737850000001"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"detail\""));
+        assertTrue(body.contains("strctCdNm"));
+        assertTrue(body.contains("useAprDay"));
+    }
+
+    @Test
+    void 좌표조회_응답이_건물관리번호_조회와_동일하다() throws Exception {
+        String byId = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100180078020441"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String byPoint = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.5639438")
+                        .param("lng", "127.08737850000001"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertEquals(byId, byPoint);
+    }
+
+    // ---- 찜 여부(saved) ----
+
+    @Test
+    void 비로그인_상세조회는_saved가_false다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+    }
+
+    @Test
+    void 찜하지_않은_건물은_saved가_false다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+    }
+
+    @Test
+    void 찜한_건물은_saved가_true다() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{buildingId}", "1121510100100030059005620")
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":true"));
+    }
+
+    @Test
+    void 비로그인_좌표조회는_saved가_false다() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+    }
+
+    @Test
+    void 찜한_건물은_좌표조회에서도_saved가_true다() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{buildingId}", "1121510100100030059005620")
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":true"));
+    }
+
+    // ---- 매물리스트 찜 여부(saved) ----
+
+    // 찜 테스트 건물(1121510100100030059005620) 주변 좁은 영역 — 리스트 20개안에 무조건 포함되도록 설정
+    private static final String SAVED_SW_LAT = "37.5620";
+    private static final String SAVED_SW_LNG = "127.0960";
+    private static final String SAVED_NE_LAT = "37.5627";
+    private static final String SAVED_NE_LNG = "127.0967";
+
+    @Test
+    @DisplayName("비로그인 매물리스트는 saved가 모두 false다")
+    void nearby_savedIsAllFalseWithoutLogin() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", SAVED_SW_LAT).param("swLng", SAVED_SW_LNG)
+                        .param("neLat", SAVED_NE_LAT).param("neLng", SAVED_NE_LNG)
+                        .param("zoom", "17"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+        assertFalse(body.contains("\"saved\":true"));
+    }
+
+    @Test
+    @DisplayName("로그인해도 찜하지 않은 건물은 매물리스트에서 saved가 false다")
+    void nearby_savedIsFalseForUnsavedBuildingEvenWhenLoggedIn() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", SAVED_SW_LAT).param("swLng", SAVED_SW_LNG)
+                        .param("neLat", SAVED_NE_LAT).param("neLng", SAVED_NE_LNG)
+                        .param("zoom", "17")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"saved\":false"));
+        assertFalse(body.contains("\"saved\":true"));
+    }
+
+    @Test
+    @DisplayName("찜한 건물은 매물리스트에서 saved가 true다")
+    void nearby_savedIsTrueForSavedBuilding() throws Exception {
+        mockMvc.perform(post("/api/member/saved/{buildingId}", "1121510100100030059005620")
+                .header("Authorization", bearer()));
+
+        String body = mockMvc.perform(get("/api/buildings/nearby")
+                        .param("swLat", SAVED_SW_LAT).param("swLng", SAVED_SW_LNG)
+                        .param("neLat", SAVED_NE_LAT).param("neLng", SAVED_NE_LNG)
+                        .param("zoom", "17")
+                        .header("Authorization", bearer()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 찜한 건물의 JSON 객체에서 saved가 true인지 확인
+        JsonNode buildings = objectMapper.readTree(body).get("buildings");
+        JsonNode savedBuilding = null;
+        for (JsonNode building : buildings) {
+            if (building.get("buildingId").asText().equals("1121510100100030059005620")) {
+                savedBuilding = building;
+                break;
+            }
+        }
+        assertNotNull(savedBuilding);
+        assertTrue(savedBuilding.get("saved").asBoolean());
+    }
+
+    @Test
+    @DisplayName("상세 조회 응답에 찜 개수가 포함된다")
+    void detail_containsSavedCnt() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/{buildingId}", "1121510100100030059005620"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"savedCnt\""));
+    }
+
+    @Test
+    @DisplayName("좌표 조회 응답에 찜 개수가 포함된다")
+    void detailAt_containsSavedCnt() throws Exception {
+        String body = mockMvc.perform(get("/api/buildings/point")
+                        .param("lat", "37.562335")
+                        .param("lng", "127.0963272"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(body.contains("\"savedCnt\""));
+    }
+}

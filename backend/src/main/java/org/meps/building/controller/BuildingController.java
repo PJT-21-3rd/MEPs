@@ -1,0 +1,78 @@
+package org.meps.building.controller;
+
+import lombok.RequiredArgsConstructor;
+import org.meps.building.dto.BuildingCompareResponseDto;
+import org.meps.building.dto.BuildingDetailDto;
+import org.meps.building.dto.BuildingSearchResponseDto;
+import org.meps.building.dto.NearbyBuildingsResponseDto;
+import org.meps.building.dto.SortType;
+import org.meps.building.service.BuildingCompareService;
+import org.meps.building.service.BuildingSearchService;
+import org.meps.building.service.BuildingService;
+import org.meps.common.auth.LoginRequiredException;
+import org.meps.common.auth.LoginUser;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/buildings")
+@RequiredArgsConstructor
+public class BuildingController {
+
+    private final BuildingService buildingService;
+    private final BuildingSearchService buildingSearchService;
+    private final BuildingCompareService buildingCompareService;
+
+    /**
+     * 위치 기반 매물 리스트 조회
+     */
+    @GetMapping("/nearby")
+    public NearbyBuildingsResponseDto getNearby(
+            @RequestParam double swLat,
+            @RequestParam double swLng,
+            @RequestParam double neLat,
+            @RequestParam double neLng,
+            @RequestParam int zoom,
+            @RequestParam(name = "sort", defaultValue = "LATEST") SortType sortType,
+            @LoginUser Integer userId) {
+
+        return buildingService.getNearbyBuildings(swLat, swLng, neLat, neLng, zoom, sortType, userId);
+    }
+
+    /**
+     * 건물 기본 상세 조회
+     */
+    @GetMapping("/{buildingId}")
+    public BuildingDetailDto detail(@PathVariable String buildingId,
+                                    @LoginUser Integer userId) {
+        return buildingService.getBuildingDetail(buildingId, userId);
+    }
+
+    /**
+     * 통합 검색 (검색어 위치 해석) - 도로명주소/지번/건물명/지역명
+     */
+    @GetMapping("/search")
+    public BuildingSearchResponseDto search(@RequestParam String keyword) {
+        return buildingSearchService.search(keyword);
+    }
+
+    @GetMapping("/point")
+    public BuildingDetailDto detailAt(@RequestParam double lat,
+                                      @RequestParam double lng,
+                                      @LoginUser Integer userId) {
+        return buildingService.getBuildingDetailAt(lat, lng, userId);
+    }
+
+    /**
+     * 찜한 매물 비교
+     */
+    @GetMapping("/compare")
+    public BuildingCompareResponseDto compare(@RequestParam("buildingIds") List<String> buildingIds,
+                                              @LoginUser Integer userId) {
+        if (userId == null) {
+            throw new LoginRequiredException("로그인 필수");
+        }
+        return buildingCompareService.compare(buildingIds, userId);
+    }
+}

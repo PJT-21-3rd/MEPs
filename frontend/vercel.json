@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.meps-api.store/api/:path*"
+    },
+    {
+      "source": "/api-hub/:path*",
+      "destination": "https://naverapihub.apigw.ntruss.com/:path*"
+    },
+    {
+      "source": "/maps-api/:path*",
+      "destination": "https://maps.apigw.ntruss.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

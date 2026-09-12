@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.safetyreport.mapper.SafetyReportMapper">
+
+    <!-- 저장 행 조회. 기본/상세 리포트가 재사용 판정 로직을 공유하므로 조회 쿼리를 하나로 유지 -->
+    <select id="findByBdMgtSn" resultType="org.meps.safetyreport.dto.SafetyReportRowDto">
+        SELECT bd_mgt_sn,
+               ai_model_nm,
+               total_score,
+               flood_score,
+               sink_score,
+               fire_score,
+               struct_score,
+               total_brief,
+               flood_brief,
+               sink_brief,
+               fire_brief,
+               struct_brief,
+               total_report,
+               flood_report,
+               sink_report,
+               fire_report,
+               struct_report,
+               brief_source,
+               generated_at
+        FROM building_safety_report
+        WHERE bd_mgt_sn = #{bdMgtSn}
+    </select>
+
+    <!-- 점수 변경 시에만 호출: 갱신이면 기존 브리핑·상세 해석을 함께 무효화(NULL) -->
+    <insert id="upsertScores">
+        INSERT INTO building_safety_report
+            (bd_mgt_sn, ai_model_nm, total_score, flood_score, sink_score, fire_score, struct_score)
+        VALUES
+            (#{bdMgtSn}, #{aiModelNm}, #{totalScore}, #{floodScore}, #{sinkScore}, #{fireScore}, #{structScore})
+        ON DUPLICATE KEY UPDATE
+            ai_model_nm  = VALUES(ai_model_nm),
+            total_score  = VALUES(total_score),
+            flood_score  = VALUES(flood_score),
+            sink_score   = VALUES(sink_score),
+            fire_score   = VALUES(fire_score),
+            struct_score = VALUES(struct_score),
+            total_brief  = NULL,
+            flood_brief  = NULL,
+            sink_brief   = NULL,
+            fire_brief   = NULL,
+            struct_brief = NULL,
+            total_report  = NULL,
+            flood_report  = NULL,
+            sink_report   = NULL,
+            fire_report   = NULL,
+            struct_report = NULL,
+            brief_status  = NULL,
+            brief_source  = NULL,
+            generation_started_at = NULL
+    </insert>
+
+    <!--
+        source: 'LLM'(정상 생성) 또는 'FALLBACK'(등급별 고정 템플릿) — 둘 다 brief_status는 DONE으로 끝난다.
+        재시도가 필요한지는 brief_source/generated_at을 보는 tryClaimBriefGeneration의 몫이라 동시성 로직과는 분리된다
+    -->
+    <update id="updateBriefs">
+        UPDATE building_safety_report
+        SET ai_model_nm  = #{aiModelNm},
+            total_brief  = #{briefs.totalBrief},
+            flood_brief  = #{briefs.floodBrief},
+            sink_brief   = #{briefs.sinkBrief},
+            fire_brief   = #{briefs.fireBrief},
+            struct_brief = #{briefs.structBrief},
+            brief_status = 'DONE',
+            brief_source = #{source},
+            generation_started_at = NULL
+        WHERE bd_mgt_sn = #{bdMgtSn}
+    </update>
+
+    <!--
+        브리핑 생성 권한 클레임: InnoDB 행 락 위에서 affected rows = 1을 받은 요청만 리더.
+        GENERATING 30초 초과 조건은 리더 인스턴스 사망 시 재클레임을 여는 스테일 타임아웃
+        (기본 브리핑 LLM read timeout 5초 대비 충분한 여유).
+        마지막 조건(FALLBACK + 1시간 경과)은 폴백으로 채워진 행을 백그라운드 재생성이 다시 시도할 수 있게 여는 쿨다운
+    -->
+    <update id="tryClaimBriefGeneration">
+        UPDATE building_safety_report
+        SET brief_status = 'GENERATING', generation_started_at = NOW()
+        WHERE bd_mgt_sn = #{bdMgtSn}
+          AND (brief_status IS NULL
+               OR (brief_status = 'DONE' AND total_brief IS NULL)
+               OR (brief_status = 'GENERATING'
+                   AND generation_started_at &lt; NOW() - INTERVAL 30 SECOND)
+               OR (brief_status = 'DONE' AND brief_source = 'FALLBACK'
+                   AND generated_at &lt; NOW() - INTERVAL 1 HOUR))
+    </update>
+
+    <update id="updateReports">
+        UPDATE building_safety_report
+        SET total_report  = #{totalReport},
+            flood_report  = #{floodReport},
+            sink_report   = #{sinkReport},
+            fire_report   = #{fireReport},
+            struct_report = #{structReport}
+        WHERE bd_mgt_sn = #{bdMgtSn}
+    </update>
+
+</mapper>

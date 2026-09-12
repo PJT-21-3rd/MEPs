@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.user.mapper.UserMapper">
+
+    <!-- 이메일 중복 확인 -->
+    <select id="countByEmail" resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!--
+      회원 등록
+      useGeneratedKeys로 AUTO_INCREMENT 값을 userId에 되돌려 받는다.
+    -->
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users (email, password)
+        VALUES (#{email}, #{password})
+    </insert>
+
+    <!-- 로그인용 조회 -->
+    <select id="findByEmail" resultType="org.meps.user.dto.UserDto">
+        SELECT user_id    AS userId,
+               email,
+               password,
+               created_at AS createdAt
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 찜 존재 여부 확인 -->
+    <select id="existsSavedBuilding" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM saved
+        WHERE user_id = #{userId}
+          AND bd_mgt_sn = #{buildingId}
+    </select>
+
+    <!-- 찜 등록 -->
+    <insert id="insertSavedBuilding">
+        INSERT INTO saved (user_id, bd_mgt_sn)
+        VALUES (#{userId}, #{buildingId})
+    </insert>
+
+    <!-- 찜 해제 -->
+    <delete id="deleteSavedBuilding">
+        DELETE FROM saved
+        WHERE user_id = #{userId}
+          AND bd_mgt_sn = #{buildingId}
+    </delete>
+
+    <!-- 건물 찜 개수 조회 -->
+    <select id="findSavedCount" resultType="int">
+        SELECT saved_cnt
+        FROM buildings
+        WHERE bd_mgt_sn = #{buildingId}
+    </select>
+
+    <!-- 건물 찜 개수 증가 -->
+    <update id="incrementSavedCount">
+        UPDATE buildings SET saved_cnt = saved_cnt + 1
+        WHERE bd_mgt_sn = #{buildingId}
+    </update>
+
+    <!-- 건물 찜 개수 감소 -->
+    <update id="decrementSavedCount">
+        UPDATE buildings SET saved_cnt = GREATEST(saved_cnt - 1, 0)
+        WHERE bd_mgt_sn = #{buildingId}
+    </update>
+
+    <!-- 회원이 찜한 건물 목록 -->
+    <select id="findSavedBuildingIds" resultType="string">
+        SELECT bd_mgt_sn
+        FROM saved
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 마이페이지 찜 목록 - 안전 리포트는 아직 생성되지 않았을 수 있어 LEFT JOIN -->
+    <select id="findSavedBuildings" resultType="org.meps.user.dto.SavedBuildingDto">
+        SELECT b.bd_mgt_sn   AS buildingId,
+               b.bld_nm      AS bldNm,
+               b.road_addr   AS roadAddr,
+               b.jibun_addr  AS jibunAddr,
+               ST_Latitude(b.center)  AS lat,
+               ST_Longitude(b.center) AS lng,
+               b.arch_area   AS archArea,
+               r.total_score AS safetyScore,
+               b.main_purps  AS mainPurpsNm,
+               b.grnd_flr    AS grndFlr,
+               b.ugrnd_flr   AS ugrndFlr,
+               b.use_apr_day AS useAprDay,
+               TRUE          AS saved
+        FROM saved s
+                 JOIN buildings b ON b.bd_mgt_sn = s.bd_mgt_sn
+                 LEFT JOIN building_safety_report r ON r.bd_mgt_sn = s.bd_mgt_sn
+        WHERE s.user_id = #{userId}
+          AND b.biz_eligible = TRUE
+        ORDER BY s.created_at DESC
+    </select>
+
+    <!-- 회원 삭제 -->
+    <delete id="deleteUser">
+        DELETE FROM users
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

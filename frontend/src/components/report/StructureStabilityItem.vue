@@ -1,0 +1,111 @@
+<script setup>
+import { computed } from 'vue';
+import StatusBadge from '@/components/common/StatusBadge.vue';
+import { HardHat, Info } from '@lucide/vue';
+import TypeWriterText from './TypeWriterText.vue';
+
+//  #25 - 구조 안전성 한줄 요약
+//  #32 - detail 모드: 번호+제목, 서브타이틀, AI 전문가 의견(3단락) 추가
+
+const props = defineProps({
+  status: {
+    type: String,
+    required: true,
+    validator: (v) => ['safe', 'good', 'warning', 'danger'].includes(v),
+  },
+  summary: {
+    type: String,
+    required: true,
+  },
+  mode: {
+    type: String,
+    default: 'summary',
+    validator: (v) => ['summary', 'detail'].includes(v),
+  },
+  detail: {
+    type: Object,
+    default: null,
+  },
+  aiReport: {
+    type: String,
+    default: '',
+  },
+  typingActive: { type: Boolean, default: false },
+  alreadyTyped: { type: Boolean, default: false },
+});
+
+defineEmits(['typing-done']);
+
+// aiReport가 3단락(근거 데이터 설명/리스크/솔루션)으로 온다는 가정 하에,
+// 빈 줄(\n\n) 기준으로 나눠서 단락별 여백을 확실히 준다.
+const aiReportParagraphs = computed(() => {
+  if (!props.aiReport) return [];
+  return props.aiReport.split(/\n\s*\n/).filter((p) => p.trim());
+});
+</script>
+
+<template>
+  <div
+    class="p-4 rounded-xl flex flex-col gap-3 transition-opacity duration-300"
+    :class="[
+      mode === 'detail' ? '' : 'border border-surface-gray',
+      mode === 'summary' && !typingActive && !alreadyTyped ? 'opacity-40' : 'opacity-100',
+    ]"
+  >
+    <!-- summary 뷰 -->
+    <template v-if="mode === 'summary'">
+      <div class="flex items-center gap-2">
+        <HardHat class="w-4 h-4 text-secondary" />
+        <span class="flex-1 text-sm font-semibold text-text-main">구조안정성</span>
+        <StatusBadge :status="status" />
+      </div>
+      <p class="text-sm text-text-secondary">
+        "<span v-if="alreadyTyped">{{ summary }}</span
+        ><TypeWriterText
+          v-else:
+          text="summary"
+          :active="typingActive"
+          @done="$emit('typing-done')"
+        />"
+      </p>
+    </template>
+
+    <!-- detail 뷰 -->
+    <template v-else>
+      <div class="flex items-center gap-2">
+        <span class="w-7 h-7 shrink-0 rounded-[10px] bg-[#FFFAE5] flex items-center justify-center">
+          <HardHat class="w-4 h-4 text-secondary" />
+        </span>
+        <span class="flex-1 text-sm font-semibold text-text-main">1. 구조안정성</span>
+        <StatusBadge :status="status" />
+      </div>
+
+      <p class="text-xs text-text-sub">건물 구조 안전성 종합 분석</p>
+
+      <div
+        v-if="aiReportParagraphs.length"
+        class="bg-surface-sky rounded-lg p-3 flex flex-col gap-1.5"
+      >
+        <div class="flex items-center gap-1.5">
+          <Info class="w-3.5 h-3.5 text-button-primary shrink-0" />
+          <span class="text-xs font-semibold text-button-primary">AI 전문가 의견</span>
+        </div>
+        <p
+          v-for="(paragraph, idx) in aiReportParagraphs"
+          :key="idx"
+          class="text-sm text-text-detail"
+        >
+          {{ paragraph }}
+        </p>
+      </div>
+    </template>
+
+    <!-- 특약 카드: 주의 등급이면 summary/detail 상관없이 항상 노출 -->
+    <div v-if="status === 'warning' && detail?.insurance">
+      <div class="bg-surface-base rounded-lg p-3">
+        <p class="text-sm font-semibold text-text-main mb-0.5">{{ detail.insurance.name }}</p>
+        <p class="text-xs text-text-sub">{{ detail.insurance.description }}</p>
+      </div>
+    </div>
+  </div>
+</template>

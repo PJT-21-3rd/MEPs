@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.structure.mapper.StructureMapper">
+
+    <!-- 구조안정성 점수 산정에 필요한 건물 원천 속성 -->
+    <select id="findStructuralInfo" resultType="org.meps.structure.dto.BuildingStructuralInfoDto">
+        SELECT bd_mgt_sn, use_apr_day, strct_cd_nm, viol_bd_yn, ugrnd_flr
+        FROM buildings
+        WHERE bd_mgt_sn = #{buildingId}
+    </select>
+
+</mapper>

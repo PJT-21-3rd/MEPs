@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.meps.fire.mapper.FireMapper">
+
+    <!-- 화재 점수 입력이 되는 건물 개별 사실 (주구조, 도로접면) -->
+    <select id="findBuildingFireFacts" resultType="org.meps.fire.dto.FireFactsDto">
+        SELECT strct_cd_nm,
+               road_side_code_nm,
+               hjd_cd
+        FROM buildings
+        WHERE bd_mgt_sn = #{buildingId}
+    </select>
+
+    <!-- 최근접 소방서/119안전센터 직선거리 -->
+    <select id="findNearestStation" resultType="org.meps.fire.dto.FireStationDistanceDto">
+        SELECT f.station_nm,
+               ST_Distance_Sphere(b.center, f.geom) AS distanceM
+        FROM buildings b
+        CROSS JOIN fire_station f
+        WHERE b.bd_mgt_sn = #{buildingId}
+        ORDER BY distanceM ASC
+        LIMIT 1
+    </select>
+
+    <!-- 행정동 최근 3년 평균 화재 건수 -->
+    <select id="findDongAvgFireCnt" resultType="java.lang.Double">
+        SELECT AVG(cnt)
+        FROM fire
+        WHERE hjd_cd = #{hjdCd}
+          AND year BETWEEN #{fromYear} AND #{toYear}
+    </select>
+
+</mapper>
